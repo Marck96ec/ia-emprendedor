@@ -61,17 +61,20 @@ export async function signup(formData: FormData) {
   });
 
   if (error) {
+    console.error("SUPABASE_SIGNUP_ERROR", {
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      name: error.name,
+    });
+
     redirect(
       "/signup?error=" +
-        encodeURIComponent("No pudimos crear la cuenta. Intenta nuevamente."),
+        encodeURIComponent(
+          "No pudimos crear la cuenta. Intenta nuevamente.",
+        ),
     );
   }
-
-  redirect(
-    "/signup?message=" +
-      encodeURIComponent("Revisa tu correo para confirmar tu cuenta."),
-  );
-}
 
 export async function login(formData: FormData) {
   const email = String(formData.get("email") ?? "")
