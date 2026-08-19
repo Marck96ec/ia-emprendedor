@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // Verificar identidad.
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims();
 
@@ -16,7 +15,6 @@ export default async function DashboardPage() {
 
   const userId = claimsData.claims.sub;
 
-  // Buscar negocio del usuario.
   const { data: business, error: businessError } =
     await supabase
       .from("businesses")
@@ -40,6 +38,26 @@ export default async function DashboardPage() {
 
   if (!business) {
     redirect("/onboarding/business");
+  }
+
+  const { data: diagnostic, error: diagnosticError } =
+    await supabase
+      .from("business_diagnostics")
+      .select("id")
+      .eq("business_id", business.id)
+      .maybeSingle();
+
+  if (diagnosticError) {
+    console.error(
+      "DIAGNOSTIC_LOAD_ERROR",
+      diagnosticError,
+    );
+
+    throw new Error("No pudimos cargar el diagnóstico");
+  }
+
+  if (!diagnostic) {
+    redirect("/onboarding/diagnostic");
   }
 
   const email =
@@ -97,10 +115,20 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <p className="mt-2 text-gray-600">
-                En el siguiente paso completaremos el
-                diagnóstico inicial de tu negocio.
+                Ya completaste la información básica de tu negocio.
               </p>
             )}
+          </div>
+
+          <div className="mt-6 rounded-xl bg-gray-50 p-6">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Diagnóstico inicial completado
+            </h2>
+
+            <p className="mt-2 text-gray-600">
+              Ya tenemos la información necesaria para comenzar a
+              analizar tu negocio.
+            </p>
           </div>
         </div>
       </div>
