@@ -6,15 +6,45 @@ import { createClient } from "@/lib/supabase/server";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.getClaims();
+  // Verificar identidad.
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
 
-  if (error || !data?.claims) {
+  if (claimsError || !claimsData?.claims?.sub) {
     redirect("/login");
   }
 
+  const userId = claimsData.claims.sub;
+
+  // Buscar negocio del usuario.
+  const { data: business, error: businessError } =
+    await supabase
+      .from("businesses")
+      .select(
+        `
+          id,
+          name,
+          business_type,
+          description,
+          created_at
+        `,
+      )
+      .eq("owner_id", userId)
+      .maybeSingle();
+
+  if (businessError) {
+    console.error("BUSINESS_LOAD_ERROR", businessError);
+
+    throw new Error("No pudimos cargar el negocio");
+  }
+
+  if (!business) {
+    redirect("/onboarding/business");
+  }
+
   const email =
-    typeof data.claims.email === "string"
-      ? data.claims.email
+    typeof claimsData.claims.email === "string"
+      ? claimsData.claims.email
       : "Usuario";
 
   return (
@@ -22,11 +52,19 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-5xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500">IA Emprendedor</p>
+            <p className="text-sm text-gray-500">
+              IA Emprendedor
+            </p>
 
             <h1 className="mt-1 text-3xl font-semibold text-gray-900">
-              Dashboard
+              {business.name}
             </h1>
+
+            {business.business_type && (
+              <p className="mt-1 text-gray-600">
+                {business.business_type}
+              </p>
+            )}
           </div>
 
           <form action={logout}>
@@ -49,13 +87,20 @@ export default async function DashboardPage() {
           </p>
 
           <div className="mt-8 rounded-xl bg-gray-50 p-6">
-            <h2 className="font-semibold text-gray-900">
-              Próximo paso
+            <h2 className="text-lg font-semibold text-gray-900">
+              Tu negocio está listo
             </h2>
 
-            <p className="mt-2 text-gray-600">
-              Aquí construiremos el onboarding de tu negocio.
-            </p>
+            {business.description ? (
+              <p className="mt-2 text-gray-600">
+                {business.description}
+              </p>
+            ) : (
+              <p className="mt-2 text-gray-600">
+                En el siguiente paso completaremos el
+                diagnóstico inicial de tu negocio.
+              </p>
+            )}
           </div>
         </div>
       </div>
