@@ -47,3 +47,12 @@ where table_schema = 'public'
   and table_name = 'business_diagnostics'
   and grantee = 'authenticated'
 order by privilege_type;
+
+select
+  policyname,
+  cmd,
+  roles
+from pg_policies
+where schemaname = 'public'
+  and tablename = 'ceo_plans'
+order by cmd;
