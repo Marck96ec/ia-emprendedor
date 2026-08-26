@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { logout } from "@/actions/auth";
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
+import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,16 @@ type DashboardPageProps = {
     error?: string;
     message?: string;
   }>;
+};
+
+type WeeklyAction = {
+  id: string;
+  day: number;
+  action: string;
+  objective: string;
+  success_metric: string;
+  status: "pending" | "completed";
+  completed_at: string | null;
 };
 
 export default async function DashboardPage({
@@ -120,7 +131,8 @@ export default async function DashboardPage({
   }
 
   /*
-   * Validación defensiva de lo guardado en JSONB.
+   * Validación defensiva del contenido generado
+   * por el CEO IA.
    */
   const parsedCEOPlan =
     ceoPlan?.status === "ready"
@@ -154,6 +166,71 @@ export default async function DashboardPage({
       parsedCEOPlan.error,
     );
   }
+
+  /*
+   * Obtener acciones semanales reales.
+   *
+   * weekly_actions es ahora la fuente de verdad
+   * para saber qué acciones están pendientes
+   * o completadas.
+   */
+  let weeklyActions: WeeklyAction[] = [];
+
+  if (ceoPlan?.status === "ready") {
+    const {
+      data: actions,
+      error: actionsError,
+    } = await supabase
+      .from("weekly_actions")
+      .select(
+        `
+          id,
+          day,
+          action,
+          objective,
+          success_metric,
+          status,
+          completed_at
+        `,
+      )
+      .eq("ceo_plan_id", ceoPlan.id)
+      .order("day", {
+        ascending: true,
+      });
+
+    if (actionsError) {
+      console.error(
+        "WEEKLY_ACTIONS_LOAD_ERROR",
+        actionsError,
+      );
+
+      throw new Error(
+        "No pudimos cargar las acciones semanales",
+      );
+    }
+
+    weeklyActions =
+      (actions ?? []) as WeeklyAction[];
+  }
+
+  /*
+   * Calcular progreso semanal.
+   */
+  const completedActions =
+    weeklyActions.filter(
+      (action) =>
+        action.status === "completed",
+    ).length;
+
+  const totalActions =
+    weeklyActions.length;
+
+  const progressPercent =
+    totalActions === 0
+      ? 0
+      : Math.round(
+          (completedActions / totalActions) * 100,
+        );
 
   const email =
     typeof claimsData.claims.email === "string"
@@ -356,29 +433,87 @@ export default async function DashboardPage({
             </section>
 
             <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                Plan de 7 días
-              </h2>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Plan de 7 días
+                  </h2>
+
+                  <p className="mt-2 text-gray-600">
+                    Completa las acciones una por una durante
+                    esta semana.
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {completedActions}/{totalActions}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    completadas
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-black transition-all"
+                    style={{
+                      width: `${progressPercent}%`,
+                    }}
+                  />
+                </div>
+
+                <p className="mt-2 text-sm text-gray-500">
+                  {progressPercent}% de progreso
+                </p>
+              </div>
 
               <div className="mt-6 space-y-4">
-                {readyPlan.weekly_plan
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      a.day - b.day,
-                  )
-                  .map((item) => (
-                    <div
-                      key={item.day}
-                      className="rounded-xl border border-gray-200 p-5"
-                    >
-                      <p className="text-sm font-semibold text-gray-500">
-                        Día {item.day}
-                      </p>
+                {weeklyActions.map((item) => {
+                  const completed =
+                    item.status === "completed";
 
-                      <h3 className="mt-1 text-lg font-semibold text-gray-900">
-                        {item.action}
-                      </h3>
+                  return (
+                    <div
+                      key={item.id}
+                      className={`rounded-xl border p-5 ${
+                        completed
+                          ? "border-gray-200 bg-gray-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-500">
+                            Día {item.day}
+                          </p>
+
+                          <h3
+                            className={`mt-1 text-lg font-semibold ${
+                              completed
+                                ? "text-gray-500 line-through"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            {item.action}
+                          </h3>
+                        </div>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            completed
+                              ? "bg-gray-200 text-gray-700"
+                              : "bg-yellow-50 text-yellow-700"
+                          }`}
+                        >
+                          {completed
+                            ? "Completada"
+                            : "Pendiente"}
+                        </span>
+                      </div>
 
                       <p className="mt-3 text-gray-700">
                         {item.objective}
@@ -390,9 +525,57 @@ export default async function DashboardPage({
                         </strong>{" "}
                         {item.success_metric}
                       </p>
+
+                      <form
+                        action={updateWeeklyActionStatus}
+                        className="mt-5"
+                      >
+                        <input
+                          type="hidden"
+                          name="action_id"
+                          value={item.id}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="status"
+                          value={
+                            completed
+                              ? "pending"
+                              : "completed"
+                          }
+                        />
+
+                        <button
+                          type="submit"
+                          className={
+                            completed
+                              ? "rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700"
+                              : "rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
+                          }
+                        >
+                          {completed
+                            ? "Marcar como pendiente"
+                            : "Marcar como completada"}
+                        </button>
+                      </form>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
+
+              {totalActions === 7 &&
+                completedActions === 7 && (
+                  <div className="mt-6 rounded-xl bg-green-50 p-5">
+                    <h3 className="font-semibold text-green-900">
+                      Semana completada
+                    </h3>
+
+                    <p className="mt-1 text-sm text-green-800">
+                      Completaste las 7 acciones de tu plan.
+                    </p>
+                  </div>
+                )}
             </section>
           </>
         )}

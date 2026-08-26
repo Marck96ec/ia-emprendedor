@@ -289,8 +289,46 @@ export async function generateCEOPlanAction() {
     });
 
     /*
-     * 6. Guardar resultado estructurado.
-     */
+    * 6. Materializar las 7 acciones semanales.
+    *
+    * El JSON generado por el CEO sigue almacenado en ceo_plans
+    * como snapshot, pero weekly_actions será la fuente de verdad
+    * para el seguimiento de ejecución.
+    */
+    const weeklyActions =
+      output.weekly_plan.map((item) => ({
+        ceo_plan_id: planId,
+        day: item.day,
+        action: item.action,
+        objective: item.objective,
+        success_metric: item.success_metric,
+      }));
+
+    const { error: actionsError } =
+      await supabase
+        .from("weekly_actions")
+        .upsert(
+          weeklyActions,
+          {
+            onConflict: "ceo_plan_id,day",
+          },
+        );
+
+    if (actionsError) {
+      console.error(
+        "CEO_PLAN_ACTIONS_CREATE_ERROR",
+        actionsError,
+      );
+
+      throw actionsError;
+    }
+
+    /*
+    * 7. Guardar el plan como listo.
+    *
+    * Solo lo marcamos ready después de tener correctamente
+    * materializadas las 7 acciones.
+    */
     const { error: saveError } =
       await supabase
         .from("ceo_plans")
