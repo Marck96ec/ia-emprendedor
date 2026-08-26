@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v1";
+const PROMPT_VERSION = "v2";
 
 function dashboardError(message: string) {
   return (
@@ -38,7 +38,7 @@ export async function generateCEOPlanAction() {
   const userId = claimsData.claims.sub;
 
   /*
-   * 1. Obtener negocio.
+   * 1. Negocio.
    */
   const { data: business, error: businessError } =
     await supabase
@@ -72,7 +72,7 @@ export async function generateCEOPlanAction() {
   }
 
   /*
-   * 2. Obtener diagnóstico.
+   * 2. Diagnóstico.
    */
   const {
     data: diagnostic,
@@ -112,21 +112,36 @@ export async function generateCEOPlanAction() {
   }
 
   /*
-   * 3. Verificar si ya existe un plan.
+   * 3. Obtener el plan más reciente.
    */
   const {
-    data: existingPlan,
-    error: existingPlanError,
+    data: latestPlan,
+    error: latestPlanError,
   } = await supabase
     .from("ceo_plans")
-    .select("id, status")
+    .select(
+      `
+        id,
+        status,
+        week_number,
+        previous_plan_id,
+        executive_summary,
+        diagnosis,
+        priorities,
+        weekly_plan
+      `,
+    )
     .eq("business_id", business.id)
+    .order("week_number", {
+      ascending: false,
+    })
+    .limit(1)
     .maybeSingle();
 
-  if (existingPlanError) {
+  if (latestPlanError) {
     console.error(
       "CEO_PLAN_LOOKUP_ERROR",
-      existingPlanError,
+      latestPlanError,
     );
 
     redirect(
@@ -136,11 +151,7 @@ export async function generateCEOPlanAction() {
     );
   }
 
-  if (existingPlan?.status === "ready") {
-    redirect("/dashboard");
-  }
-
-  if (existingPlan?.status === "generating") {
+  if (latestPlan?.status === "generating") {
     redirect(
       dashboardMessage(
         "Tu plan ya se está generando.",
@@ -148,15 +159,23 @@ export async function generateCEOPlanAction() {
     );
   }
 
-  /*
-   * 4. Reclamar el derecho a generar.
-   *
-   * Esto evita que dos clics generen dos llamadas
-   * simultáneas a OpenAI.
-   */
   let planId: string;
+  let weekNumber: number;
+  let previousPlanId: string | null = null;
 
-  if (!existingPlan) {
+  /*
+   * Plan que utilizaremos como contexto histórico.
+   *
+   * null = estamos creando Semana 1.
+   */
+  let contextPlanId: string | null = null;
+
+  /*
+   * 4A. Primera semana.
+   */
+  if (!latestPlan) {
+    weekNumber = 1;
+
     const {
       data: createdPlan,
       error: createPlanError,
@@ -164,6 +183,8 @@ export async function generateCEOPlanAction() {
       .from("ceo_plans")
       .insert({
         business_id: business.id,
+        week_number: weekNumber,
+        previous_plan_id: null,
         status: "generating",
         model: MODEL,
         prompt_version: PROMPT_VERSION,
@@ -172,10 +193,6 @@ export async function generateCEOPlanAction() {
       .single();
 
     if (createPlanError) {
-      /*
-       * 23505 = unique_violation.
-       * Otro request pudo crear el plan primero.
-       */
       if (createPlanError.code === "23505") {
         redirect(
           dashboardMessage(
@@ -185,7 +202,7 @@ export async function generateCEOPlanAction() {
       }
 
       console.error(
-        "CEO_PLAN_CREATE_RECORD_ERROR",
+        "CEO_PLAN_CREATE_ERROR",
         createPlanError,
       );
 
@@ -197,11 +214,19 @@ export async function generateCEOPlanAction() {
     }
 
     planId = createdPlan.id;
-  } else {
-    /*
-     * Solo permitimos reclamar un plan que esté failed.
-     * El primer request lo cambia a generating.
-     */
+  }
+
+  /*
+   * 4B. Reintentar una semana que falló.
+   */
+  else if (latestPlan.status === "failed") {
+    weekNumber = latestPlan.week_number;
+    previousPlanId =
+      latestPlan.previous_plan_id;
+
+    contextPlanId =
+      latestPlan.previous_plan_id;
+
     const {
       data: claimedPlan,
       error: claimError,
@@ -217,14 +242,14 @@ export async function generateCEOPlanAction() {
         weekly_plan: null,
         generated_at: null,
       })
-      .eq("id", existingPlan.id)
+      .eq("id", latestPlan.id)
       .eq("status", "failed")
       .select("id")
       .maybeSingle();
 
     if (claimError) {
       console.error(
-        "CEO_PLAN_CLAIM_ERROR",
+        "CEO_PLAN_RETRY_ERROR",
         claimError,
       );
 
@@ -247,14 +272,260 @@ export async function generateCEOPlanAction() {
   }
 
   /*
-   * 5. Ejecutar el CEO IA.
+   * 4C. El último plan está listo.
+   *
+   * Para crear una nueva semana exigimos primero
+   * la revisión de la semana anterior.
+   */
+  else {
+    const {
+      data: previousReview,
+      error: reviewCheckError,
+    } = await supabase
+      .from("weekly_reviews")
+      .select("id")
+      .eq("ceo_plan_id", latestPlan.id)
+      .maybeSingle();
+
+    if (reviewCheckError) {
+      console.error(
+        "CEO_PLAN_REVIEW_CHECK_ERROR",
+        reviewCheckError,
+      );
+
+      redirect(
+        dashboardError(
+          "No pudimos verificar tu revisión semanal.",
+        ),
+      );
+    }
+
+    if (!previousReview) {
+      redirect(
+        dashboardMessage(
+          "Completa primero la revisión de tu semana.",
+        ),
+      );
+    }
+
+    weekNumber =
+      latestPlan.week_number + 1;
+
+    previousPlanId =
+      latestPlan.id;
+
+    contextPlanId =
+      latestPlan.id;
+
+    const {
+      data: createdPlan,
+      error: createPlanError,
+    } = await supabase
+      .from("ceo_plans")
+      .insert({
+        business_id: business.id,
+        week_number: weekNumber,
+        previous_plan_id: previousPlanId,
+        status: "generating",
+        model: MODEL,
+        prompt_version: PROMPT_VERSION,
+      })
+      .select("id")
+      .single();
+
+    if (createPlanError) {
+      if (createPlanError.code === "23505") {
+        redirect(
+          dashboardMessage(
+            "La nueva semana ya se está generando.",
+          ),
+        );
+      }
+
+      console.error(
+        "CEO_PLAN_NEXT_WEEK_CREATE_ERROR",
+        createPlanError,
+      );
+
+      redirect(
+        dashboardError(
+          "No pudimos iniciar tu nueva semana.",
+        ),
+      );
+    }
+
+    planId = createdPlan.id;
+  }
+
+  /*
+   * 5. Construir contexto de la semana anterior.
+   */
+  let previousWeek = null;
+
+  if (contextPlanId) {
+    const {
+      data: contextPlan,
+      error: contextPlanError,
+    } = await supabase
+      .from("ceo_plans")
+      .select(
+        `
+          id,
+          week_number,
+          executive_summary,
+          diagnosis,
+          priorities,
+          weekly_plan
+        `,
+      )
+      .eq("id", contextPlanId)
+      .single();
+
+    if (contextPlanError) {
+      console.error(
+        "CEO_PLAN_CONTEXT_ERROR",
+        contextPlanError,
+      );
+
+      redirect(
+        dashboardError(
+          "No pudimos cargar la semana anterior.",
+        ),
+      );
+    }
+
+    const {
+      data: contextActions,
+      error: contextActionsError,
+    } = await supabase
+      .from("weekly_actions")
+      .select(
+        `
+          day,
+          action,
+          objective,
+          success_metric,
+          status
+        `,
+      )
+      .eq("ceo_plan_id", contextPlan.id)
+      .order("day", {
+        ascending: true,
+      });
+
+    if (contextActionsError) {
+      console.error(
+        "CEO_PLAN_CONTEXT_ACTIONS_ERROR",
+        contextActionsError,
+      );
+
+      redirect(
+        dashboardError(
+          "No pudimos cargar las acciones anteriores.",
+        ),
+      );
+    }
+
+    const {
+      data: contextReview,
+      error: contextReviewError,
+    } = await supabase
+      .from("weekly_reviews")
+      .select(
+        `
+          what_worked,
+          what_didnt_work,
+          business_changes,
+          next_week_focus,
+          completed_actions,
+          total_actions
+        `,
+      )
+      .eq("ceo_plan_id", contextPlan.id)
+      .maybeSingle();
+
+    if (contextReviewError) {
+      console.error(
+        "CEO_PLAN_CONTEXT_REVIEW_ERROR",
+        contextReviewError,
+      );
+
+      redirect(
+        dashboardError(
+          "No pudimos cargar la revisión anterior.",
+        ),
+      );
+    }
+
+    if (!contextReview) {
+      redirect(
+        dashboardError(
+          "La semana anterior no tiene una revisión válida.",
+        ),
+      );
+    }
+
+    previousWeek = {
+      weekNumber:
+        contextPlan.week_number,
+
+      executiveSummary:
+        contextPlan.executive_summary,
+
+      diagnosis:
+        contextPlan.diagnosis,
+
+      priorities:
+        contextPlan.priorities,
+
+      weeklyPlan:
+        contextPlan.weekly_plan,
+
+      actions:
+        (contextActions ?? []).map(
+          (action) => ({
+            day: action.day,
+            action: action.action,
+            objective: action.objective,
+            successMetric:
+              action.success_metric,
+            status: action.status,
+          }),
+        ),
+
+      review: {
+        whatWorked:
+          contextReview.what_worked,
+
+        whatDidntWork:
+          contextReview.what_didnt_work,
+
+        businessChanges:
+          contextReview.business_changes,
+
+        nextWeekFocus:
+          contextReview.next_week_focus,
+
+        completedActions:
+          contextReview.completed_actions,
+
+        totalActions:
+          contextReview.total_actions,
+      },
+    };
+  }
+
+  /*
+   * 6. Ejecutar CEO IA.
    */
   try {
     const output = await generateCEOPlan({
       business: {
         name: business.name,
-        businessType: business.business_type,
-        description: business.description,
+        businessType:
+          business.business_type,
+        description:
+          business.description,
       },
 
       diagnostic: {
@@ -286,23 +557,24 @@ export async function generateCEOPlanAction() {
         currencyCode:
           diagnostic.currency_code,
       },
+
+      previousWeek,
     });
 
     /*
-    * 6. Materializar las 7 acciones semanales.
-    *
-    * El JSON generado por el CEO sigue almacenado en ceo_plans
-    * como snapshot, pero weekly_actions será la fuente de verdad
-    * para el seguimiento de ejecución.
-    */
+     * 7. Materializar las 7 acciones.
+     */
     const weeklyActions =
-      output.weekly_plan.map((item) => ({
-        ceo_plan_id: planId,
-        day: item.day,
-        action: item.action,
-        objective: item.objective,
-        success_metric: item.success_metric,
-      }));
+      output.weekly_plan.map(
+        (item) => ({
+          ceo_plan_id: planId,
+          day: item.day,
+          action: item.action,
+          objective: item.objective,
+          success_metric:
+            item.success_metric,
+        }),
+      );
 
     const { error: actionsError } =
       await supabase
@@ -310,13 +582,14 @@ export async function generateCEOPlanAction() {
         .upsert(
           weeklyActions,
           {
-            onConflict: "ceo_plan_id,day",
+            onConflict:
+              "ceo_plan_id,day",
           },
         );
 
     if (actionsError) {
       console.error(
-        "CEO_PLAN_ACTIONS_CREATE_ERROR",
+        "CEO_PLAN_ACTIONS_ERROR",
         actionsError,
       );
 
@@ -324,11 +597,8 @@ export async function generateCEOPlanAction() {
     }
 
     /*
-    * 7. Guardar el plan como listo.
-    *
-    * Solo lo marcamos ready después de tener correctamente
-    * materializadas las 7 acciones.
-    */
+     * 8. Marcar plan listo.
+     */
     const { error: saveError } =
       await supabase
         .from("ceo_plans")
@@ -385,5 +655,10 @@ export async function generateCEOPlanAction() {
 
   revalidatePath("/dashboard");
 
-  redirect("/dashboard");
+  redirect(
+    "/dashboard?message=" +
+      encodeURIComponent(
+        `Semana ${weekNumber} preparada.`,
+      ),
+  );
 }

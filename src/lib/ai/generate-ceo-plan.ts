@@ -22,6 +22,33 @@ type GenerateCEOPlanInput = {
     monthlyRevenue: number | null;
     currencyCode: string | null;
   };
+
+  previousWeek: {
+    weekNumber: number;
+
+    executiveSummary: string | null;
+    diagnosis: string | null;
+
+    priorities: unknown;
+    weeklyPlan: unknown;
+
+    actions: Array<{
+      day: number;
+      action: string;
+      objective: string;
+      successMetric: string;
+      status: string;
+    }>;
+
+    review: {
+      whatWorked: string;
+      whatDidntWork: string;
+      businessChanges: string;
+      nextWeekFocus: string | null;
+      completedActions: number;
+      totalActions: number;
+    };
+  } | null;
 };
 
 export async function generateCEOPlan(
@@ -36,14 +63,23 @@ export async function generateCEOPlan(
   const result = await run(
     ceoAgent,
     `
-Analiza el siguiente negocio.
+Analiza el siguiente negocio y prepara su próximo plan semanal.
 
-DATOS DEL NEGOCIO:
+DATOS DISPONIBLES:
 
 ${JSON.stringify(input, null, 2)}
 
-Genera el diagnóstico ejecutivo, las 3 prioridades y el plan
-de acción para los próximos 7 días.
+Si previousWeek es null, estás preparando la primera semana.
+
+Si previousWeek contiene información, estás preparando una nueva
+semana y debes utilizar los resultados y aprendizajes de la semana
+anterior para adaptar tus decisiones.
+
+Genera:
+
+- diagnóstico ejecutivo actualizado
+- exactamente 3 prioridades
+- exactamente 7 acciones, una para cada día del 1 al 7
 `,
   );
 
