@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { logout } from "@/actions/auth";
@@ -5,6 +6,7 @@ import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
+
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -308,14 +310,23 @@ export default async function DashboardPage({
             )}
           </div>
 
-          <form action={logout}>
-            <button
-              type="submit"
+          <div className="flex items-center gap-3">
+            <Link
+              href="/history"
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800"
             >
-              Cerrar sesión
-            </button>
-          </form>
+              Historial
+            </Link>
+
+            <form action={logout}>
+              <button
+                type="submit"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800"
+              >
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Mensajes */}
