@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createBusiness } from "@/actions/business";
+import { OnboardingProgress } from "@/components/onboarding-progress";
 import { createClient } from "@/lib/supabase/server";
 
 type BusinessOnboardingPageProps = {
@@ -44,14 +45,19 @@ export default async function BusinessOnboardingPage({
             IA Emprendedor
           </p>
 
-          <h1 className="mt-2 text-3xl font-semibold text-gray-900">
+          <div className="mt-6">
+            <OnboardingProgress currentStep={1} />
+          </div>
+
+          <h1 className="text-3xl font-semibold text-gray-900">
             Cuéntanos sobre tu negocio
           </h1>
 
-          <p className="mt-3 text-gray-600">
-            Empecemos con la información básica. Después
-            profundizaremos durante el diagnóstico.
-          </p>
+        <p className="mt-3 text-gray-600">
+          Empecemos con la información básica de tu negocio.
+          Te tomará solo unos minutos completar todo el proceso
+          y recibir tu primera semana de prioridades.
+        </p>
 
           {error && (
             <div className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">

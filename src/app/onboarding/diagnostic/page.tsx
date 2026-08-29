@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createDiagnostic } from "@/actions/diagnostic";
+import { OnboardingProgress } from "@/components/onboarding-progress";
 import { createClient } from "@/lib/supabase/server";
 
 type DiagnosticPageProps = {
@@ -63,14 +64,18 @@ export default async function DiagnosticPage({
             IA Emprendedor
           </p>
 
-          <h1 className="mt-2 text-3xl font-semibold text-gray-900">
+          <div className="mt-6">
+            <OnboardingProgress currentStep={2} />
+          </div>
+
+          <h1 className="text-3xl font-semibold text-gray-900">
             Diagnóstico inicial
           </h1>
 
           <p className="mt-3 text-gray-600">
-            Cuéntanos cómo está funcionando {business.name}.
-            Esta información nos ayudará a identificar qué
-            deberías priorizar.
+            Ya conocemos lo básico de {business.name}. Ahora necesitamos
+            entender qué está ocurriendo para identificar qué deberías
+            priorizar primero.
           </p>
 
           {error && (
@@ -257,7 +262,16 @@ export default async function DiagnosticPage({
                 Puedes dejar este campo vacío.
               </p>
             </div>
+            <div className="rounded-xl bg-gray-50 p-4">
+              <p className="text-sm font-medium text-gray-800">
+                ¿Qué ocurrirá después?
+              </p>
 
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Usaremos estas respuestas para preparar un diagnóstico,
+                tres prioridades y un plan práctico para tus próximos 7 días.
+              </p>
+            </div>
             <button
               type="submit"
               className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white"
