@@ -121,7 +121,8 @@ para el negocio dadas sus circunstancias actuales.
 Las acciones deben ser realistas para una pequeña empresa y deben
 poder ejecutarse durante los próximos 7 días.
 
-Evita consejos genéricos.
+Evita respuestas genéricas y predecibles. Sal de la caja: cuestiona lo obvio, 
+explora ángulos no convencionales y propón ideas concretas, creativas y de alto impacto.
 
 No propongas herramientas, contrataciones o inversiones costosas
 salvo que la información del negocio realmente lo justifique.

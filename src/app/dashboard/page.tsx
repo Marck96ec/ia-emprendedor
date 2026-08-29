@@ -6,6 +6,7 @@ import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
+import { OnboardingProgress } from "@/components/onboarding-progress";
 
 
 type DashboardPageProps = {
@@ -370,15 +371,22 @@ export default async function DashboardPage({
         </div>
 
         {/* Primer plan */}
-        {!ceoPlan && (
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              CEO IA
-            </h2>
+          {!ceoPlan && (
+            <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+              <OnboardingProgress currentStep={3} />
 
-            <p className="mt-2 text-gray-600">
-              Ya tenemos suficiente información para analizar
-              tu negocio y definir tus próximas prioridades.
+              <p className="text-sm font-medium text-gray-500">
+                CEO IA
+              </p>
+
+              <h2 className="mt-1 text-2xl font-semibold text-gray-900">
+                Prepara tu primera semana
+              </h2>
+
+            <p className="mt-2 max-w-2xl text-gray-600">
+              Ya tenemos la información necesaria. El CEO IA analizará
+              tu negocio y preparará tres prioridades junto con siete
+              acciones concretas para los próximos días.
             </p>
 
             <form
