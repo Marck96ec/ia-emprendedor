@@ -14,7 +14,15 @@ const WeeklyReviewSchema = z.object({
     .string()
     .trim()
     .max(1000)
-    .optional(),
+    .refine(
+      (value) =>
+        value.length === 0 ||
+        value.length >= 5,
+      {
+        message:
+          "El enfoque debe tener al menos 5 caracteres.",
+      },
+    ),
 });
 
 function reviewError(message: string) {

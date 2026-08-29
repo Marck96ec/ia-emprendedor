@@ -243,9 +243,10 @@ export default async function WeeklyReviewPage({
               <textarea
                 id="next_week_focus"
                 name="next_week_focus"
+                rows={4}
+                minLength={5}
                 maxLength={1000}
-                rows={3}
-                placeholder="Ej. Quiero enfocarme en conseguir más clientes recurrentes."
+                placeholder="Ej. Esta semana quiero enfocarme en conseguir más clientes recurrentes."
                 className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
               />
             </div>
