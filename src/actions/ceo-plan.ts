@@ -11,6 +11,9 @@ const MODEL =
 
 const PROMPT_VERSION = "v2";
 
+const GENERATING_STALE_AFTER_MS =
+  15 * 60 * 1000;
+
 function dashboardError(message: string) {
   return (
     "/dashboard?error=" +
@@ -128,7 +131,8 @@ export async function generateCEOPlanAction() {
         executive_summary,
         diagnosis,
         priorities,
-        weekly_plan
+        weekly_plan,
+        updated_at
       `,
     )
     .eq("business_id", business.id)
@@ -151,13 +155,66 @@ export async function generateCEOPlanAction() {
     );
   }
 
-  if (latestPlan?.status === "generating") {
+/*
+ * Si una generación lleva demasiado tiempo sin actualizarse,
+ * asumimos que el proceso murió antes de poder marcarla
+ * como ready o failed.
+ *
+ * Solo un request podrá recuperar el plan gracias a las
+ * condiciones status + updated_at.
+ */
+if (latestPlan?.status === "generating") {
+  const staleBefore = new Date(
+    Date.now() -
+      GENERATING_STALE_AFTER_MS,
+  ).toISOString();
+
+  const {
+    data: recoveredPlan,
+    error: recoveryError,
+  } = await supabase
+    .from("ceo_plans")
+    .update({
+      status: "failed",
+    })
+    .eq("id", latestPlan.id)
+    .eq("status", "generating")
+    .lt("updated_at", staleBefore)
+    .select("id")
+    .maybeSingle();
+
+  if (recoveryError) {
+    console.error(
+      "CEO_PLAN_STALE_RECOVERY_ERROR",
+      recoveryError,
+    );
+
+    redirect(
+      dashboardError(
+        "No pudimos verificar el estado de tu plan.",
+      ),
+    );
+  }
+
+  /*
+   * Si no se actualizó ninguna fila significa que la
+   * generación sigue siendo reciente.
+   */
+  if (!recoveredPlan) {
     redirect(
       dashboardMessage(
         "Tu plan ya se está generando.",
       ),
     );
   }
+
+  /*
+   * El registro ya quedó como failed en DB.
+   * Actualizamos el objeto cargado para que el flujo
+   * siguiente reutilice esta misma semana.
+   */
+  latestPlan.status = "failed";
+}
 
   let planId: string;
   let weekNumber: number;
@@ -360,7 +417,10 @@ export async function generateCEOPlanAction() {
   /*
    * 5. Construir contexto de la semana anterior.
    */
-  let previousWeek = null;
+
+  try {
+
+    let previousWeek = null;
 
   if (contextPlanId) {
     const {
@@ -387,10 +447,8 @@ export async function generateCEOPlanAction() {
         contextPlanError,
       );
 
-      redirect(
-        dashboardError(
-          "No pudimos cargar la semana anterior.",
-        ),
+      throw new Error(
+        "No pudimos cargar la semana anterior.",
       );
     }
 
@@ -419,10 +477,17 @@ export async function generateCEOPlanAction() {
         contextActionsError,
       );
 
-      redirect(
-        dashboardError(
-          "No pudimos cargar las acciones anteriores.",
-        ),
+      throw new Error(
+        "No pudimos cargar las acciones anteriores.",
+      );
+    }
+
+    if (
+      !contextActions ||
+      contextActions.length !== 7
+    ) {
+      throw new Error(
+        "La semana anterior no tiene las 7 acciones esperadas.",
       );
     }
 
@@ -450,18 +515,14 @@ export async function generateCEOPlanAction() {
         contextReviewError,
       );
 
-      redirect(
-        dashboardError(
-          "No pudimos cargar la revisión anterior.",
-        ),
+      throw new Error(
+        "No pudimos cargar la revisión anterior.",
       );
     }
 
     if (!contextReview) {
-      redirect(
-        dashboardError(
-          "La semana anterior no tiene una revisión válida.",
-        ),
+      throw new Error(
+        "La semana anterior no tiene una revisión válida.",
       );
     }
 
@@ -518,7 +579,7 @@ export async function generateCEOPlanAction() {
   /*
    * 6. Ejecutar CEO IA.
    */
-  try {
+
     const output = await generateCEOPlan({
       business: {
         name: business.name,
