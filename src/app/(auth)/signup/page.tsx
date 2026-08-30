@@ -15,34 +15,24 @@ export default async function SignupPage({
   const { error, message } = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-gray-900">
+    <main className="ambient-shell flex min-h-screen items-center justify-center px-4">
+      <div className="surface-card w-full max-w-md rounded-[2rem] p-6 sm:p-8">
+        <p className="badge-chip">IA Emprendedor</p>
+
+        <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
           Crear cuenta
         </h1>
 
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-slate-600">
           Empieza a construir el plan de tu negocio con IA Emprendedor.
         </p>
 
-        {error && (
-          <div className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <div className="alert-box mt-6">{error}</div>}
+        {message && <div className="success-box mt-6">{message}</div>}
 
-        {message && (
-          <div className="mt-6 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-            {message}
-          </div>
-        )}
-
-        <form action={signup} className="mt-6 space-y-4">
+        <form action={signup} className="mt-6 space-y-5">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="field-label">
               Correo
             </label>
 
@@ -52,16 +42,13 @@ export default async function SignupPage({
               type="email"
               required
               autoComplete="email"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+              className="form-field"
               placeholder="tu@negocio.com"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="field-label">
               Contraseña
             </label>
 
@@ -72,21 +59,18 @@ export default async function SignupPage({
               required
               minLength={8}
               autoComplete="new-password"
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+              className="form-field"
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-black px-4 py-2 font-medium text-white"
-          >
+          <button type="submit" className="primary-button w-full">
             Crear cuenta
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-slate-600">
           ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="font-medium text-gray-900 underline">
+          <Link href="/login" className="link-button">
             Inicia sesión
           </Link>
         </p>
