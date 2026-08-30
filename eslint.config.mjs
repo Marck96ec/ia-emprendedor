@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "supabase/.temp/**",
+
+    // Local AI tooling / generated skill assets are not part of the app runtime.
+    ".agents/**",
+    "**/*.min.js",
   ]),
 ]);
 

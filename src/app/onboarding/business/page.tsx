@@ -38,42 +38,28 @@ export default async function BusinessOnboardingPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12">
+    <main className="ambient-shell min-h-screen px-4 py-12">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
-            IA Emprendedor
-          </p>
+        <div className="surface-card rounded-[2rem] p-5 sm:p-8">
+          <p className="badge-chip">IA Emprendedor</p>
 
           <div className="mt-6">
             <OnboardingProgress currentStep={1} />
           </div>
 
-          <h1 className="text-3xl font-semibold text-gray-900">
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
             Cuéntanos sobre tu negocio
           </h1>
 
-        <p className="mt-3 text-gray-600">
-          Empecemos con la información básica de tu negocio.
-          Te tomará solo unos minutos completar todo el proceso
-          y recibir tu primera semana de prioridades.
-        </p>
+          <p className="mt-3 text-slate-600">
+            Empecemos con la información básica de tu negocio. Te tomará solo unos minutos completar todo el proceso y recibir tu primera semana de prioridades.
+          </p>
 
-          {error && (
-            <div className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert-box mt-6">{error}</div>}
 
-          <form
-            action={createBusiness}
-            className="mt-8 space-y-6"
-          >
+          <form action={createBusiness} className="mt-8 space-y-6">
             <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="name" className="field-label">
                 Nombre del negocio
               </label>
 
@@ -85,15 +71,12 @@ export default async function BusinessOnboardingPage({
                 minLength={2}
                 maxLength={120}
                 placeholder="Ej. Panadería San José"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="business_type"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="business_type" className="field-label">
                 Tipo de negocio
               </label>
 
@@ -102,15 +85,12 @@ export default async function BusinessOnboardingPage({
                 name="business_type"
                 type="text"
                 placeholder="Ej. Panadería, restaurante, peluquería..."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="description" className="field-label">
                 Describe brevemente tu negocio
               </label>
 
@@ -119,14 +99,11 @@ export default async function BusinessOnboardingPage({
                 name="description"
                 rows={5}
                 placeholder="¿Qué vendes, a quién y cómo funciona tu negocio?"
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white"
-            >
+            <button type="submit" className="primary-button w-full">
               Continuar
             </button>
           </form>

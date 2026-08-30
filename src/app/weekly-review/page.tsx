@@ -12,8 +12,7 @@ type WeeklyReviewPageProps = {
 export default async function WeeklyReviewPage({
   searchParams,
 }: WeeklyReviewPageProps) {
-  const { error: pageError } =
-    await searchParams;
+  const { error: pageError } = await searchParams;
 
   const supabase = await createClient();
 
@@ -34,67 +33,41 @@ export default async function WeeklyReviewPage({
       .maybeSingle();
 
   if (businessError) {
-    console.error(
-      "WEEKLY_REVIEW_PAGE_BUSINESS_ERROR",
-      businessError,
-    );
-
-    throw new Error(
-      "No pudimos cargar el negocio",
-    );
+    console.error("WEEKLY_REVIEW_PAGE_BUSINESS_ERROR", businessError);
+    throw new Error("No pudimos cargar el negocio");
   }
 
   if (!business) {
     redirect("/onboarding/business");
   }
 
-  /*
-   * Siempre trabajamos con la semana más reciente.
-   */
   const { data: ceoPlan, error: planError } =
     await supabase
       .from("ceo_plans")
       .select("id, week_number, status")
       .eq("business_id", business.id)
-      .order("week_number", {
-        ascending: false,
-      })
+      .order("week_number", { ascending: false })
       .limit(1)
       .maybeSingle();
 
   if (planError) {
-    console.error(
-      "WEEKLY_REVIEW_PAGE_PLAN_ERROR",
-      planError,
-    );
-
-    throw new Error(
-      "No pudimos cargar el plan semanal",
-    );
+    console.error("WEEKLY_REVIEW_PAGE_PLAN_ERROR", planError);
+    throw new Error("No pudimos cargar el plan semanal");
   }
 
   if (!ceoPlan || ceoPlan.status !== "ready") {
     redirect("/dashboard");
   }
 
-  const {
-    data: existingReview,
-    error: reviewError,
-  } = await supabase
+  const { data: existingReview, error: reviewError } = await supabase
     .from("weekly_reviews")
     .select("id")
     .eq("ceo_plan_id", ceoPlan.id)
     .maybeSingle();
 
   if (reviewError) {
-    console.error(
-      "WEEKLY_REVIEW_PAGE_LOOKUP_ERROR",
-      reviewError,
-    );
-
-    throw new Error(
-      "No pudimos cargar la revisión semanal",
-    );
+    console.error("WEEKLY_REVIEW_PAGE_LOOKUP_ERROR", reviewError);
+    throw new Error("No pudimos cargar la revisión semanal");
   }
 
   if (existingReview) {
@@ -108,72 +81,44 @@ export default async function WeeklyReviewPage({
       .eq("ceo_plan_id", ceoPlan.id);
 
   if (actionsError) {
-    console.error(
-      "WEEKLY_REVIEW_PAGE_ACTIONS_ERROR",
-      actionsError,
-    );
-
-    throw new Error(
-      "No pudimos cargar las acciones",
-    );
+    console.error("WEEKLY_REVIEW_PAGE_ACTIONS_ERROR", actionsError);
+    throw new Error("No pudimos cargar las acciones");
   }
 
-  const totalActions =
-    actions?.length ?? 0;
-
+  const totalActions = actions?.length ?? 0;
   const completedActions =
-    actions?.filter(
-      (action) =>
-        action.status === "completed",
-    ).length ?? 0;
+    actions?.filter((action) => action.status === "completed").length ?? 0;
 
   if (totalActions !== 7) {
     redirect("/dashboard");
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12">
+    <main className="ambient-shell min-h-screen px-4 py-12">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
-            IA Emprendedor
-          </p>
+        <div className="surface-card rounded-[2rem] p-5 sm:p-8">
+          <p className="badge-chip">IA Emprendedor</p>
 
-          <h1 className="mt-2 text-3xl font-semibold text-gray-900">
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
             Revisión de la semana {ceoPlan.week_number}
           </h1>
 
-          <p className="mt-3 text-gray-600">
-            Antes de preparar la siguiente semana,
-            revisemos qué ocurrió realmente en{" "}
-            {business.name}.
+          <p className="mt-3 text-slate-600">
+            Antes de preparar la siguiente semana, revisemos qué ocurrió realmente en {business.name}.
           </p>
 
-          <div className="mt-6 rounded-xl bg-gray-50 p-5">
-            <p className="text-sm text-gray-500">
-              Progreso de esta semana
-            </p>
-
-            <p className="mt-1 text-2xl font-semibold text-gray-900">
+          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
+            <p className="text-sm text-slate-500">Progreso de esta semana</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">
               {completedActions}/7 acciones completadas
             </p>
           </div>
 
-          {pageError && (
-            <div className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              {pageError}
-            </div>
-          )}
+          {pageError && <div className="alert-box mt-6">{pageError}</div>}
 
-          <form
-            action={createWeeklyReview}
-            className="mt-8 space-y-7"
-          >
+          <form action={createWeeklyReview} className="mt-8 space-y-7">
             <div>
-              <label
-                htmlFor="what_worked"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="what_worked" className="field-label">
                 ¿Qué funcionó bien esta semana?
               </label>
 
@@ -185,15 +130,12 @@ export default async function WeeklyReviewPage({
                 maxLength={2000}
                 rows={4}
                 placeholder="Ej. Contactar clientes antiguos produjo varias conversaciones nuevas."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="what_didnt_work"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="what_didnt_work" className="field-label">
                 ¿Qué no funcionó o qué no pudiste completar?
               </label>
 
@@ -205,15 +147,12 @@ export default async function WeeklyReviewPage({
                 maxLength={2000}
                 rows={4}
                 placeholder="Ej. No pude completar algunas llamadas porque tuve que atender problemas operativos."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="business_changes"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="business_changes" className="field-label">
                 ¿Qué cambió en el negocio esta semana?
               </label>
 
@@ -225,19 +164,14 @@ export default async function WeeklyReviewPage({
                 maxLength={2000}
                 rows={4}
                 placeholder="Ej. Conseguimos dos clientes nuevos y descubrimos que las recomendaciones convierten mejor."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="next_week_focus"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="next_week_focus" className="field-label">
                 ¿Hay algo en lo que quieras enfocarte la próxima semana?
-                <span className="ml-1 text-gray-400">
-                  (opcional)
-                </span>
+                <span className="ml-1 text-slate-400">(opcional)</span>
               </label>
 
               <textarea
@@ -247,14 +181,11 @@ export default async function WeeklyReviewPage({
                 minLength={5}
                 maxLength={1000}
                 placeholder="Ej. Esta semana quiero enfocarme en conseguir más clientes recurrentes."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white"
-            >
+            <button type="submit" className="primary-button w-full">
               Guardar revisión semanal
             </button>
           </form>

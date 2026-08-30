@@ -57,42 +57,28 @@ export default async function DiagnosticPage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12">
+    <main className="ambient-shell min-h-screen px-4 py-12">
       <div className="mx-auto max-w-2xl">
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">
-            IA Emprendedor
-          </p>
+        <div className="surface-card rounded-[2rem] p-5 sm:p-8">
+          <p className="badge-chip">IA Emprendedor</p>
 
           <div className="mt-6">
             <OnboardingProgress currentStep={2} />
           </div>
 
-          <h1 className="text-3xl font-semibold text-gray-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
             Diagnóstico inicial
           </h1>
 
-          <p className="mt-3 text-gray-600">
-            Ya conocemos lo básico de {business.name}. Ahora necesitamos
-            entender qué está ocurriendo para identificar qué deberías
-            priorizar primero.
+          <p className="mt-3 text-slate-600">
+            Ya conocemos lo básico de {business.name}. Ahora necesitamos entender qué está ocurriendo para identificar qué deberías priorizar primero.
           </p>
 
-          {error && (
-            <div className="mt-6 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <div className="alert-box mt-6">{error}</div>}
 
-          <form
-            action={createDiagnostic}
-            className="mt-8 space-y-7"
-          >
+          <form action={createDiagnostic} className="mt-8 space-y-7">
             <div>
-              <label
-                htmlFor="business_stage"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="business_stage" className="field-label">
                 ¿En qué etapa está tu negocio?
               </label>
 
@@ -101,31 +87,20 @@ export default async function DiagnosticPage({
                 name="business_stage"
                 required
                 defaultValue=""
-                className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900"
+                className="form-field"
               >
                 <option value="" disabled>
                   Selecciona una opción
                 </option>
-                <option value="starting">
-                  Estoy empezando
-                </option>
-                <option value="operating">
-                  Está funcionando de forma estable
-                </option>
-                <option value="growing">
-                  Está creciendo
-                </option>
-                <option value="stalled">
-                  Está estancado o tiene dificultades
-                </option>
+                <option value="starting">Estoy empezando</option>
+                <option value="operating">Está funcionando de forma estable</option>
+                <option value="growing">Está creciendo</option>
+                <option value="stalled">Está estancado o tiene dificultades</option>
               </select>
             </div>
 
             <div>
-              <label
-                htmlFor="team_size"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="team_size" className="field-label">
                 ¿Cuántas personas trabajan en el negocio?
               </label>
 
@@ -137,15 +112,12 @@ export default async function DiagnosticPage({
                 max={10000}
                 defaultValue={1}
                 required
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="main_challenge"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="main_challenge" className="field-label">
                 ¿Cuál es el principal problema que tienes hoy?
               </label>
 
@@ -157,15 +129,12 @@ export default async function DiagnosticPage({
                 rows={4}
                 required
                 placeholder="Ej. Tenemos ventas, pero no son constantes y no sé qué canal priorizar."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="primary_goal"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="primary_goal" className="field-label">
                 ¿Qué te gustaría lograr en los próximos 3 meses?
               </label>
 
@@ -177,15 +146,12 @@ export default async function DiagnosticPage({
                 rows={4}
                 required
                 placeholder="Ej. Aumentar las ventas mensuales y conseguir clientes recurrentes."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="customers_description"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="customers_description" className="field-label">
                 ¿Quiénes son tus principales clientes?
               </label>
 
@@ -197,15 +163,12 @@ export default async function DiagnosticPage({
                 rows={4}
                 required
                 placeholder="Ej. Familias y trabajadores de la zona que compran productos todos los días."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="sales_process"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="sales_process" className="field-label">
                 ¿Cómo consigues clientes y realizas ventas actualmente?
               </label>
 
@@ -217,19 +180,13 @@ export default async function DiagnosticPage({
                 rows={4}
                 required
                 placeholder="Ej. Los clientes llegan por recomendaciones, Instagram y personas que pasan frente al local."
-                className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                className="form-field resize-y"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="monthly_revenue"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Facturación mensual aproximada
-                <span className="ml-1 text-gray-400">
-                  (opcional)
-                </span>
+              <label htmlFor="monthly_revenue" className="field-label">
+                Facturación mensual aproximada <span className="text-slate-400">(opcional)</span>
               </label>
 
               <div className="mt-2 grid grid-cols-3 gap-3">
@@ -240,14 +197,10 @@ export default async function DiagnosticPage({
                   min={0}
                   step="0.01"
                   placeholder="5000"
-                  className="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-gray-900"
+                  className="form-field col-span-2"
                 />
 
-                <select
-                  name="currency_code"
-                  defaultValue="USD"
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900"
-                >
+                <select name="currency_code" defaultValue="USD" className="form-field bg-white">
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                   <option value="COP">COP</option>
@@ -258,24 +211,20 @@ export default async function DiagnosticPage({
                 </select>
               </div>
 
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-slate-500">
                 Puedes dejar este campo vacío.
               </p>
             </div>
-            <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-800">
-                ¿Qué ocurrirá después?
-              </p>
 
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Usaremos estas respuestas para preparar un diagnóstico,
-                tres prioridades y un plan práctico para tus próximos 7 días.
+            <div className="rounded-[1.25rem] bg-slate-50 p-4">
+              <p className="text-sm font-medium text-slate-800">¿Qué ocurrirá después?</p>
+
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Usaremos estas respuestas para preparar un diagnóstico, tres prioridades y un plan práctico para tus próximos 7 días.
               </p>
             </div>
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-black px-4 py-3 font-medium text-white"
-            >
+
+            <button type="submit" className="primary-button w-full">
               Completar diagnóstico
             </button>
           </form>

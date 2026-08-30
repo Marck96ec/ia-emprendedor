@@ -7,6 +7,7 @@ import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingProgress } from "@/components/onboarding-progress";
+import { PlanGeneratingStatus } from "@/components/plan-generating-status";
 
 
 type DashboardPageProps = {
@@ -290,151 +291,88 @@ export default async function DashboardPage({
       : "Usuario";
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-sm text-gray-500">
-              IA Emprendedor
-            </p>
+            <p className="badge-chip">IA Emprendedor</p>
 
-            <h1 className="mt-1 text-3xl font-semibold text-gray-900">
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               {business.name}
             </h1>
 
             {business.business_type && (
-              <p className="mt-1 text-gray-600">
-                {business.business_type}
-              </p>
+              <p className="mt-2 text-slate-600">{business.business_type}</p>
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/history"
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800"
-            >
+            <Link href="/history" className="secondary-button px-4 py-2 text-sm">
               Historial
             </Link>
 
             <form action={logout}>
-              <button
-                type="submit"
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800"
-              >
+              <button type="submit" className="secondary-button px-4 py-2 text-sm">
                 Cerrar sesión
               </button>
             </form>
           </div>
         </div>
 
-        {/* Mensajes */}
-        {pageError && (
-          <div className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-            {pageError}
-          </div>
-        )}
+        {pageError && <div className="alert-box mt-6">{pageError}</div>}
+        {message && <div className="success-box mt-6">{message}</div>}
 
-        {message && (
-          <div className="mt-6 rounded-xl bg-blue-50 p-4 text-sm text-blue-700">
-            {message}
-          </div>
-        )}
+        <div className="mt-8 surface-card rounded-[2rem] p-5 sm:p-6">
+          <p className="text-sm text-slate-500">Sesión iniciada como</p>
+          <p className="mt-1 font-semibold text-slate-900">{email}</p>
 
-        {/* Información del negocio */}
-        <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm text-gray-500">
-            Sesión iniciada como
-          </p>
-
-          <p className="mt-1 font-medium text-gray-900">
-            {email}
-          </p>
-
-          <div className="mt-8 rounded-xl bg-gray-50 p-6">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Tu negocio está listo
-            </h2>
+          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Tu negocio está listo</h2>
 
             {business.description ? (
-              <p className="mt-2 text-gray-600">
-                {business.description}
-              </p>
+              <p className="mt-2 text-slate-600">{business.description}</p>
             ) : (
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-slate-600">
                 Ya completaste la información básica de tu negocio.
               </p>
             )}
           </div>
         </div>
 
-        {/* Primer plan */}
-          {!ceoPlan && (
-            <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <OnboardingProgress currentStep={3} />
+        {!ceoPlan && (
+          <div className="mt-6 surface-card rounded-[2rem] p-5 sm:p-6">
+            <OnboardingProgress currentStep={3} />
 
-              <p className="text-sm font-medium text-gray-500">
-                CEO IA
-              </p>
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">CEO IA</p>
 
-              <h2 className="mt-1 text-2xl font-semibold text-gray-900">
-                Prepara tu primera semana
-              </h2>
+            <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+              Prepara tu primera semana
+            </h2>
 
-            <p className="mt-2 max-w-2xl text-gray-600">
-              Ya tenemos la información necesaria. El CEO IA analizará
-              tu negocio y preparará tres prioridades junto con siete
-              acciones concretas para los próximos días.
+            <p className="mt-2 max-w-2xl text-slate-600">
+              Ya tenemos la información necesaria. El CEO IA analizará tu negocio y preparará tres prioridades junto con siete acciones concretas para los próximos días.
             </p>
 
-            <form
-              action={generateCEOPlanAction}
-              className="mt-6"
-            >
-              <button
-                type="submit"
-                className="rounded-lg bg-black px-5 py-3 font-medium text-white"
-              >
+            <form action={generateCEOPlanAction} className="mt-6">
+              <button type="submit" className="primary-button px-5 py-3">
                 Generar mi plan
               </button>
             </form>
           </div>
         )}
 
-        {/* Generando */}
-        {ceoPlan?.status === "generating" && (
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Generando tu plan...
-            </h2>
+        {ceoPlan?.status === "generating" && <PlanGeneratingStatus />}
 
-            <p className="mt-2 text-gray-600">
-              El CEO IA está analizando tu negocio.
-            </p>
-          </div>
-        )}
-
-        {/* Falló generación */}
         {ceoPlan?.status === "failed" && (
-          <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="mt-6 surface-card rounded-[2rem] p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-slate-950">
               No pudimos generar el plan
             </h2>
 
-            <p className="mt-2 text-gray-600">
-              Puedes volver a intentarlo.
-            </p>
+            <p className="mt-2 text-slate-600">Puedes volver a intentarlo.</p>
 
-            <form
-              action={generateCEOPlanAction}
-              className="mt-5"
-            >
-              <button
-                type="submit"
-                className="rounded-lg bg-black px-5 py-3 font-medium text-white"
-              >
+            <form action={generateCEOPlanAction} className="mt-5">
+              <button type="submit" className="primary-button px-5 py-3">
                 Intentar nuevamente
               </button>
             </form>
