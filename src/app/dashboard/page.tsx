@@ -7,6 +7,7 @@ import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingProgress } from "@/components/onboarding-progress";
+import { PlanGenerationSubmit } from "@/components/plan-generation-submit";
 import { PlanGeneratingStatus } from "@/components/plan-generating-status";
 
 
@@ -354,9 +355,7 @@ export default async function DashboardPage({
             </p>
 
             <form action={generateCEOPlanAction} className="mt-6">
-              <button type="submit" className="primary-button px-5 py-3">
-                Generar mi plan
-              </button>
+              <PlanGenerationSubmit label="Generar mi plan" />
             </form>
           </div>
         )}
@@ -372,9 +371,7 @@ export default async function DashboardPage({
             <p className="mt-2 text-slate-600">Puedes volver a intentarlo.</p>
 
             <form action={generateCEOPlanAction} className="mt-5">
-              <button type="submit" className="primary-button px-5 py-3">
-                Intentar nuevamente
-              </button>
+              <PlanGenerationSubmit label="Intentar nuevamente" />
             </form>
           </div>
         )}
@@ -651,13 +648,10 @@ export default async function DashboardPage({
                     action={generateCEOPlanAction}
                     className="mt-5"
                   >
-                    <button
-                      type="submit"
+                    <PlanGenerationSubmit
+                      label={`Preparar semana ${ceoPlan.week_number + 1}`}
                       className="rounded-lg bg-black px-5 py-3 font-medium text-white"
-                    >
-                      Preparar semana{" "}
-                      {ceoPlan.week_number + 1}
-                    </button>
+                    />
                   </form>
                 </div>
               )}
