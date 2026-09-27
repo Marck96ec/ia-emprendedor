@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { login } from "@/actions/auth";
+import { PasswordField } from "@/components/password-field";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -46,20 +47,13 @@ export default async function LoginPage({
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="field-label">
-              Contraseña
-            </label>
-
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="form-field"
-            />
-          </div>
+          <PasswordField
+            id="password"
+            name="password"
+            label="Contraseña"
+            required
+            autoComplete="current-password"
+          />
 
           <button type="submit" className="primary-button w-full">
             Entrar
