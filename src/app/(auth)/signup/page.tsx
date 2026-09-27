@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signup } from "@/actions/auth";
+import { PasswordField } from "@/components/password-field";
 
 type SignupPageProps = {
   searchParams: Promise<{
@@ -47,21 +48,14 @@ export default async function SignupPage({
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="field-label">
-              Contraseña
-            </label>
-
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className="form-field"
-            />
-          </div>
+          <PasswordField
+            id="password"
+            name="password"
+            label="Contraseña"
+            required
+            minLength={8}
+            autoComplete="new-password"
+          />
 
           <button type="submit" className="primary-button w-full">
             Crear cuenta
