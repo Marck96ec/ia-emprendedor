@@ -152,9 +152,10 @@ export async function workOnActionWithAI(formData: FormData) {
             prompt_version: PROMPT_VERSION,
           })
           .eq("id", existingResult.id)
-            .eq("status", "draft")
-            .select("id")
-            .maybeSingle()
+          .eq("status", "draft")
+          .eq("revision", existingResult.revision)
+          .select("id")
+          .maybeSingle()
       : await supabase.from("action_results").insert({
           weekly_action_id: action.id,
           status: "draft",
