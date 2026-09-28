@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
+import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
 
 const MODEL =
@@ -113,6 +114,8 @@ export async function generateCEOPlanAction() {
   if (!diagnostic) {
     redirect("/onboarding/diagnostic");
   }
+
+  const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   /*
    * 3. Obtener el plan más reciente.
@@ -626,6 +629,7 @@ if (latestPlan?.status === "generating") {
       },
 
       previousWeek,
+      businessKnowledge,
     });
 
     /*
