@@ -1,11 +1,6 @@
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 
-import {
-  ACTION_EXECUTION_MODES,
-  ACTION_TYPES,
-} from "@/lib/weekly-action-types";
-
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
   title: z.string(),
@@ -18,12 +13,8 @@ const WeeklyPlanItemSchema = z.object({
   action: z.string(),
   objective: z.string(),
   success_metric: z.string(),
-  execution_mode: z
-    .enum(ACTION_EXECUTION_MODES)
-    .default("manual"),
-  action_type: z
-    .enum(ACTION_TYPES)
-    .default("generic"),
+  execution_mode: z.literal("manual").default("manual"),
+  action_type: z.literal("generic").default("generic"),
 });
 
 export const CEOPlanSchema = z.object({
