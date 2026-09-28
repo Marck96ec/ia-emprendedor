@@ -107,6 +107,7 @@ with check (
       on b.id = cp.business_id
     where b.owner_id = (select auth.uid())
       and wa.execution_mode = 'ai_assisted'
+      and wa.status = 'pending'
       and not exists (
         select 1
         from public.weekly_reviews wr
