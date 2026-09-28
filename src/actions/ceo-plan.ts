@@ -463,6 +463,8 @@ if (latestPlan?.status === "generating") {
           action,
           objective,
           success_metric,
+          execution_mode,
+          action_type,
           status
         `,
       )
@@ -550,6 +552,10 @@ if (latestPlan?.status === "generating") {
             objective: action.objective,
             successMetric:
               action.success_metric,
+            executionMode:
+              action.execution_mode,
+            actionType:
+              action.action_type,
             status: action.status,
           }),
         ),
@@ -634,6 +640,10 @@ if (latestPlan?.status === "generating") {
           objective: item.objective,
           success_metric:
             item.success_metric,
+          execution_mode:
+            item.execution_mode,
+          action_type:
+            item.action_type,
         }),
       );
 

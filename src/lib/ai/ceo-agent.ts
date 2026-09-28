@@ -13,6 +13,8 @@ const WeeklyPlanItemSchema = z.object({
   action: z.string(),
   objective: z.string(),
   success_metric: z.string(),
+  execution_mode: z.literal("manual").default("manual"),
+  action_type: z.literal("generic").default("generic"),
 });
 
 export const CEOPlanSchema = z.object({
