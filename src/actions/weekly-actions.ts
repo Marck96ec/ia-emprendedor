@@ -65,6 +65,7 @@ export async function updateWeeklyActionStatus(
             : null,
       })
       .eq("id", actionId)
+      .eq("execution_mode", "manual")
       .select("id")
       .maybeSingle();
 
