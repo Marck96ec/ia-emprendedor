@@ -7,6 +7,7 @@ import {
 } from "@/actions/action-ai";
 import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
 import { ValuePropositionSchema } from "@/lib/ai/value-proposition-agent";
+import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
 
 type ActionPageProps = {
@@ -86,6 +87,7 @@ export default async function ActionWorkspacePage({
 
   const result = resultResponse.data;
   const review = reviewResponse.data;
+  const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   const isClosed = Boolean(review);
   const content = result
@@ -116,6 +118,11 @@ export default async function ActionWorkspacePage({
 
         {!content?.success && !result && canWork && (
           <section className="surface-card mt-6 rounded-[2rem] p-6 sm:p-8">
+            {businessKnowledge.valueProposition && (
+              <p className="soft-status mb-5">
+                Ya tenemos una propuesta de valor aprobada de tu negocio. La usaremos como punto de partida.
+              </p>
+            )}
             <h2 className="text-2xl font-semibold text-slate-950">Tu propuesta</h2>
             <p className="mt-3 max-w-2xl text-slate-600">Basándome en lo que ya conozco de tu negocio, prepararé una propuesta concreta para esta acción.</p>
             <form action={workOnActionWithAI} className="mt-6">

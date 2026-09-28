@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { generateValueProposition } from "@/lib/ai/generate-value-proposition";
+import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import {
   ValuePropositionSchema,
   type ValueProposition,
@@ -116,6 +117,7 @@ export async function workOnActionWithAI(formData: FormData) {
   const draft = existingResult?.draft_content
     ? ValuePropositionSchema.safeParse(existingResult.draft_content)
     : null;
+  const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   try {
     const output = await generateValueProposition({
@@ -137,7 +139,8 @@ export async function workOnActionWithAI(formData: FormData) {
         diagnosis: plan.diagnosis,
         priorities: plan.priorities,
       },
-      draft: draft?.success ? draft.data : null,
+      currentDraft: draft?.success ? draft.data : null,
+      currentKnowledge: businessKnowledge.valueProposition,
       feedback: parsed.data.feedback ?? null,
     });
 

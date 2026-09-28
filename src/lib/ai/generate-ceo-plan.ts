@@ -4,6 +4,7 @@ import {
   ceoAgent,
   type CEOPlan,
 } from "@/lib/ai/ceo-agent";
+import type { BusinessKnowledge } from "@/lib/business-knowledge";
 
 type GenerateCEOPlanInput = {
   business: {
@@ -49,6 +50,7 @@ type GenerateCEOPlanInput = {
       totalActions: number;
     };
   } | null;
+  businessKnowledge: BusinessKnowledge;
 };
 
 export async function generateCEOPlan(
@@ -74,6 +76,10 @@ Si previousWeek es null, estás preparando la primera semana.
 Si previousWeek contiene información, estás preparando una nueva
 semana y debes utilizar los resultados y aprendizajes de la semana
 anterior para adaptar tus decisiones.
+
+businessKnowledge contiene únicamente conocimiento canónico aprobado
+por el usuario. Reutilízalo cuando siga siendo válido y considera
+revisarlo solo si el contexto actual indica que quedó obsoleto.
 
 Genera:
 
