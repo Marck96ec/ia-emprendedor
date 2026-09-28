@@ -80,6 +80,16 @@ Genera:
 - diagnóstico ejecutivo actualizado
 - exactamente 3 prioridades
 - exactamente 7 acciones, una para cada día del 1 al 7
+
+Para cada acción, decide explícitamente execution_mode y action_type
+siguiendo estas reglas:
+
+- Como máximo una acción puede ser ai_assisted/value_proposition.
+- Usa value_proposition solo cuando sea relevante para el diagnóstico
+  y las prioridades del negocio.
+- Si no es relevante, todas deben ser manual/generic.
+- value_proposition siempre implica ai_assisted.
+- generic siempre implica manual.
 `,
   );
 

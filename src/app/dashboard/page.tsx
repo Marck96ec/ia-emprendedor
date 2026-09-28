@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { logout } from "@/actions/auth";
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
-import { CEOPlanSchema } from "@/lib/ai/ceo-agent";
+import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingProgress } from "@/components/onboarding-progress";
 import { PlanGenerationSubmit } from "@/components/plan-generation-submit";
@@ -26,6 +26,9 @@ type WeeklyAction = {
   success_metric: string;
   status: "pending" | "completed";
   completed_at: string | null;
+  execution_mode: "manual" | "ai_assisted";
+  action_type: "generic" | "value_proposition";
+  action_results: { id: string; status: "draft" | "approved" }[];
 };
 
 type WeeklyReview = {
@@ -158,7 +161,7 @@ export default async function DashboardPage({
    */
   const parsedCEOPlan =
     ceoPlan?.status === "ready"
-      ? CEOPlanSchema.safeParse({
+      ? StoredCEOPlanSchema.safeParse({
           executive_summary:
             ceoPlan.executive_summary,
 
@@ -208,7 +211,13 @@ export default async function DashboardPage({
           objective,
           success_metric,
           status,
-          completed_at
+          completed_at,
+          execution_mode,
+          action_type,
+          action_results (
+            id,
+            status
+          )
         `,
       )
       .eq("ceo_plan_id", ceoPlan.id)
@@ -548,7 +557,23 @@ export default async function DashboardPage({
                        * la semana queda cerrada y ya no
                        * permitimos modificar acciones.
                        */}
-                      {!weeklyReview && (
+                      {item.execution_mode === "ai_assisted" && item.action_type === "value_proposition" && (
+                        <div className="mt-5">
+                          {completed ? (
+                            <Link href={`/actions/${item.id}`} className="secondary-button px-4 py-2 text-sm">
+                              Ver resultado
+                            </Link>
+                          ) : weeklyReview ? (
+                            <span className="text-sm text-slate-500">Semana cerrada</span>
+                          ) : (
+                            <Link href={`/actions/${item.id}`} className="primary-button px-4 py-2 text-sm">
+                              Trabajar con IA
+                            </Link>
+                          )}
+                        </div>
+                      )}
+
+                      {item.execution_mode === "manual" && !weeklyReview && (
                         <form
                           action={updateWeeklyActionStatus}
                           className="mt-5"
