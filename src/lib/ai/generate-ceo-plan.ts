@@ -48,6 +48,8 @@ type GenerateCEOPlanInput = {
       nextWeekFocus: string | null;
       completedActions: number;
       totalActions: number;
+      outcomeStatus: "positive" | "mixed" | "no_change" | "negative";
+      outcomeSummary: string;
     };
   } | null;
   businessKnowledge: BusinessKnowledge;
@@ -74,8 +76,14 @@ ${JSON.stringify(input, null, 2)}
 Si previousWeek es null, estás preparando la primera semana.
 
 Si previousWeek contiene información, estás preparando una nueva
-semana y debes utilizar los resultados y aprendizajes de la semana
-anterior para adaptar tus decisiones.
+semana y debes utilizar el resultado real y los aprendizajes de la
+semana anterior para adaptar tus decisiones. Distingue siempre la
+ejecución del resultado: completar acciones no equivale a éxito.
+
+Un esfuerzo alto con no_change exige reevaluar la estrategia y no
+repetir mecánicamente el plan. Un resultado positive con pocas
+acciones exige identificar qué produjo el impacto. Si hubo negative,
+adapta las prioridades sin dramatizar.
 
 businessKnowledge contiene únicamente conocimiento canónico aprobado
 por el usuario. Reutilízalo cuando siga siendo válido y considera
@@ -90,11 +98,13 @@ Genera:
 Para cada acción, decide explícitamente execution_mode y action_type
 siguiendo estas reglas:
 
-- Como máximo una acción puede ser ai_assisted/value_proposition.
+- Como máximo una acción puede ser ai_assisted.
 - Usa value_proposition solo cuando sea relevante para el diagnóstico
   y las prioridades del negocio.
+- Usa commercial_messages cuando la acción solicite varios mensajes,
+  variantes, versiones o copies comerciales.
 - Si no es relevante, todas deben ser manual/generic.
-- value_proposition siempre implica ai_assisted.
+- value_proposition y commercial_messages siempre implican ai_assisted.
 - generic siempre implica manual.
 `,
   );

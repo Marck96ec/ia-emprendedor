@@ -9,6 +9,7 @@ export type ActionExecutionMode =
 export const ACTION_TYPES = [
   "generic",
   "value_proposition",
+  "commercial_messages",
 ] as const;
 
 export type ActionType =

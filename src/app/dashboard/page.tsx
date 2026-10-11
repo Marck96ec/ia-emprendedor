@@ -27,7 +27,7 @@ type WeeklyAction = {
   status: "pending" | "completed";
   completed_at: string | null;
   execution_mode: "manual" | "ai_assisted";
-  action_type: "generic" | "value_proposition";
+  action_type: "generic" | "value_proposition" | "commercial_messages";
   action_results: { id: string; status: "draft" | "approved" }[];
 };
 
@@ -35,7 +35,16 @@ type WeeklyReview = {
   id: string;
   completed_actions: number;
   total_actions: number;
+  outcome_status: "positive" | "mixed" | "no_change" | "negative";
+  outcome_summary: string;
 };
+
+const outcomeLabels = {
+  positive: "Hubo avance",
+  mixed: "Avance parcial",
+  no_change: "Sin cambio claro",
+  negative: "Hubo retroceso",
+} as const;
 
 export default async function DashboardPage({
   searchParams,
@@ -241,7 +250,7 @@ export default async function DashboardPage({
   }
 
   /*
-   * Calcular progreso.
+  * Calcular ejecución.
    */
   const completedActions =
     weeklyActions.filter(
@@ -252,7 +261,7 @@ export default async function DashboardPage({
   const totalActions =
     weeklyActions.length;
 
-  const progressPercent =
+  const executionPercent =
     totalActions === 0
       ? 0
       : Math.round(
@@ -274,7 +283,9 @@ export default async function DashboardPage({
         `
           id,
           completed_actions,
-          total_actions
+          total_actions,
+          outcome_status,
+          outcome_summary
         `,
       )
       .eq("ceo_plan_id", ceoPlan.id)
@@ -471,7 +482,7 @@ export default async function DashboardPage({
 
                 <div className="text-right">
                   <p className="text-2xl font-semibold text-gray-900">
-                    {completedActions}/{totalActions}
+                    {completedActions} de {totalActions}
                   </p>
 
                   <p className="text-sm text-gray-500">
@@ -486,13 +497,13 @@ export default async function DashboardPage({
                   <div
                     className="h-full rounded-full bg-black transition-all"
                     style={{
-                      width: `${progressPercent}%`,
+                      width: `${executionPercent}%`,
                     }}
                   />
                 </div>
 
                 <p className="mt-2 text-sm text-gray-500">
-                  {progressPercent}% de progreso
+                  {completedActions} de {totalActions} acciones realizadas
                 </p>
               </div>
 
@@ -557,7 +568,7 @@ export default async function DashboardPage({
                        * la semana queda cerrada y ya no
                        * permitimos modificar acciones.
                        */}
-                      {item.execution_mode === "ai_assisted" && item.action_type === "value_proposition" && (
+                      {item.execution_mode === "ai_assisted" && (
                         <div className="mt-5">
                           {completed ? (
                             <Link href={`/actions/${item.id}`} className="secondary-button px-4 py-2 text-sm">
@@ -613,21 +624,6 @@ export default async function DashboardPage({
                 })}
               </div>
 
-              {/* Semana 100% completada */}
-              {totalActions === 7 &&
-                completedActions === 7 &&
-                !weeklyReview && (
-                  <div className="mt-6 rounded-xl bg-green-50 p-5">
-                    <h3 className="font-semibold text-green-900">
-                      Semana completada
-                    </h3>
-
-                    <p className="mt-1 text-sm text-green-800">
-                      Completaste las 7 acciones de tu plan.
-                    </p>
-                  </div>
-                )}
-
               {/* Abrir revisión semanal */}
               {totalActions === 7 &&
                 !weeklyReview && (
@@ -652,19 +648,24 @@ export default async function DashboardPage({
 
               {/* Semana revisada */}
               {weeklyReview && (
-                <div className="mt-8 rounded-xl bg-green-50 p-5">
-                  <h3 className="font-semibold text-green-900">
-                    Revisión semanal completada
+                <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
+                  <h3 className="font-semibold text-slate-900">
+                    Resultado de la semana
                   </h3>
 
-                  <p className="mt-2 text-sm text-green-800">
-                    Registraste{" "}
-                    {weeklyReview.completed_actions}/
-                    {weeklyReview.total_actions} acciones
-                    completadas.
+                  <p className="mt-3 text-lg font-semibold text-slate-900">
+                    {outcomeLabels[weeklyReview.outcome_status]}
                   </p>
 
-                  <p className="mt-2 text-sm text-green-800">
+                  <p className="mt-2 text-slate-700">
+                    {weeklyReview.outcome_summary}
+                  </p>
+
+                  <p className="mt-5 text-sm text-slate-600">
+                    Ejecución: {weeklyReview.completed_actions} de {weeklyReview.total_actions} acciones realizadas.
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-600">
                     Ya tenemos el contexto necesario para
                     preparar la siguiente semana.
                   </p>

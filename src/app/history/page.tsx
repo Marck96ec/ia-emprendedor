@@ -17,7 +17,16 @@ type WeeklyReviewRow = {
   next_week_focus: string | null;
   completed_actions: number;
   total_actions: number;
+  outcome_status: "positive" | "mixed" | "no_change" | "negative";
+  outcome_summary: string;
 };
+
+const outcomeLabels = {
+  positive: "Hubo avance",
+  mixed: "Avance parcial",
+  no_change: "Sin cambio claro",
+  negative: "Hubo retroceso",
+} as const;
 
 export default async function HistoryPage() {
   const supabase = await createClient();
@@ -157,7 +166,9 @@ export default async function HistoryPage() {
           business_changes,
           next_week_focus,
           completed_actions,
-          total_actions
+          total_actions,
+          outcome_status,
+          outcome_summary
         `,
       )
       .in("ceo_plan_id", planIds);
@@ -301,15 +312,24 @@ export default async function HistoryPage() {
                 {plan.status === "ready" && (
                   <>
                     <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
+                      {review && (
+                        <div className="mb-5">
+                          <p className="text-sm text-slate-500">Resultado</p>
+                          <p className="mt-1 text-xl font-semibold text-slate-900">
+                            {outcomeLabels[review.outcome_status]}
+                          </p>
+                          <p className="mt-2 text-slate-700">{review.outcome_summary}</p>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm text-slate-500">Ejecución</p>
                           <p className="mt-1 text-xl font-semibold text-slate-900">
-                            {completed}/{total} acciones
+                            {completed} de {total} acciones
                           </p>
                         </div>
 
-                        <p className="font-semibold text-slate-900">{progress}%</p>
                       </div>
 
                       <div className="mt-4 progress-track">
