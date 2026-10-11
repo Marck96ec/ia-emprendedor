@@ -1,6 +1,8 @@
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 
+import { isCommercialMessagesRequest } from "./action-deliverables";
+
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
   title: z.string(),
@@ -14,17 +16,21 @@ const WeeklyPlanItemSchema = z.object({
   objective: z.string(),
   success_metric: z.string(),
   execution_mode: z.enum(["manual", "ai_assisted"]).default("manual"),
-  action_type: z.enum(["generic", "value_proposition"]).default("generic"),
+  action_type: z.enum([
+    "generic",
+    "value_proposition",
+    "commercial_messages",
+  ]).default("generic"),
 }).superRefine((item, context) => {
   if (
     item.execution_mode === "manual" &&
-    item.action_type === "value_proposition"
+    item.action_type !== "generic"
   ) {
     context.addIssue({
       code: "custom",
       message:
-        "Una acción value_proposition debe ser ai_assisted",
-      path: ["action_type"],
+        "Una acción con entregable debe ser ai_assisted",
+      path: ["execution_mode"],
     });
   }
 
@@ -38,6 +44,32 @@ const WeeklyPlanItemSchema = z.object({
       path: ["action_type"],
     });
   }
+
+  const requestsCommercialMessages = isCommercialMessagesRequest(item);
+
+  if (
+    item.action_type === "commercial_messages" &&
+    !requestsCommercialMessages
+  ) {
+    context.addIssue({
+      code: "custom",
+      message:
+        "Una acción commercial_messages debe solicitar mensajes o variantes comerciales",
+      path: ["action_type"],
+    });
+  }
+
+  if (
+    item.action_type === "value_proposition" &&
+    requestsCommercialMessages
+  ) {
+    context.addIssue({
+      code: "custom",
+      message:
+        "Una acción que solicita mensajes o variantes debe usar commercial_messages",
+      path: ["action_type"],
+    });
+  }
 });
 
 const StoredWeeklyPlanItemSchema = z.object({
@@ -46,7 +78,11 @@ const StoredWeeklyPlanItemSchema = z.object({
   objective: z.string(),
   success_metric: z.string(),
   execution_mode: z.enum(["manual", "ai_assisted"]).default("manual"),
-  action_type: z.enum(["generic", "value_proposition"]).default("generic"),
+  action_type: z.enum([
+    "generic",
+    "value_proposition",
+    "commercial_messages",
+  ]).default("generic"),
 });
 
 export const CEOPlanSchema = z.object({
@@ -82,17 +118,15 @@ export const CEOPlanSchema = z.object({
       },
     )
     .superRefine((items, context) => {
-      const assistedValuePropositions = items.filter(
-        (item) =>
-          item.execution_mode === "ai_assisted" &&
-          item.action_type === "value_proposition",
+      const assistedActions = items.filter(
+        (item) => item.execution_mode === "ai_assisted",
       );
 
-      if (assistedValuePropositions.length > 1) {
+      if (assistedActions.length > 1) {
         context.addIssue({
           code: "custom",
           message:
-            "El plan puede contener como máximo una acción value_proposition",
+            "El plan puede contener como máximo una acción asistida por IA",
           path: ["weekly_plan"],
         });
       }
@@ -127,6 +161,9 @@ La información de una semana anterior puede incluir:
 - prioridades anteriores
 - acciones anteriores
 - acciones completadas o pendientes
+- el número de acciones realizadas frente al total
+- el resultado observado: avance, avance parcial, sin cambio claro o retroceso
+- la explicación concreta de qué cambió realmente
 - qué funcionó
 - qué no funcionó
 - cambios ocurridos en el negocio
@@ -150,6 +187,11 @@ Cuando exista información de una semana anterior:
   claramente importante, pero debes justificarlo con el contexto
 - da especial importancia a los cambios reales reportados por
   el emprendedor
+- distingue ejecución de resultado y nunca asume que completar tareas
+  significa que el negocio tuvo éxito
+- si hubo mucho esfuerzo sin resultado, reevalúa la estrategia
+- si hubo resultado con pocas acciones, identifica qué produjo impacto
+- si hubo retroceso, adapta las prioridades sin dramatizar
 
 Cuando exista conocimiento aprobado del negocio:
 
@@ -185,16 +227,17 @@ poder ejecutarse durante los próximos 7 días.
 Para cada acción debes expresar explícitamente:
 
 - execution_mode: "manual" o "ai_assisted"
-- action_type: "generic" o "value_proposition"
+- action_type: "generic", "value_proposition" o "commercial_messages"
 
 Reglas obligatorias para esos campos:
 
-- Como máximo una de las siete acciones puede ser
-  execution_mode = "ai_assisted" y action_type = "value_proposition".
+- Como máximo una de las siete acciones puede ser ai_assisted.
 - Usa value_proposition solo si definir o mejorar la propuesta de valor
   es realmente relevante para el diagnóstico y las prioridades.
+- Usa commercial_messages cuando la acción solicite varios mensajes,
+  variantes, versiones o copies comerciales.
 - Si no es relevante, las siete acciones deben ser manual/generic.
-- Toda acción value_proposition debe ser ai_assisted.
+- Toda acción value_proposition o commercial_messages debe ser ai_assisted.
 - Toda acción generic debe ser manual.
 
 No clasifiques por palabras concretas del texto de una acción. Decide a

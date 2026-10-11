@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "outDir": ".test-dist",
+    "noEmitOnError": true
+  },
+  "include": [
+    "tests/action-deliverables.test.ts",
+    "src/lib/ai/action-deliverables.ts",
+    "src/lib/ai/value-proposition-agent.ts",
+    "src/lib/ai/generate-commercial-messages.ts",
+    "src/lib/ai/commercial-messages-agent.ts"
+  ]
+}

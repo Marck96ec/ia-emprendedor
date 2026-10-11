@@ -7,6 +7,13 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 const WeeklyReviewSchema = z.object({
+  outcome_status: z.enum([
+    "positive",
+    "mixed",
+    "no_change",
+    "negative",
+  ]),
+  outcome_summary: z.string().trim().min(5).max(1000),
   what_worked: z.string().trim().min(5).max(2000),
   what_didnt_work: z.string().trim().min(5).max(2000),
   business_changes: z.string().trim().min(5).max(2000),
@@ -36,6 +43,14 @@ export async function createWeeklyReview(
   formData: FormData,
 ) {
   const parsed = WeeklyReviewSchema.safeParse({
+    outcome_status: String(
+      formData.get("outcome_status") ?? "",
+    ),
+
+    outcome_summary: String(
+      formData.get("outcome_summary") ?? "",
+    ),
+
     what_worked: String(
       formData.get("what_worked") ?? "",
     ),
@@ -206,6 +221,12 @@ export async function createWeeklyReview(
     .from("weekly_reviews")
     .insert({
       ceo_plan_id: ceoPlan.id,
+
+      outcome_status:
+        parsed.data.outcome_status,
+
+      outcome_summary:
+        parsed.data.outcome_summary,
 
       what_worked:
         parsed.data.what_worked,

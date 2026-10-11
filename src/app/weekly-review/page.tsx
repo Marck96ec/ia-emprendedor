@@ -108,7 +108,7 @@ export default async function WeeklyReviewPage({
           </p>
 
           <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">Progreso de esta semana</p>
+            <p className="text-sm text-slate-500">Ejecución de la semana</p>
             <p className="mt-2 text-2xl font-semibold text-slate-900">
               {completedActions}/7 acciones completadas
             </p>
@@ -117,6 +117,49 @@ export default async function WeeklyReviewPage({
           {pageError && <div className="alert-box mt-6">{pageError}</div>}
 
           <form action={createWeeklyReview} className="mt-8 space-y-7">
+            <fieldset>
+              <legend className="field-label">
+                ¿Qué resultado produjo esta semana?
+              </legend>
+
+              <div className="mt-3 space-y-3">
+                {[
+                  ["positive", "Hubo avance"],
+                  ["mixed", "Avance parcial"],
+                  ["no_change", "Sin cambio claro"],
+                  ["negative", "Hubo retroceso"],
+                ].map(([value, label]) => (
+                  <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4">
+                    <input
+                      type="radio"
+                      name="outcome_status"
+                      value={value}
+                      required
+                      className="h-4 w-4"
+                    />
+                    <span className="font-medium text-slate-800">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div>
+              <label htmlFor="outcome_summary" className="field-label">
+                ¿Qué cambió realmente?
+              </label>
+
+              <textarea
+                id="outcome_summary"
+                name="outcome_summary"
+                required
+                minLength={5}
+                maxLength={1000}
+                rows={3}
+                placeholder="Ej. La nueva propuesta generó más respuestas."
+                className="form-field resize-y"
+              />
+            </div>
+
             <div>
               <label htmlFor="what_worked" className="field-label">
                 ¿Qué funcionó bien esta semana?

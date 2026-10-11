@@ -508,7 +508,9 @@ if (latestPlan?.status === "generating") {
           business_changes,
           next_week_focus,
           completed_actions,
-          total_actions
+          total_actions,
+          outcome_status,
+          outcome_summary
         `,
       )
       .eq("ceo_plan_id", contextPlan.id)
@@ -581,6 +583,12 @@ if (latestPlan?.status === "generating") {
 
         totalActions:
           contextReview.total_actions,
+
+        outcomeStatus:
+          contextReview.outcome_status,
+
+        outcomeSummary:
+          contextReview.outcome_summary,
       },
     };
   }

@@ -4,11 +4,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { generateCommercialMessages } from "@/lib/ai/generate-commercial-messages";
 import { generateValueProposition } from "@/lib/ai/generate-value-proposition";
+import {
+  AIActionDefinitionSchema,
+  CommercialMessagesSchema,
+  parseActionDeliverable,
+  validateActionResultForApproval,
+} from "@/lib/ai/action-deliverables";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import {
   ValuePropositionSchema,
-  type ValueProposition,
 } from "@/lib/ai/value-proposition-agent";
 import { createClient } from "@/lib/supabase/server";
 
@@ -76,8 +82,16 @@ export async function workOnActionWithAI(formData: FormData) {
     redirect(actionError(parsed.data.action_id, "No encontramos esa acción."));
   }
 
-  if (action.execution_mode !== "ai_assisted" || action.action_type !== "value_proposition") {
+  const actionDefinition = AIActionDefinitionSchema.safeParse(action);
+
+  if (!actionDefinition.success || actionDefinition.data.execution_mode !== "ai_assisted") {
     redirect(actionError(action.id, "Esta acción no tiene un espacio de trabajo con IA."));
+  }
+
+  const actionType = actionDefinition.data.action_type;
+
+  if (actionType === "generic") {
+    redirect(actionError(action.id, "Esta acción no tiene un entregable definido."));
   }
 
   if (action.status !== "pending" || plan.status !== "ready") {
@@ -115,36 +129,72 @@ export async function workOnActionWithAI(formData: FormData) {
   }
 
   const draft = existingResult?.draft_content
-    ? ValuePropositionSchema.safeParse(existingResult.draft_content)
+    ? parseActionDeliverable(actionType, existingResult.draft_content)
     : null;
+  const currentDraft = draft?.success ? draft.data : null;
   const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   try {
-    const output = await generateValueProposition({
-      business: {
-        name: business.name,
-        business_type: business.business_type,
-        description: business.description,
-      },
-      diagnostic,
-      action: {
-        action: action.action,
-        objective: action.objective,
-        success_metric: action.success_metric,
-        day: action.day,
-        action_type: action.action_type,
-      },
-      plan: {
-        executive_summary: plan.executive_summary,
-        diagnosis: plan.diagnosis,
-        priorities: plan.priorities,
-      },
-      currentDraft: draft?.success ? draft.data : null,
-      currentKnowledge: businessKnowledge.valueProposition,
-      feedback: parsed.data.feedback ?? null,
-    });
-
-    const content: ValueProposition = ValuePropositionSchema.parse(output);
+    const content = actionType === "commercial_messages"
+      ? CommercialMessagesSchema.parse(
+          await generateCommercialMessages({
+            business: {
+              name: business.name,
+              business_type: business.business_type,
+              description: business.description,
+            },
+            diagnostic,
+            action: {
+              action: action.action,
+              objective: action.objective,
+              success_metric: action.success_metric,
+              day: action.day,
+              action_type: "commercial_messages",
+            },
+            plan: {
+              executive_summary: plan.executive_summary,
+              diagnosis: plan.diagnosis,
+              priorities: plan.priorities,
+            },
+            currentDraft:
+              currentDraft && "deliverable_type" in currentDraft
+                ? currentDraft
+                : null,
+            currentKnowledge: businessKnowledge.valueProposition,
+            feedback: parsed.data.feedback ?? null,
+          }),
+        )
+      : ValuePropositionSchema.parse(
+          await generateValueProposition({
+            business: {
+              name: business.name,
+              business_type: business.business_type,
+              description: business.description,
+            },
+            diagnostic,
+            action: {
+              action: action.action,
+              objective: action.objective,
+              success_metric: action.success_metric,
+              day: action.day,
+              action_type: actionType,
+            },
+            plan: {
+              executive_summary: plan.executive_summary,
+              diagnosis: plan.diagnosis,
+              priorities: plan.priorities,
+            },
+            currentDraft:
+              currentDraft && !("deliverable_type" in currentDraft)
+                ? currentDraft
+                : null,
+            currentKnowledge: businessKnowledge.valueProposition,
+            feedback: parsed.data.feedback ?? null,
+          }),
+        );
+    const promptVersion = actionType === "commercial_messages"
+      ? "commercial-messages-v1"
+      : PROMPT_VERSION;
     const { data: savedResult, error: saveError } = existingResult
       ? await supabase
           .from("action_results")
@@ -152,7 +202,7 @@ export async function workOnActionWithAI(formData: FormData) {
             draft_content: content,
             revision: existingResult.revision + 1,
             model: MODEL,
-            prompt_version: PROMPT_VERSION,
+            prompt_version: promptVersion,
           })
           .eq("id", existingResult.id)
           .eq("status", "draft")
@@ -165,16 +215,16 @@ export async function workOnActionWithAI(formData: FormData) {
           draft_content: content,
           revision: 1,
           model: MODEL,
-          prompt_version: PROMPT_VERSION,
+          prompt_version: promptVersion,
         }).select("id").maybeSingle();
 
     if (saveError || !savedResult) {
       console.error("ACTION_RESULT_SAVE_ERROR", saveError);
-      redirect(actionError(action.id, "No pudimos guardar la propuesta."));
+      redirect(actionError(action.id, "No pudimos guardar el entregable."));
     }
   } catch (error) {
-    console.error("VALUE_PROPOSITION_GENERATION_ERROR", error);
-    redirect(actionError(action.id, "No pudimos generar la propuesta. Puedes reintentarlo."));
+    console.error("ACTION_DELIVERABLE_GENERATION_ERROR", error);
+    redirect(actionError(action.id, "No pudimos generar el entregable. Puedes reintentarlo."));
   }
 
   revalidatePath(`/actions/${action.id}`);
@@ -192,6 +242,40 @@ export async function approveActionResult(formData: FormData) {
   }
 
   const { supabase } = await getAuthenticatedUser();
+
+  const { data: result, error: resultError } = await supabase
+    .from("action_results")
+    .select("id, weekly_action_id, status, draft_content")
+    .eq("id", parsed.data.action_result_id)
+    .maybeSingle();
+
+  if (resultError || !result) {
+    redirect("/dashboard?error=No pudimos aprobar el resultado.");
+  }
+
+  if (result.status === "draft") {
+    const { data: action, error: actionErrorResult } = await supabase
+      .from("weekly_actions")
+      .select("action, objective, success_metric, execution_mode, action_type")
+      .eq("id", result.weekly_action_id)
+      .maybeSingle();
+
+    const approvalValidation = action
+      ? validateActionResultForApproval(action, result)
+      : null;
+
+    if (
+      actionErrorResult ||
+      !approvalValidation?.success
+    ) {
+      console.error("ACTION_RESULT_INVALID_BEFORE_APPROVAL", {
+        actionErrorResult,
+        approvalValidation,
+      });
+      redirect("/dashboard?error=El entregable no es válido para aprobarlo.");
+    }
+  }
+
   const { data, error } = await supabase.rpc("approve_action_result", {
     p_action_result_id: parsed.data.action_result_id,
   });
