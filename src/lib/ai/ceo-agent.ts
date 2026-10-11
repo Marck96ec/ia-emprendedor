@@ -1,8 +1,6 @@
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 
-import { isCommercialMessagesRequest } from "./action-deliverables";
-
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
   title: z.string(),
@@ -20,56 +18,7 @@ const WeeklyPlanItemSchema = z.object({
     "generic",
     "value_proposition",
     "commercial_messages",
-  ]).default("generic"),
-}).superRefine((item, context) => {
-  if (
-    item.execution_mode === "manual" &&
-    item.action_type !== "generic"
-  ) {
-    context.addIssue({
-      code: "custom",
-      message:
-        "Una acción con entregable debe ser ai_assisted",
-      path: ["execution_mode"],
-    });
-  }
-
-  if (
-    item.execution_mode === "ai_assisted" &&
-    item.action_type === "generic"
-  ) {
-    context.addIssue({
-      code: "custom",
-      message: "Una acción generic debe ser manual",
-      path: ["action_type"],
-    });
-  }
-
-  const requestsCommercialMessages = isCommercialMessagesRequest(item);
-
-  if (
-    item.action_type === "commercial_messages" &&
-    !requestsCommercialMessages
-  ) {
-    context.addIssue({
-      code: "custom",
-      message:
-        "Una acción commercial_messages debe solicitar mensajes o variantes comerciales",
-      path: ["action_type"],
-    });
-  }
-
-  if (
-    item.action_type === "value_proposition" &&
-    requestsCommercialMessages
-  ) {
-    context.addIssue({
-      code: "custom",
-      message:
-        "Una acción que solicita mensajes o variantes debe usar commercial_messages",
-      path: ["action_type"],
-    });
-  }
+  ]),
 });
 
 const StoredWeeklyPlanItemSchema = z.object({
@@ -116,25 +65,61 @@ export const CEOPlanSchema = z.object({
         message:
           "El plan debe contener días únicos del 1 al 7",
       },
-    )
-    .superRefine((items, context) => {
-      const assistedActions = items.filter(
-        (item) => item.execution_mode === "ai_assisted",
-      );
-
-      if (assistedActions.length > 1) {
-        context.addIssue({
-          code: "custom",
-          message:
-            "El plan puede contener como máximo una acción asistida por IA",
-          path: ["weekly_plan"],
-        });
-      }
-    }),
+    ),
 });
 
 export type CEOPlan =
   z.infer<typeof CEOPlanSchema>;
+
+export const MAX_AI_ASSISTED_ACTIONS = 1;
+
+export const CEOPlanBusinessRulesSchema = CEOPlanSchema.superRefine(
+  (plan, context) => {
+    plan.weekly_plan.forEach((item, index) => {
+      if (
+        item.execution_mode === "manual" &&
+        item.action_type !== "generic"
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Una acción con entregable debe ser ai_assisted",
+          path: ["weekly_plan", index, "execution_mode"],
+        });
+      }
+
+      if (
+        item.execution_mode === "ai_assisted" &&
+        item.action_type === "generic"
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Una acción generic debe ser manual",
+          path: ["weekly_plan", index, "action_type"],
+        });
+      }
+    });
+
+    const assistedActions = plan.weekly_plan.filter(
+      (item) => item.execution_mode === "ai_assisted",
+    );
+
+    if (assistedActions.length > MAX_AI_ASSISTED_ACTIONS) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "El plan puede contener como máximo una acción asistida por IA",
+        path: ["weekly_plan"],
+      });
+    }
+  },
+);
+
+export function validateCEOPlanBusinessRules(
+  plan: CEOPlan,
+) {
+  return CEOPlanBusinessRulesSchema.safeParse(plan);
+}
 
 export const ceoAgent = new Agent({
   name: "CEO IA Emprendedor",

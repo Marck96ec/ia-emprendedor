@@ -1,12 +1,36 @@
 import { run } from "@openai/agents";
+import { ZodError } from "zod";
 
 import {
   ceoAgent,
+  CEOPlanSchema,
+  validateCEOPlanBusinessRules,
   type CEOPlan,
-} from "@/lib/ai/ceo-agent";
-import type { BusinessKnowledge } from "@/lib/business-knowledge";
+} from "./ceo-agent";
+import type { BusinessKnowledge } from "../business-knowledge-types";
+import {
+  CEOPlanError,
+  isRetryableCEOPlanError,
+  toSafeCEOPlanError,
+} from "./ceo-plan-errors";
 
-type GenerateCEOPlanInput = {
+const MAX_GENERATION_ATTEMPTS = 2;
+
+type CEOPlanRunResult = {
+  finalOutput?: unknown;
+};
+
+export type CEOPlanRunner = (
+  agent: typeof ceoAgent,
+  prompt: string,
+) => Promise<CEOPlanRunResult>;
+
+const defaultCEOPlanRunner: CEOPlanRunner = (
+  agent,
+  prompt,
+) => run(agent, prompt) as Promise<CEOPlanRunResult>;
+
+export type GenerateCEOPlanInput = {
   business: {
     name: string;
     businessType: string | null;
@@ -57,16 +81,34 @@ type GenerateCEOPlanInput = {
 
 export async function generateCEOPlan(
   input: GenerateCEOPlanInput,
+  runner: CEOPlanRunner = defaultCEOPlanRunner,
 ): Promise<CEOPlan> {
   if (!process.env.OPENAI_API_KEY) {
-    throw new Error(
-      "OPENAI_API_KEY no está configurada",
+    throw new CEOPlanError(
+      "configuration",
+      "CEO_PLAN_CONFIGURATION_ERROR",
+      "OPENAI_API_KEY no está configurada.",
     );
   }
 
-  const result = await run(
-    ceoAgent,
-    `
+  for (
+    let attempt = 1;
+    attempt <= MAX_GENERATION_ATTEMPTS;
+    attempt += 1
+  ) {
+    try {
+      const retryInstructions =
+        attempt === 1
+          ? ""
+          : `
+La respuesta anterior no cumplió el contrato. Corrige únicamente su
+estructura y coherencia de clasificación. Devuelve un plan completo,
+no una explicación del error.
+`;
+
+      const result = await runner(
+        ceoAgent,
+        `
 Analiza el siguiente negocio y prepara su próximo plan semanal.
 
 DATOS DISPONIBLES:
@@ -106,14 +148,68 @@ siguiendo estas reglas:
 - Si no es relevante, todas deben ser manual/generic.
 - value_proposition y commercial_messages siempre implican ai_assisted.
 - generic siempre implica manual.
+${retryInstructions}
 `,
-  );
+      );
 
-  if (!result.finalOutput) {
-    throw new Error(
-      "El CEO IA no produjo una respuesta",
-    );
+      if (!result.finalOutput) {
+        throw new CEOPlanError(
+          "structural",
+          "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+          "El CEO IA no produjo un output estructurado.",
+        );
+      }
+
+      const structuralOutput = CEOPlanSchema.safeParse(
+        result.finalOutput,
+      );
+
+      if (!structuralOutput.success) {
+        throw new CEOPlanError(
+          "structural",
+          "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+          "El output del CEO IA no coincide con el contrato estructural.",
+          getIssuePaths(structuralOutput.error),
+        );
+      }
+
+      const businessRules = validateCEOPlanBusinessRules(
+        structuralOutput.data,
+      );
+
+      if (!businessRules.success) {
+        throw new CEOPlanError(
+          "semantic",
+          "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+          "El output del CEO IA incumple reglas de coherencia del plan.",
+          getIssuePaths(businessRules.error),
+        );
+      }
+
+      return businessRules.data;
+    } catch (error) {
+      const normalized = toSafeCEOPlanError(error);
+
+      if (
+        attempt < MAX_GENERATION_ATTEMPTS &&
+        isRetryableCEOPlanError(normalized)
+      ) {
+        continue;
+      }
+
+      throw normalized;
+    }
   }
 
-  return result.finalOutput;
+  throw new CEOPlanError(
+    "structural",
+    "CEO_PLAN_OUTPUT_RETRY_EXHAUSTED",
+    "No fue posible obtener un plan válido.",
+  );
+}
+
+function getIssuePaths(error: ZodError): string[] {
+  return error.issues.map((issue) =>
+    issue.path.join("."),
+  );
 }

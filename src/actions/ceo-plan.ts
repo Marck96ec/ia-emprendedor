@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
+import {
+  CEOPlanError,
+  safeCEOPlanLog,
+} from "@/lib/ai/ceo-plan-errors";
 import { createClient } from "@/lib/supabase/server";
 
 const MODEL =
@@ -640,92 +644,41 @@ if (latestPlan?.status === "generating") {
       businessKnowledge,
     });
 
-    /*
-     * 7. Materializar las 7 acciones.
-     */
-    const weeklyActions =
-      output.weekly_plan.map(
-        (item) => ({
-          ceo_plan_id: planId,
-          day: item.day,
-          action: item.action,
-          objective: item.objective,
-          success_metric:
-            item.success_metric,
-          execution_mode:
-            item.execution_mode,
-          action_type:
-            item.action_type,
-        }),
+    const { error: completePlanError } =
+      await supabase.rpc("complete_ceo_plan", {
+        p_plan_id: planId,
+        p_executive_summary: output.executive_summary,
+        p_diagnosis: output.diagnosis,
+        p_priorities: output.priorities,
+        p_weekly_plan: output.weekly_plan,
+        p_actions: output.weekly_plan,
+      });
+
+    if (completePlanError) {
+      throw new CEOPlanError(
+        "persistence",
+        "CEO_PLAN_PERSISTENCE_ERROR",
+        "No se pudo guardar el plan completo.",
       );
-
-    const { error: actionsError } =
-      await supabase
-        .from("weekly_actions")
-        .upsert(
-          weeklyActions,
-          {
-            onConflict:
-              "ceo_plan_id,day",
-          },
-        );
-
-    if (actionsError) {
-      console.error(
-        "CEO_PLAN_ACTIONS_ERROR",
-        actionsError,
-      );
-
-      throw actionsError;
-    }
-
-    /*
-     * 8. Marcar plan listo.
-     */
-    const { error: saveError } =
-      await supabase
-        .from("ceo_plans")
-        .update({
-          status: "ready",
-
-          executive_summary:
-            output.executive_summary,
-
-          diagnosis:
-            output.diagnosis,
-
-          priorities:
-            output.priorities,
-
-          weekly_plan:
-            output.weekly_plan,
-
-          generated_at:
-            new Date().toISOString(),
-        })
-        .eq("id", planId);
-
-    if (saveError) {
-      throw saveError;
     }
   } catch (error) {
     console.error(
       "CEO_PLAN_GENERATION_ERROR",
-      error,
+      safeCEOPlanLog(error),
     );
 
-    const { error: failedUpdateError } =
-      await supabase
-        .from("ceo_plans")
-        .update({
-          status: "failed",
-        })
-        .eq("id", planId);
+    const { error: failedUpdateError } = await supabase.rpc(
+      "fail_ceo_plan",
+      { p_plan_id: planId },
+    );
 
     if (failedUpdateError) {
       console.error(
         "CEO_PLAN_FAILED_STATUS_ERROR",
-        failedUpdateError,
+        {
+          code: "CEO_PLAN_FAILED_STATUS_ERROR",
+          kind: "persistence",
+        },
       );
     }
 
