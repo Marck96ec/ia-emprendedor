@@ -1,12 +1,10 @@
 import {
   ValuePropositionSchema,
-  type ValueProposition,
 } from "@/lib/ai/value-proposition-agent";
 import { createClient } from "@/lib/supabase/server";
 
-export type BusinessKnowledge = {
-  valueProposition: ValueProposition | null;
-};
+export type { BusinessKnowledge } from "./business-knowledge-types";
+import type { BusinessKnowledge } from "./business-knowledge-types";
 
 export async function loadBusinessKnowledge(
   businessId: string,
