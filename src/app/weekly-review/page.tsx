@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createWeeklyReview } from "@/actions/weekly-review";
@@ -97,7 +98,12 @@ export default async function WeeklyReviewPage({
     <main className="ambient-shell min-h-screen px-4 py-12">
       <div className="mx-auto max-w-2xl">
         <div className="surface-card rounded-[2rem] p-5 sm:p-8">
-          <p className="badge-chip">IA Emprendedor</p>
+          <div className="flex items-center justify-between gap-4">
+            <p className="badge-chip">IA Emprendedor</p>
+            <Link href="/dashboard" className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-xs">
+              Seguir con mi semana
+            </Link>
+          </div>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
             Revisión de la semana {ceoPlan.week_number}
@@ -105,6 +111,10 @@ export default async function WeeklyReviewPage({
 
           <p className="mt-3 text-slate-600">
             Antes de preparar la siguiente semana, revisemos qué ocurrió realmente en {business.name}.
+          </p>
+
+          <p className="mt-3 text-sm text-slate-500">
+            Puedes regresar a tu semana sin guardar esta revisión. Solo se cierra cuando pulses “Guardar aprendizajes de la semana”.
           </p>
 
           <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
@@ -229,8 +239,12 @@ export default async function WeeklyReviewPage({
             </div>
 
             <button type="submit" className="primary-button w-full">
-              Guardar revisión semanal
+              Guardar aprendizajes de la semana
             </button>
+
+            <Link href="/dashboard" className="secondary-button w-full">
+              Salir sin guardar
+            </Link>
           </form>
         </div>
       </div>

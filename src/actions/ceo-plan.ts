@@ -694,7 +694,7 @@ if (latestPlan?.status === "generating") {
   redirect(
     "/dashboard?message=" +
       encodeURIComponent(
-        `Semana ${weekNumber} preparada.`,
+        `Tu semana ${weekNumber} está lista. Empieza por el Día 1.`,
       ),
   );
 }
