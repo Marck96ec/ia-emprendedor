@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { logout } from "@/actions/auth";
+import { HistoryTimeline, type HistoryWeek } from "@/components/history-timeline";
 import { createClient } from "@/lib/supabase/server";
 
 type WeeklyActionRow = {
@@ -20,13 +21,6 @@ type WeeklyReviewRow = {
   outcome_status: "positive" | "mixed" | "no_change" | "negative";
   outcome_summary: string;
 };
-
-const outcomeLabels = {
-  positive: "Hubo avance",
-  mixed: "Avance parcial",
-  no_change: "Sin cambio claro",
-  negative: "Hubo retroceso",
-} as const;
 
 export default async function HistoryPage() {
   const supabase = await createClient();
@@ -222,162 +216,60 @@ export default async function HistoryPage() {
     );
   }
 
+  const historyWeeks: HistoryWeek[] = (plans ?? []).map((plan) => {
+    const planActions = actionsByPlanId.get(plan.id) ?? [];
+    const review = reviewByPlanId.get(plan.id);
+
+    return {
+      id: plan.id,
+      weekNumber: plan.week_number,
+      status: plan.status,
+      executiveSummary: plan.executive_summary,
+      generatedAt: plan.generated_at,
+      completedActions: planActions.filter((action) => action.status === "completed").length,
+      totalActions: planActions.length,
+      review: review
+        ? {
+            whatWorked: review.what_worked,
+            whatDidntWork: review.what_didnt_work,
+            businessChanges: review.business_changes,
+            nextWeekFocus: review.next_week_focus,
+            outcomeStatus: review.outcome_status,
+            outcomeSummary: review.outcome_summary,
+          }
+        : null,
+    };
+  });
+
   return (
-    <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="badge-chip">IA Emprendedor</p>
-
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Historial semanal
-            </h1>
-
-            <p className="mt-2 text-slate-600">{business.name}</p>
+    <main className="ambient-shell flex h-dvh min-h-0 flex-col overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1240px] flex-1 flex-col gap-3">
+        <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 pb-3">
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-500">TuCEO IA</p>
+            <div className="mt-1 flex min-w-0 items-baseline gap-2">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">Semanas anteriores</h1>
+              <span className="shrink-0 text-xs font-medium text-slate-500">{business.name}</span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link href="/dashboard" className="secondary-button px-4 py-2 text-sm">
-              Volver al dashboard
-            </Link>
-
+          <nav aria-label="Navegación del historial" className="flex shrink-0 items-center gap-2">
+            <Link href="/dashboard" className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-xs">Ver mi semana actual</Link>
             <form action={logout}>
-              <button type="submit" className="secondary-button px-4 py-2 text-sm">
-                Cerrar sesión
-              </button>
+              <button type="submit" className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-xs">Cerrar sesión</button>
             </form>
-          </div>
-        </div>
+          </nav>
+        </header>
 
-        {plans?.length === 0 && (
-          <section className="surface-card mt-8 rounded-[2rem] p-6 sm:p-8">
-            <h2 className="text-xl font-semibold text-slate-950">
-              Todavía no tienes semanas registradas
-            </h2>
-
-            <p className="mt-2 text-slate-600">
-              Cuando generes tu primer plan semanal, aparecerá aquí.
-            </p>
-
-            <Link href="/dashboard" className="primary-button mt-5 px-5 py-3">
-              Ir al dashboard
-            </Link>
+        {historyWeeks.length === 0 ? (
+          <section className="surface-card flex min-h-0 flex-1 flex-col items-center justify-center rounded-2xl p-6 text-center">
+            <h2 className="text-xl font-semibold text-slate-950">Todavía no tienes semanas registradas</h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">Cuando generes tu primer plan semanal, aparecerá aquí.</p>
+            <Link href="/dashboard" className="primary-button mt-5 px-5 py-3">Empezar mi semana</Link>
           </section>
+        ) : (
+          <HistoryTimeline weeks={historyWeeks} />
         )}
-
-        <div className="mt-8 space-y-6">
-          {(plans ?? []).map((plan) => {
-            const planActions = actionsByPlanId.get(plan.id) ?? [];
-            const completed = planActions.filter((action) => action.status === "completed").length;
-            const total = planActions.length;
-            const review = reviewByPlanId.get(plan.id);
-            const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-
-            return (
-              <section key={plan.id} className="surface-card rounded-[2rem] p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500">CEO IA</p>
-                    <h2 className="mt-1 text-2xl font-semibold text-slate-950">
-                      Semana {plan.week_number}
-                    </h2>
-                  </div>
-
-                  <span
-                    className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${
-                      plan.status === "ready"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : plan.status === "failed"
-                          ? "bg-rose-50 text-rose-700"
-                          : "bg-amber-50 text-amber-700"
-                    }`}
-                  >
-                    {plan.status === "ready" ? "Lista" : plan.status === "failed" ? "Falló" : "Generando"}
-                  </span>
-                </div>
-
-                {plan.generated_at && (
-                  <p className="mt-3 text-sm text-slate-500">
-                    Generada: {new Date(plan.generated_at).toLocaleDateString("es", { year: "numeric", month: "long", day: "numeric" })}
-                  </p>
-                )}
-
-                {plan.executive_summary && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-slate-900">Resumen ejecutivo</h3>
-                    <p className="mt-2 leading-7 text-slate-700">{plan.executive_summary}</p>
-                  </div>
-                )}
-
-                {plan.status === "ready" && (
-                  <>
-                    <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-                      {review && (
-                        <div className="mb-5">
-                          <p className="text-sm text-slate-500">Resultado</p>
-                          <p className="mt-1 text-xl font-semibold text-slate-900">
-                            {outcomeLabels[review.outcome_status]}
-                          </p>
-                          <p className="mt-2 text-slate-700">{review.outcome_summary}</p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-slate-500">Ejecución</p>
-                          <p className="mt-1 text-xl font-semibold text-slate-900">
-                            {completed} de {total} acciones
-                          </p>
-                        </div>
-
-                      </div>
-
-                      <div className="mt-4 progress-track">
-                        <div className="progress-fill" style={{ width: `${progress}%` }} />
-                      </div>
-                    </div>
-
-                    {review ? (
-                      <div className="mt-6 border-t border-slate-200 pt-6">
-                        <h3 className="text-lg font-semibold text-slate-900">Revisión de la semana</h3>
-
-                        <div className="mt-5 space-y-5">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-700">Qué funcionó</p>
-                            <p className="mt-1 text-slate-600">{review.what_worked}</p>
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-semibold text-slate-700">Qué no funcionó</p>
-                            <p className="mt-1 text-slate-600">{review.what_didnt_work}</p>
-                          </div>
-
-                          <div>
-                            <p className="text-sm font-semibold text-slate-700">Qué cambió</p>
-                            <p className="mt-1 text-slate-600">{review.business_changes}</p>
-                          </div>
-
-                          {review.next_week_focus && (
-                            <div>
-                              <p className="text-sm font-semibold text-slate-700">
-                                Foco solicitado para la siguiente semana
-                              </p>
-                              <p className="mt-1 text-slate-600">{review.next_week_focus}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-6 rounded-[1rem] bg-sky-50 p-4 text-sm text-sky-700">
-                        Esta semana todavía no tiene una revisión cerrada.
-                      </div>
-                    )}
-                  </>
-                )}
-              </section>
-            );
-          })}
-        </div>
       </div>
     </main>
   );

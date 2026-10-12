@@ -107,7 +107,7 @@ export default async function ActionWorkspacePage({
   return (
     <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <Link href="/dashboard" className="link-button text-sm">Volver al dashboard</Link>
+        <Link href="/dashboard" className="link-button text-sm">Volver a mi semana</Link>
 
         <header className="mt-8 border-b border-slate-200 pb-7">
           <p className="badge-chip">Trabajar con IA · Día {action.day}</p>

@@ -1,15 +1,19 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { logout } from "@/actions/auth";
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
-import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
+import { DashboardHeader } from "@/components/dashboard-header";
+import { ExecutiveSummary } from "@/components/executive-summary";
 import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
+import type {
+  DashboardAction,
+  DashboardWeeklyReview,
+} from "@/lib/dashboard-types";
 import { createClient } from "@/lib/supabase/server";
 import { OnboardingProgress } from "@/components/onboarding-progress";
 import { PlanGenerationSubmit } from "@/components/plan-generation-submit";
 import { PlanGeneratingStatus } from "@/components/plan-generating-status";
-
+import { WeeklyActionBoard } from "@/components/weekly-action-board";
+import { WeeklyProgress } from "@/components/weekly-progress";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -17,34 +21,6 @@ type DashboardPageProps = {
     message?: string;
   }>;
 };
-
-type WeeklyAction = {
-  id: string;
-  day: number;
-  action: string;
-  objective: string;
-  success_metric: string;
-  status: "pending" | "completed";
-  completed_at: string | null;
-  execution_mode: "manual" | "ai_assisted";
-  action_type: "generic" | "value_proposition" | "commercial_messages";
-  action_results: { id: string; status: "draft" | "approved" }[];
-};
-
-type WeeklyReview = {
-  id: string;
-  completed_actions: number;
-  total_actions: number;
-  outcome_status: "positive" | "mixed" | "no_change" | "negative";
-  outcome_summary: string;
-};
-
-const outcomeLabels = {
-  positive: "Hubo avance",
-  mixed: "Avance parcial",
-  no_change: "Sin cambio claro",
-  negative: "Hubo retroceso",
-} as const;
 
 export default async function DashboardPage({
   searchParams,
@@ -204,7 +180,7 @@ export default async function DashboardPage({
   /*
    * Obtener acciones de la semana actual.
    */
-  let weeklyActions: WeeklyAction[] = [];
+  let weeklyActions: DashboardAction[] = [];
 
   if (ceoPlan?.status === "ready") {
     const {
@@ -245,8 +221,12 @@ export default async function DashboardPage({
       );
     }
 
-    weeklyActions =
-      (actions ?? []) as WeeklyAction[];
+    weeklyActions = (actions ?? []).map((action) => ({
+      ...action,
+      action_results: Array.isArray(action.action_results)
+        ? action.action_results
+        : [],
+    })) as DashboardAction[];
   }
 
   /*
@@ -261,17 +241,10 @@ export default async function DashboardPage({
   const totalActions =
     weeklyActions.length;
 
-  const executionPercent =
-    totalActions === 0
-      ? 0
-      : Math.round(
-          (completedActions / totalActions) * 100,
-        );
-
   /*
    * Obtener revisión de la semana actual.
    */
-  let weeklyReview: WeeklyReview | null = null;
+  let weeklyReview: DashboardWeeklyReview | null = null;
 
   if (ceoPlan?.status === "ready") {
     const {
@@ -303,386 +276,92 @@ export default async function DashboardPage({
     }
 
     weeklyReview =
-      review as WeeklyReview | null;
+      review as DashboardWeeklyReview | null;
   }
 
-  const email =
-    typeof claimsData.claims.email === "string"
-      ? claimsData.claims.email
-      : "Usuario";
+  const preparedWeekMessage = message?.match(
+    /^Semana (\d+) preparada\.$/,
+  );
+  const displayMessage = preparedWeekMessage
+    ? `Tu semana ${preparedWeekMessage[1]} está lista. Empieza por el Día 1.`
+    : message;
 
   return (
-    <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="badge-chip">IA Emprendedor</p>
+    <main className={`ambient-shell min-h-screen overflow-x-hidden px-4 py-4 sm:px-6 lg:px-8 ${readyPlan ? "h-dvh overflow-hidden" : ""}`}>
+      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "h-full min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
+        <DashboardHeader
+          businessName={business.name}
+          weekNumber={ceoPlan?.status === "ready" ? ceoPlan.week_number : null}
+        />
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              {business.name}
-            </h1>
-
-            {business.business_type && (
-              <p className="mt-2 text-slate-600">{business.business_type}</p>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link href="/history" className="secondary-button px-4 py-2 text-sm">
-              Historial
-            </Link>
-
-            <form action={logout}>
-              <button type="submit" className="secondary-button px-4 py-2 text-sm">
-                Cerrar sesión
-              </button>
-            </form>
-          </div>
-        </div>
-
-        {pageError && <div className="alert-box mt-6">{pageError}</div>}
-        {message && <div className="success-box mt-6">{message}</div>}
-
-        <div className="mt-8 surface-card rounded-[2rem] p-5 sm:p-6">
-          <p className="text-sm text-slate-500">Sesión iniciada como</p>
-          <p className="mt-1 font-semibold text-slate-900">{email}</p>
-
-          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-slate-900">Tu negocio está listo</h2>
-
-            {business.description ? (
-              <p className="mt-2 text-slate-600">{business.description}</p>
-            ) : (
-              <p className="mt-2 text-slate-600">
-                Ya completaste la información básica de tu negocio.
-              </p>
-            )}
-          </div>
-        </div>
+        {pageError && <div className="alert-box shrink-0" role="alert">{pageError}</div>}
+        {displayMessage && <div className="success-box shrink-0" role="status">{displayMessage}</div>}
 
         {!ceoPlan && (
-          <div className="mt-6 surface-card rounded-[2rem] p-5 sm:p-6">
-            <OnboardingProgress currentStep={3} />
+          <div className="surface-card rounded-2xl p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(17rem,0.8fr)] lg:gap-8">
+            <div>
+              <OnboardingProgress currentStep={3} />
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Primera semana</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-950">Prepara tu primera semana</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Con lo que nos contaste, el CEO IA identificará qué merece tu atención primero y preparará un plan de siete acciones para llevar tus prioridades a la práctica.
+              </p>
+              <form action={generateCEOPlanAction} className="mt-5">
+                <PlanGenerationSubmit label="Generar mi plan" />
+              </form>
+            </div>
 
-            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.14em] text-slate-500">CEO IA</p>
-
-            <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-              Prepara tu primera semana
-            </h2>
-
-            <p className="mt-2 max-w-2xl text-slate-600">
-              Ya tenemos la información necesaria. El CEO IA analizará tu negocio y preparará tres prioridades junto con siete acciones concretas para los próximos días.
-            </p>
-
-            <form action={generateCEOPlanAction} className="mt-6">
-              <PlanGenerationSubmit label="Generar mi plan" />
-            </form>
+            <aside className="mt-6 border-t border-slate-200 pt-5 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-7">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Esto es lo que vamos a preparar</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  ["01", "Tres prioridades claras", "Qué merece atención primero."],
+                  ["02", "Siete acciones concretas", "Un paso útil para cada día."],
+                  ["03", "Un plan adaptado a tu negocio", "Basado en lo que nos contaste."],
+                ].map(([number, title, description]) => (
+                  <div key={number} className="flex gap-3 rounded-xl bg-slate-50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[0.65rem] font-bold text-white">{number}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{title}</p>
+                      <p className="mt-0.5 text-xs leading-5 text-slate-600">{description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
           </div>
         )}
 
         {ceoPlan?.status === "generating" && <PlanGeneratingStatus />}
 
         {ceoPlan?.status === "failed" && (
-          <div className="mt-6 surface-card rounded-[2rem] p-5 sm:p-6">
-            <h2 className="text-xl font-semibold text-slate-950">
-              No pudimos generar el plan
-            </h2>
-
-            <p className="mt-2 text-slate-600">Puedes volver a intentarlo.</p>
-
+          <div className="surface-card rounded-2xl p-5 sm:p-6">
+            <h2 className="text-xl font-semibold text-slate-950">No pudimos generar el plan</h2>
+            <p className="mt-2 text-sm text-slate-600">Puedes volver a intentarlo.</p>
             <form action={generateCEOPlanAction} className="mt-5">
               <PlanGenerationSubmit label="Intentar nuevamente" />
             </form>
           </div>
         )}
 
-        {/* Plan listo */}
         {readyPlan && ceoPlan && (
-          <>
-            {/* Resumen */}
-            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <p className="text-sm font-medium text-gray-500">
-                CEO IA · Semana {ceoPlan.week_number}
-              </p>
-
-              <h2 className="mt-1 text-2xl font-semibold text-gray-900">
-                Resumen ejecutivo
-              </h2>
-
-              <p className="mt-4 leading-7 text-gray-700">
-                {readyPlan.executive_summary}
-              </p>
-            </section>
-
-            {/* Diagnóstico */}
-            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                Diagnóstico
-              </h2>
-
-              <p className="mt-4 leading-7 text-gray-700">
-                {readyPlan.diagnosis}
-              </p>
-            </section>
-
-            {/* Prioridades */}
-            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                Tus 3 prioridades
-              </h2>
-
-              <div className="mt-6 space-y-4">
-                {readyPlan.priorities
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      a.rank - b.rank,
-                  )
-                  .map((priority) => (
-                    <div
-                      key={priority.rank}
-                      className="rounded-xl bg-gray-50 p-5"
-                    >
-                      <p className="text-sm font-semibold text-gray-500">
-                        Prioridad {priority.rank}
-                      </p>
-
-                      <h3 className="mt-1 text-lg font-semibold text-gray-900">
-                        {priority.title}
-                      </h3>
-
-                      <p className="mt-3 text-gray-700">
-                        {priority.reason}
-                      </p>
-
-                      <p className="mt-3 text-sm text-gray-600">
-                        <strong>
-                          Impacto esperado:
-                        </strong>{" "}
-                        {priority.expected_impact}
-                      </p>
-                    </div>
-                  ))}
-              </div>
-            </section>
-
-            {/* Plan de 7 días */}
-            <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Plan de 7 días
-                  </h2>
-
-                  <p className="mt-2 text-gray-600">
-                    Completa las acciones una por una durante
-                    esta semana.
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-2xl font-semibold text-gray-900">
-                    {completedActions} de {totalActions}
-                  </p>
-
-                  <p className="text-sm text-gray-500">
-                    completadas
-                  </p>
-                </div>
-              </div>
-
-              {/* Progreso */}
-              <div className="mt-6">
-                <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className="h-full rounded-full bg-black transition-all"
-                    style={{
-                      width: `${executionPercent}%`,
-                    }}
-                  />
-                </div>
-
-                <p className="mt-2 text-sm text-gray-500">
-                  {completedActions} de {totalActions} acciones realizadas
-                </p>
-              </div>
-
-              {/* Acciones */}
-              <div className="mt-6 space-y-4">
-                {weeklyActions.map((item) => {
-                  const completed =
-                    item.status === "completed";
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={`rounded-xl border p-5 ${
-                        completed
-                          ? "border-gray-200 bg-gray-50"
-                          : "border-gray-200 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-500">
-                            Día {item.day}
-                          </p>
-
-                          <h3
-                            className={`mt-1 text-lg font-semibold ${
-                              completed
-                                ? "text-gray-500 line-through"
-                                : "text-gray-900"
-                            }`}
-                          >
-                            {item.action}
-                          </h3>
-                        </div>
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            completed
-                              ? "bg-gray-200 text-gray-700"
-                              : "bg-yellow-50 text-yellow-700"
-                          }`}
-                        >
-                          {completed
-                            ? "Completada"
-                            : "Pendiente"}
-                        </span>
-                      </div>
-
-                      <p className="mt-3 text-gray-700">
-                        {item.objective}
-                      </p>
-
-                      <p className="mt-3 text-sm text-gray-600">
-                        <strong>
-                          Cómo saber si funcionó:
-                        </strong>{" "}
-                        {item.success_metric}
-                      </p>
-
-                      {/*
-                       * Una vez creada la revisión semanal,
-                       * la semana queda cerrada y ya no
-                       * permitimos modificar acciones.
-                       */}
-                      {item.execution_mode === "ai_assisted" && (
-                        <div className="mt-5">
-                          {completed ? (
-                            <Link href={`/actions/${item.id}`} className="secondary-button px-4 py-2 text-sm">
-                              Ver resultado
-                            </Link>
-                          ) : weeklyReview ? (
-                            <span className="text-sm text-slate-500">Semana cerrada</span>
-                          ) : (
-                            <Link href={`/actions/${item.id}`} className="primary-button px-4 py-2 text-sm">
-                              Trabajar con IA
-                            </Link>
-                          )}
-                        </div>
-                      )}
-
-                      {item.execution_mode === "manual" && !weeklyReview && (
-                        <form
-                          action={updateWeeklyActionStatus}
-                          className="mt-5"
-                        >
-                          <input
-                            type="hidden"
-                            name="action_id"
-                            value={item.id}
-                          />
-
-                          <input
-                            type="hidden"
-                            name="status"
-                            value={
-                              completed
-                                ? "pending"
-                                : "completed"
-                            }
-                          />
-
-                          <button
-                            type="submit"
-                            className={
-                              completed
-                                ? "rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700"
-                                : "rounded-lg bg-black px-4 py-2 text-sm font-medium text-white"
-                            }
-                          >
-                            {completed
-                              ? "Marcar como pendiente"
-                              : "Marcar como completada"}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Abrir revisión semanal */}
-              {totalActions === 7 &&
-                !weeklyReview && (
-                  <div className="mt-8 border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      ¿Terminó tu semana?
-                    </h3>
-
-                    <p className="mt-2 text-gray-600">
-                      Revisa qué funcionó y qué cambió antes
-                      de preparar tu siguiente plan.
-                    </p>
-
-                    <a
-                      href="/weekly-review"
-                      className="mt-4 inline-block rounded-lg bg-black px-5 py-3 font-medium text-white"
-                    >
-                      Revisar mi semana
-                    </a>
-                  </div>
-                )}
-
-              {/* Semana revisada */}
-              {weeklyReview && (
-                <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-5">
-                  <h3 className="font-semibold text-slate-900">
-                    Resultado de la semana
-                  </h3>
-
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    {outcomeLabels[weeklyReview.outcome_status]}
-                  </p>
-
-                  <p className="mt-2 text-slate-700">
-                    {weeklyReview.outcome_summary}
-                  </p>
-
-                  <p className="mt-5 text-sm text-slate-600">
-                    Ejecución: {weeklyReview.completed_actions} de {weeklyReview.total_actions} acciones realizadas.
-                  </p>
-
-                  <p className="mt-2 text-sm text-slate-600">
-                    Ya tenemos el contexto necesario para
-                    preparar la siguiente semana.
-                  </p>
-
-                  <form
-                    action={generateCEOPlanAction}
-                    className="mt-5"
-                  >
-                    <PlanGenerationSubmit
-                      label={`Preparar semana ${ceoPlan.week_number + 1}`}
-                      className="rounded-lg bg-black px-5 py-3 font-medium text-white"
-                    />
-                  </form>
-                </div>
-              )}
-            </section>
-          </>
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <ExecutiveSummary
+              summary={readyPlan.executive_summary}
+              diagnosis={readyPlan.diagnosis}
+              priorities={readyPlan.priorities}
+            />
+            <WeeklyProgress
+              completedActions={completedActions}
+              totalActions={totalActions}
+            />
+            <WeeklyActionBoard
+              actions={weeklyActions}
+              reviewed={Boolean(weeklyReview)}
+              review={weeklyReview}
+              nextWeekNumber={weeklyReview ? ceoPlan.week_number + 1 : null}
+            />
+          </div>
         )}
       </div>
     </main>

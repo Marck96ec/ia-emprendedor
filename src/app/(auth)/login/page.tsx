@@ -24,8 +24,12 @@ export default async function LoginPage({
           Iniciar sesión
         </h1>
 
-        <p className="mt-2 text-sm text-slate-600">
-          Continúa trabajando en las prioridades de tu negocio.
+        <p className="mt-2 text-sm font-semibold leading-5 text-slate-800">
+          ¿Qué aprendiste de la última semana y qué prioridad merece tu atención ahora?
+        </p>
+
+        <p className="mt-1 text-sm leading-5 text-slate-600">
+          Retoma tu avance real y decide el siguiente paso de tu negocio con TuCEO IA.
         </p>
 
         {error && <div className="alert-box mt-6">{error}</div>}
