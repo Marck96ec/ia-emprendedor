@@ -77,7 +77,7 @@ export function DiagnosticWizard({
           </div>
 
           <p className="mt-2 text-sm leading-5 text-slate-600">
-            Tus respuestas nos ayudarán a encontrar la prioridad que más puede mover tu negocio ahora.
+            Tus respuestas ayudarán a CEO IA a comprender tu situación actual y detectar dónde puede estar la principal restricción de tu negocio.
           </p>
 
           {error && <div className="alert-box mt-4" role="alert">{error}</div>}
@@ -182,7 +182,7 @@ export function DiagnosticWizard({
               <div className="rounded-xl bg-slate-50 p-3">
                 <p className="text-sm font-semibold text-slate-800">¿Qué ocurrirá después?</p>
                 <p className="mt-1 text-sm leading-5 text-slate-600">
-                  Prepararemos un diagnóstico, tres prioridades y un plan práctico para tus próximos 7 días.
+                  Con este contexto podremos analizar mejor tu empresa y orientar las próximas decisiones.
                 </p>
               </div>
             </fieldset>

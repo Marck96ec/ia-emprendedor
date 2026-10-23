@@ -46,8 +46,8 @@ export type GenerateCEOPlanInput = {
     customersDescription: string;
     salesProcess: string;
     ownerResponsibilities: string;
-    monthlyRevenue: number | null;
-    currencyCode: string | null;
+    monthlyRevenue: number;
+    currencyCode: string;
   };
 
   previousWeek: {

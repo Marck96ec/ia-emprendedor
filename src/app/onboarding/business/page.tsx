@@ -52,7 +52,7 @@ export default async function BusinessOnboardingPage({
           </h1>
 
           <p className="mt-2 max-w-xl text-sm leading-5 text-slate-600">
-            Con estas respuestas entenderemos mejor tu negocio y prepararemos las prioridades más importantes para tu primera semana.
+            Con estas respuestas CEO IA podrá entender mejor tu empresa y analizar dónde necesita tu atención.
           </p>
 
           {error && <div className="alert-box mt-6">{error}</div>}

@@ -638,11 +638,7 @@ if (latestPlan?.status === "generating") {
           diagnostic.owner_responsibilities,
 
         monthlyRevenue:
-          diagnostic.monthly_revenue === null
-            ? null
-            : Number(
-                diagnostic.monthly_revenue,
-              ),
+          Number(diagnostic.monthly_revenue),
 
         currencyCode:
           diagnostic.currency_code,
