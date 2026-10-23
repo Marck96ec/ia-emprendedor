@@ -32,3 +32,13 @@ export type DashboardPriority = {
   reason: string;
   expected_impact: string;
 };
+
+export type DashboardStrategicDiagnosis = {
+  business_understanding: string;
+  diagnosis: string;
+  bottleneck: string;
+  evidence: string;
+  uncertainty: string;
+  alternative_hypothesis: string;
+  critical_decision: string;
+};

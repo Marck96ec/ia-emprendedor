@@ -23,6 +23,15 @@ import {
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
   diagnosis: "El negocio necesita más conversaciones cualificadas.",
+  strategic_diagnosis: {
+    business_understanding: "Taller de servicios con dos personas y pocas horas del dueño.",
+    diagnosis: "La captación de conversaciones cualificadas es insuficiente.",
+    bottleneck: "La entrada de oportunidades comerciales.",
+    evidence: "El reto principal declarado son las pocas conversaciones y las ventas llegan por referidos.",
+    uncertainty: "No sabemos aún qué segmento responde mejor.",
+    alternative_hypothesis: "El problema podría ser la conversión del seguimiento y no la captación.",
+    critical_decision: "Elegir un segmento prioritario para validar conversaciones esta semana.",
+  },
   priorities: [
     {
       rank: 1,
@@ -208,4 +217,26 @@ test("usa una RPC transaccional y limpia acciones parciales", () => {
   assert.match(migration, /insert into public\.weekly_actions/);
   assert.match(migration, /set status = 'ready'/);
   assert.match(migration, /create or replace function public\.fail_ceo_plan/);
+});
+
+test("persiste el razonamiento estratégico junto al plan", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261022010000_add_strategic_diagnosis_to_ceo_plans.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /add column strategic_diagnosis jsonb/);
+  assert.match(
+    migration,
+    /p_strategic_diagnosis jsonb/,
+  );
+  assert.match(
+    migration,
+    /perform public\.complete_ceo_plan\(/,
+  );
 });

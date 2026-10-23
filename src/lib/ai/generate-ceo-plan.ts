@@ -55,6 +55,7 @@ export type GenerateCEOPlanInput = {
 
     executiveSummary: string | null;
     diagnosis: string | null;
+    strategicDiagnosis: unknown;
 
     priorities: unknown;
     weeklyPlan: unknown;
@@ -136,8 +137,16 @@ revisarlo solo si el contexto actual indica que quedó obsoleto.
 Genera:
 
 - diagnóstico ejecutivo actualizado
+- razonamiento estratégico explícito con business_understanding, diagnosis,
+  bottleneck, evidence, uncertainty, alternative_hypothesis y
+  critical_decision
 - exactamente 3 prioridades
 - exactamente 7 acciones, una para cada día del 1 al 7
+
+La decisión crítica es la unidad central del plan. No saltes directamente
+del contexto a las prioridades: explica primero el entendimiento del negocio,
+el diagnóstico, el cuello de botella, la evidencia, la incertidumbre y una
+hipótesis alternativa. El diagnóstico ejecutivo debe resumir ese razonamiento.
 
 Para cada acción, decide explícitamente execution_mode y action_type
 siguiendo estas reglas:

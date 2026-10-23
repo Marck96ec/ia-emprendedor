@@ -8,6 +8,16 @@ const PrioritySchema = z.object({
   expected_impact: z.string(),
 });
 
+const StrategicDiagnosisSchema = z.object({
+  business_understanding: z.string(),
+  diagnosis: z.string(),
+  bottleneck: z.string(),
+  evidence: z.string(),
+  uncertainty: z.string(),
+  alternative_hypothesis: z.string(),
+  critical_decision: z.string(),
+});
+
 const WeeklyPlanItemSchema = z.object({
   day: z.number().int().min(1).max(7),
   action: z.string(),
@@ -38,6 +48,8 @@ export const CEOPlanSchema = z.object({
   executive_summary: z.string(),
 
   diagnosis: z.string(),
+
+  strategic_diagnosis: StrategicDiagnosisSchema,
 
   priorities: z
     .array(PrioritySchema)
@@ -199,9 +211,19 @@ persona que dirige una pequeña empresa.
 Debes producir:
 
 1. Un resumen ejecutivo breve.
-2. Un diagnóstico de la situación actual.
-3. Exactamente 3 prioridades, ordenadas del 1 al 3.
-4. Exactamente 7 acciones, una para cada día del 1 al 7.
+2. Un razonamiento estratégico explícito con estos siete campos, en este orden:
+  business_understanding, diagnosis, bottleneck, evidence, uncertainty,
+  alternative_hypothesis y critical_decision.
+3. Un diagnóstico breve que resuma el campo diagnosis del razonamiento estratégico.
+4. Exactamente 3 prioridades, ordenadas del 1 al 3.
+5. Exactamente 7 acciones, una para cada día del 1 al 7.
+
+El razonamiento estratégico es obligatorio y debe conectar cada afirmación
+con los datos disponibles. El bottleneck debe ser el cuello de botella
+actual, evidence debe citar señales concretas del contexto, uncertainty debe
+señalar qué no puede saberse todavía, alternative_hypothesis debe ofrecer
+una explicación plausible distinta y critical_decision debe expresar la
+decisión empresarial que el dueño debe tomar antes de ejecutar tareas.
 
 Las prioridades deben enfocarse en aquello que tenga mayor impacto
 para el negocio dadas sus circunstancias actuales.
