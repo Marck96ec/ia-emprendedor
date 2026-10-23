@@ -251,6 +251,107 @@ test("exige evidencia trazable y permite target_metric sin cifra", () => {
   );
 });
 
+test("acepta únicamente rutas de evidencia presentes en los contratos actuales", () => {
+  const validSourceFields = [
+    "business.name",
+    "business.revenueModel",
+    "business.description",
+    "diagnostic.businessStage",
+    "diagnostic.teamSize",
+    "diagnostic.ownerHoursPerWeek",
+    "diagnostic.mainChallenge",
+    "diagnostic.primaryGoal",
+    "diagnostic.customersDescription",
+    "diagnostic.salesProcess",
+    "diagnostic.ownerResponsibilities",
+    "diagnostic.monthlyRevenue",
+    "diagnostic.currencyCode",
+  ];
+
+  for (const sourceField of validSourceFields) {
+    const parsed = CEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_diagnosis: {
+        ...validPlan.strategic_diagnosis,
+        evidence: [
+          {
+            fact: "Dato proporcionado",
+            source_field: sourceField,
+            interpretation: "Interpretación verificable",
+          },
+        ],
+      },
+    });
+
+    assert.equal(parsed.success, true, sourceField);
+  }
+
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_diagnosis: {
+        ...validPlan.strategic_diagnosis,
+        evidence: [
+          {
+            fact: "Dato inventado",
+            source_field: "diagnostic.profitMargin",
+            interpretation: "No debe aceptarse",
+          },
+        ],
+      },
+    }).success,
+    false,
+  );
+});
+
+test("rechaza confidence high cuando hay múltiples unknowns", () => {
+  const highWithManyUnknowns = {
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      confidence: "high" as const,
+      unknowns: ["Falta A", "Falta B"],
+    },
+  };
+
+  assert.equal(CEOPlanSchema.safeParse(highWithManyUnknowns).success, true);
+  assert.equal(
+    validateCEOPlanBusinessRules(highWithManyUnknowns).success,
+    false,
+  );
+  assert.equal(
+    validateCEOPlanBusinessRules({
+      ...highWithManyUnknowns,
+      strategic_diagnosis: {
+        ...highWithManyUnknowns.strategic_diagnosis,
+        unknowns: ["Una ausencia no crítica"],
+      },
+    }).success,
+    true,
+  );
+});
+
+test("documenta que la validez semántica de una decisión requiere evaluación del modelo", () => {
+  const taskLikeDecision = {
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      critical_decision: {
+        question: "¿Debemos enviar mensajes?",
+        recommended_direction: "Enviar mensajes.",
+        rationale: "Es una opción para aprender.",
+        expected_outcome: "Observar respuestas.",
+        target_metric: "respuestas",
+      },
+    },
+  };
+
+  assert.equal(
+    validateCEOPlanBusinessRules(taskLikeDecision).success,
+    true,
+  );
+});
+
 test("deriva el diagnóstico textual legacy del resumen estratégico", async () => {
   process.env.OPENAI_API_KEY = "test-key";
 

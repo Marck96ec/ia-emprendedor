@@ -8,18 +8,48 @@ const PrioritySchema = z.object({
   expected_impact: z.string(),
 });
 
-const EvidenceSourceFieldSchema = z.string().refine(
-  (sourceField) =>
-    [
-      "business.",
-      "diagnostic.",
-      "previousWeek.",
-      "businessKnowledge.",
-    ].some((prefix) => sourceField.startsWith(prefix)),
-  {
-    message: "source_field debe identificar un campo del contexto disponible",
-  },
-);
+const EvidenceSourceFieldSchema = z.enum([
+  "business.name",
+  "business.revenueModel",
+  "business.description",
+  "diagnostic.businessStage",
+  "diagnostic.teamSize",
+  "diagnostic.ownerHoursPerWeek",
+  "diagnostic.mainChallenge",
+  "diagnostic.primaryGoal",
+  "diagnostic.customersDescription",
+  "diagnostic.salesProcess",
+  "diagnostic.ownerResponsibilities",
+  "diagnostic.monthlyRevenue",
+  "diagnostic.currencyCode",
+  "previousWeek.weekNumber",
+  "previousWeek.executiveSummary",
+  "previousWeek.diagnosis",
+  "previousWeek.strategicDiagnosis",
+  "previousWeek.priorities",
+  "previousWeek.weeklyPlan",
+  "previousWeek.actions.day",
+  "previousWeek.actions.action",
+  "previousWeek.actions.objective",
+  "previousWeek.actions.successMetric",
+  "previousWeek.actions.executionMode",
+  "previousWeek.actions.actionType",
+  "previousWeek.actions.status",
+  "previousWeek.review.whatWorked",
+  "previousWeek.review.whatDidntWork",
+  "previousWeek.review.businessChanges",
+  "previousWeek.review.nextWeekFocus",
+  "previousWeek.review.completedActions",
+  "previousWeek.review.totalActions",
+  "previousWeek.review.outcomeStatus",
+  "previousWeek.review.outcomeSummary",
+  "businessKnowledge.valueProposition.value_proposition",
+  "businessKnowledge.valueProposition.target_customer",
+  "businessKnowledge.valueProposition.problem_solved",
+  "businessKnowledge.valueProposition.differentiator",
+  "businessKnowledge.valueProposition.benefits",
+  "businessKnowledge.valueProposition.rationale",
+]);
 
 export const StrategicDiagnosisSchema = z.object({
   business_understanding: z.object({
@@ -81,6 +111,10 @@ export const StrategicDiagnosisSchema = z.object({
     target_metric: z.string(),
   }),
 });
+
+export type StrategicDiagnosis = z.infer<
+  typeof StrategicDiagnosisSchema
+>;
 
 const WeeklyPlanItemSchema = z.object({
   day: z.number().int().min(1).max(7),
@@ -188,6 +222,21 @@ export const CEOPlanBusinessRulesSchema = CEOPlanSchema.superRefine(
         path: ["weekly_plan"],
       });
     }
+
+    if (
+      plan.strategic_diagnosis.confidence === "high" &&
+      plan.strategic_diagnosis.unknowns.length > 1
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Una confianza high no puede coexistir con múltiples unknowns",
+        path: ["strategic_diagnosis", "unknowns"],
+      });
+    }
+
+    // La validez empresarial de la decisión requiere evaluación del modelo;
+    // evitar keywords aquí para no introducir falsos positivos frágiles.
   },
 );
 
@@ -297,12 +346,15 @@ business.*, diagnostic.*, previousWeek.* o businessKnowledge.*.
 confidence no es certeza: usa high solo con evidencia suficiente y usa medium
 o low cuando falten variables que podrían cambiar el diagnóstico.
 unknowns solo incluye ausencias que podrían cambiarlo materialmente y puede
-estar vacío. alternative_hypothesis debe ser distinta del diagnóstico
+estar vacío. Como regla mínima, confidence high no puede coexistir con más de
+un unknown. alternative_hypothesis debe ser distinta del diagnóstico
 principal y puede ser null si no es razonable formularla.
 
 critical_decision debe expresar una decisión empresarial mediante question,
 recommended_direction, rationale, expected_outcome y target_metric. No
 conviertas la decisión en una tarea ni inventes cifras objetivo.
+La distinción semántica entre una decisión y una tarea será evaluada con
+casos de modelo; no depende de una lista frágil de palabras.
 
 Las prioridades deben enfocarse en aquello que tenga mayor impacto
 para el negocio dadas sus circunstancias actuales.

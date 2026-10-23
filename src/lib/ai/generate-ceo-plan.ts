@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import {
   ceoAgent,
   CEOPlanSchema,
+  type StrategicDiagnosis,
   validateCEOPlanBusinessRules,
   type CEOPlan,
 } from "./ceo-agent";
@@ -55,7 +56,7 @@ export type GenerateCEOPlanInput = {
 
     executiveSummary: string | null;
     diagnosis: string | null;
-    strategicDiagnosis: unknown;
+    strategicDiagnosis: StrategicDiagnosis;
 
     priorities: unknown;
     weeklyPlan: unknown;
