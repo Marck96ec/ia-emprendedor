@@ -2,17 +2,20 @@
 
 import { useRef } from "react";
 
-import type { DashboardPriority } from "@/lib/dashboard-types";
+import type {
+  DashboardPriority,
+  DashboardStrategicDiagnosis,
+} from "@/lib/dashboard-types";
 
 type ExecutiveContextDialogProps = {
   summary: string;
-  diagnosis: string;
+  strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
 };
 
 export function ExecutiveContextDialog({
   summary,
-  diagnosis,
+  strategicDiagnosis,
   priorities,
 }: ExecutiveContextDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -44,7 +47,7 @@ export function ExecutiveContextDialog({
                 Contexto de la semana
               </p>
               <h2 id="executive-context-title" className="mt-1 text-lg font-semibold tracking-tight text-slate-950">
-                Diagnóstico y prioridades
+                Decisión y prioridades
               </h2>
             </div>
             <form method="dialog">
@@ -70,7 +73,37 @@ export function ExecutiveContextDialog({
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
                 Diagnóstico
               </p>
-              <p className="mt-2 leading-6 text-slate-700">{diagnosis}</p>
+              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.diagnosis.summary}</p>
+              <p className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                Área afectada: {strategicDiagnosis.diagnosis.affected_area}
+              </p>
+              <p className="mt-2 leading-6 text-slate-600">{strategicDiagnosis.diagnosis.why_it_matters}</p>
+            </section>
+
+            <section className="mt-5 border-t border-slate-100 pt-4">
+              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+                Cuello de botella
+              </p>
+              <p className="mt-2 font-medium leading-6 text-slate-700">{strategicDiagnosis.bottleneck.description}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {strategicDiagnosis.bottleneck.area} · Métrica: {strategicDiagnosis.bottleneck.affected_metric}
+              </p>
+            </section>
+
+            <section className="mt-5 border-t border-slate-100 pt-4">
+              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+                Confianza
+              </p>
+              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.confidence}</p>
+            </section>
+
+            <section className="mt-5 border-t border-slate-100 pt-4">
+              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+                Decisión crítica
+              </p>
+              <p className="mt-2 font-medium leading-6 text-slate-700">{strategicDiagnosis.critical_decision.question}</p>
+              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.critical_decision.recommended_direction}</p>
+              <p className="mt-1 leading-6 text-slate-600">{strategicDiagnosis.critical_decision.rationale}</p>
             </section>
 
             <section className="mt-5 border-t border-slate-100 pt-4">

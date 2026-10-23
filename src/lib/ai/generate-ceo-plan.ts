@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import {
   ceoAgent,
   CEOPlanSchema,
+  type StrategicDiagnosis,
   validateCEOPlanBusinessRules,
   type CEOPlan,
 } from "./ceo-agent";
@@ -55,6 +56,7 @@ export type GenerateCEOPlanInput = {
 
     executiveSummary: string | null;
     diagnosis: string | null;
+    strategicDiagnosis: StrategicDiagnosis;
 
     priorities: unknown;
     weeklyPlan: unknown;
@@ -136,8 +138,17 @@ revisarlo solo si el contexto actual indica que quedó obsoleto.
 Genera:
 
 - diagnóstico ejecutivo actualizado
+- razonamiento estratégico explícito, en este orden:
+  business_understanding, diagnosis, bottleneck, evidence, confidence,
+  unknowns, alternative_hypothesis y critical_decision
 - exactamente 3 prioridades
 - exactamente 7 acciones, una para cada día del 1 al 7
+
+La decisión crítica es la unidad central del plan. No saltes directamente
+del contexto a las prioridades: explica primero el entendimiento del negocio,
+el diagnóstico, el cuello de botella, la evidencia, la confianza, los
+desconocidos relevantes y una hipótesis alternativa. El diagnóstico textual
+legacy debe resumir strategic_diagnosis.diagnosis.summary.
 
 Para cada acción, decide explícitamente execution_mode y action_type
 siguiendo estas reglas:
@@ -188,7 +199,11 @@ ${retryInstructions}
         );
       }
 
-      return businessRules.data;
+      return {
+        ...businessRules.data,
+        diagnosis:
+          businessRules.data.strategic_diagnosis.diagnosis.summary,
+      };
     } catch (error) {
       const normalized = toSafeCEOPlanError(error);
 

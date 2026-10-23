@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v2";
+const PROMPT_VERSION = "v3-strategic-diagnosis";
 
 const GENERATING_STALE_AFTER_MS =
   15 * 60 * 1000;
@@ -443,6 +443,7 @@ if (latestPlan?.status === "generating") {
           week_number,
           executive_summary,
           diagnosis,
+          strategic_diagnosis,
           priorities,
           weekly_plan
         `,
@@ -549,6 +550,9 @@ if (latestPlan?.status === "generating") {
       diagnosis:
         contextPlan.diagnosis,
 
+      strategicDiagnosis:
+        contextPlan.strategic_diagnosis,
+
       priorities:
         contextPlan.priorities,
 
@@ -653,6 +657,7 @@ if (latestPlan?.status === "generating") {
         p_plan_id: planId,
         p_executive_summary: output.executive_summary,
         p_diagnosis: output.diagnosis,
+        p_strategic_diagnosis: output.strategic_diagnosis,
         p_priorities: output.priorities,
         p_weekly_plan: output.weekly_plan,
         p_actions: output.weekly_plan,

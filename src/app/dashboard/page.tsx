@@ -115,6 +115,7 @@ export default async function DashboardPage({
         status,
         executive_summary,
         diagnosis,
+        strategic_diagnosis,
         priorities,
         weekly_plan,
         model,
@@ -152,6 +153,9 @@ export default async function DashboardPage({
 
           diagnosis:
             ceoPlan.diagnosis,
+
+          strategic_diagnosis:
+            ceoPlan.strategic_diagnosis,
 
           priorities:
             ceoPlan.priorities,
@@ -348,7 +352,7 @@ export default async function DashboardPage({
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <ExecutiveSummary
               summary={readyPlan.executive_summary}
-              diagnosis={readyPlan.diagnosis}
+              strategicDiagnosis={readyPlan.strategic_diagnosis}
               priorities={readyPlan.priorities}
             />
             <WeeklyProgress

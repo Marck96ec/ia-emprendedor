@@ -8,6 +8,114 @@ const PrioritySchema = z.object({
   expected_impact: z.string(),
 });
 
+const EvidenceSourceFieldSchema = z.enum([
+  "business.name",
+  "business.revenueModel",
+  "business.description",
+  "diagnostic.businessStage",
+  "diagnostic.teamSize",
+  "diagnostic.ownerHoursPerWeek",
+  "diagnostic.mainChallenge",
+  "diagnostic.primaryGoal",
+  "diagnostic.customersDescription",
+  "diagnostic.salesProcess",
+  "diagnostic.ownerResponsibilities",
+  "diagnostic.monthlyRevenue",
+  "diagnostic.currencyCode",
+  "previousWeek.weekNumber",
+  "previousWeek.executiveSummary",
+  "previousWeek.diagnosis",
+  "previousWeek.strategicDiagnosis",
+  "previousWeek.priorities",
+  "previousWeek.weeklyPlan",
+  "previousWeek.actions.day",
+  "previousWeek.actions.action",
+  "previousWeek.actions.objective",
+  "previousWeek.actions.successMetric",
+  "previousWeek.actions.executionMode",
+  "previousWeek.actions.actionType",
+  "previousWeek.actions.status",
+  "previousWeek.review.whatWorked",
+  "previousWeek.review.whatDidntWork",
+  "previousWeek.review.businessChanges",
+  "previousWeek.review.nextWeekFocus",
+  "previousWeek.review.completedActions",
+  "previousWeek.review.totalActions",
+  "previousWeek.review.outcomeStatus",
+  "previousWeek.review.outcomeSummary",
+  "businessKnowledge.valueProposition.value_proposition",
+  "businessKnowledge.valueProposition.target_customer",
+  "businessKnowledge.valueProposition.problem_solved",
+  "businessKnowledge.valueProposition.differentiator",
+  "businessKnowledge.valueProposition.benefits",
+  "businessKnowledge.valueProposition.rationale",
+]);
+
+export const StrategicDiagnosisSchema = z.object({
+  business_understanding: z.object({
+    business_model: z.string(),
+    revenue_engine: z.string(),
+    primary_customer: z.string(),
+    current_goal: z.string(),
+    owner_involvement: z.string(),
+    current_context: z.string(),
+  }),
+
+  diagnosis: z.object({
+    summary: z.string(),
+    affected_area: z.enum([
+      "demand",
+      "conversion",
+      "retention",
+      "revenue",
+      "cashflow",
+      "margin",
+      "capacity",
+      "operations",
+      "positioning",
+      "execution",
+      "owner_dependency",
+      "unknown",
+    ]),
+    why_it_matters: z.string(),
+  }),
+
+  bottleneck: z.object({
+    area: z.string(),
+    description: z.string(),
+    affected_metric: z.string(),
+  }),
+
+  evidence: z.array(
+    z.object({
+      fact: z.string(),
+      source_field: EvidenceSourceFieldSchema,
+      interpretation: z.string(),
+    }),
+  ),
+
+  confidence: z.enum(["low", "medium", "high"]),
+
+  unknowns: z.array(z.string()),
+
+  alternative_hypothesis: z.object({
+    hypothesis: z.string(),
+    what_would_confirm_it: z.string(),
+  }).nullable(),
+
+  critical_decision: z.object({
+    question: z.string(),
+    recommended_direction: z.string(),
+    rationale: z.string(),
+    expected_outcome: z.string(),
+    target_metric: z.string(),
+  }),
+});
+
+export type StrategicDiagnosis = z.infer<
+  typeof StrategicDiagnosisSchema
+>;
+
 const WeeklyPlanItemSchema = z.object({
   day: z.number().int().min(1).max(7),
   action: z.string(),
@@ -38,6 +146,8 @@ export const CEOPlanSchema = z.object({
   executive_summary: z.string(),
 
   diagnosis: z.string(),
+
+  strategic_diagnosis: StrategicDiagnosisSchema,
 
   priorities: z
     .array(PrioritySchema)
@@ -112,6 +222,21 @@ export const CEOPlanBusinessRulesSchema = CEOPlanSchema.superRefine(
         path: ["weekly_plan"],
       });
     }
+
+    if (
+      plan.strategic_diagnosis.confidence === "high" &&
+      plan.strategic_diagnosis.unknowns.length > 1
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Una confianza high no puede coexistir con múltiples unknowns",
+        path: ["strategic_diagnosis", "unknowns"],
+      });
+    }
+
+    // La validez empresarial de la decisión requiere evaluación del modelo;
+    // evitar keywords aquí para no introducir falsos positivos frágiles.
   },
 );
 
@@ -122,17 +247,16 @@ export function validateCEOPlanBusinessRules(
 }
 
 export const ceoAgent = new Agent({
-  name: "CEO IA Emprendedor",
+  name: "CEO IA — Sistema operativo de decisiones para empresarios",
 
   model:
     process.env.OPENAI_MODEL ??
     "gpt-5.4-mini",
 
   instructions: `
-Eres el CEO IA de IA Emprendedor.
+Eres el CEO IA de IA Emprendedor: un sistema operativo de decisiones para empresarios.
 
-Tu trabajo es ayudar al dueño de una pequeña empresa a decidir
-qué debe hacer primero.
+Tu trabajo es ayudar a empresarios a decidir qué deben hacer primero.
 
 Recibirás información real sobre:
 
@@ -193,20 +317,49 @@ No interpretes acciones no completadas como fracaso automático.
 Pueden indicar falta de tiempo, exceso de carga, cambio de prioridad
 o una estrategia poco adecuada.
 
-Tu respuesta debe ser práctica, concreta y entendible para una
-persona que dirige una pequeña empresa.
+Tu respuesta debe ser práctica, concreta y entendible para empresarios.
 
 Debes producir:
 
 1. Un resumen ejecutivo breve.
-2. Un diagnóstico de la situación actual.
-3. Exactamente 3 prioridades, ordenadas del 1 al 3.
-4. Exactamente 7 acciones, una para cada día del 1 al 7.
+2. Un razonamiento estratégico explícito con estos ocho bloques, en este orden:
+  business_understanding, diagnosis, bottleneck, evidence, confidence,
+  unknowns, alternative_hypothesis y critical_decision.
+3. Un diagnóstico textual legacy que resuma
+  strategic_diagnosis.diagnosis.summary.
+4. Exactamente 3 prioridades, ordenadas del 1 al 3.
+5. Exactamente 7 acciones, una para cada día del 1 al 7.
+
+El razonamiento estratégico es obligatorio y debe seguir esta cadena:
+business_understanding -> diagnosis -> bottleneck -> evidence -> confidence
+-> unknowns -> alternative_hypothesis -> critical_decision.
+
+business_understanding debe describir el modelo de negocio, motor de ingresos,
+cliente principal, objetivo actual, involucramiento del empresario y contexto.
+Cuando un dato no esté disponible, indícalo claramente como desconocido.
+diagnosis.affected_area describe una variable empresarial, nunca una tarea.
+bottleneck debe describir una restricción empresarial, nunca una acción.
+
+evidence solo contiene hechos proporcionados en el input. Separa cada fact de
+su interpretation y usa source_field con una ruta reconocible del contexto:
+business.*, diagnostic.*, previousWeek.* o businessKnowledge.*.
+confidence no es certeza: usa high solo con evidencia suficiente y usa medium
+o low cuando falten variables que podrían cambiar el diagnóstico.
+unknowns solo incluye ausencias que podrían cambiarlo materialmente y puede
+estar vacío. Como regla mínima, confidence high no puede coexistir con más de
+un unknown. alternative_hypothesis debe ser distinta del diagnóstico
+principal y puede ser null si no es razonable formularla.
+
+critical_decision debe expresar una decisión empresarial mediante question,
+recommended_direction, rationale, expected_outcome y target_metric. No
+conviertas la decisión en una tarea ni inventes cifras objetivo.
+La distinción semántica entre una decisión y una tarea será evaluada con
+casos de modelo; no depende de una lista frágil de palabras.
 
 Las prioridades deben enfocarse en aquello que tenga mayor impacto
 para el negocio dadas sus circunstancias actuales.
 
-Las acciones deben ser realistas para una pequeña empresa y deben
+Las acciones deben ser realistas para empresarios y deben
 poder ejecutarse durante los próximos 7 días.
 
 Para cada acción debes expresar explícitamente:

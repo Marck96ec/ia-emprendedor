@@ -23,6 +23,51 @@ import {
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
   diagnosis: "El negocio necesita más conversaciones cualificadas.",
+  strategic_diagnosis: {
+    business_understanding: {
+      business_model: "Servicios de reparación para comercios.",
+      revenue_engine: "Cobro por servicios de reparación.",
+      primary_customer: "Comercios locales.",
+      current_goal: "Aumentar solicitudes.",
+      owner_involvement: "Vende, coordina el equipo y revisa las finanzas.",
+      current_context: "Dos personas y seis horas semanales del empresario.",
+    },
+    diagnosis: {
+      summary: "La captación de conversaciones cualificadas es insuficiente.",
+      affected_area: "demand",
+      why_it_matters: "Sin conversaciones nuevas no hay oportunidades suficientes.",
+    },
+    bottleneck: {
+      area: "Demanda",
+      description: "La entrada de oportunidades comerciales es insuficiente.",
+      affected_metric: "conversaciones cualificadas",
+    },
+    evidence: [
+      {
+        fact: "Pocas conversaciones.",
+        source_field: "diagnostic.mainChallenge",
+        interpretation: "La entrada comercial parece ser la restricción actual.",
+      },
+      {
+        fact: "Las ventas llegan por referidos.",
+        source_field: "diagnostic.salesProcess",
+        interpretation: "El canal comercial depende de una fuente poco controlada.",
+      },
+    ],
+    confidence: "medium",
+    unknowns: ["Qué segmento responde mejor."],
+    alternative_hypothesis: {
+      hypothesis: "El problema podría ser la conversión del seguimiento y no la captación.",
+      what_would_confirm_it: "Comparar conversaciones recibidas con propuestas y cierres.",
+    },
+    critical_decision: {
+      question: "¿Debemos priorizar un segmento concreto antes de ampliar la captación?",
+      recommended_direction: "Validar un segmento prioritario esta semana.",
+      rationale: "La evidencia disponible apunta a una demanda poco enfocada.",
+      expected_outcome: "Aprender qué segmento genera conversaciones cualificadas.",
+      target_metric: "conversaciones cualificadas",
+    },
+  },
   priorities: [
     {
       rank: 1,
@@ -80,6 +125,247 @@ test("acepta un plan estructuralmente válido de siete acciones", () => {
 
   assert.equal(parsed.success, true);
   assert.equal(parsed.success && parsed.data.weekly_plan.length, 7);
+});
+
+test("rechaza el contrato estratégico antiguo basado únicamente en strings", () => {
+  const legacyStrategicDiagnosis = {
+    business_understanding: "Contexto",
+    diagnosis: "Diagnóstico",
+    bottleneck: "Cuello de botella",
+    evidence: "Evidencia",
+    uncertainty: "Incertidumbre",
+    alternative_hypothesis: "Hipótesis alternativa",
+    critical_decision: "Decisión crítica",
+  };
+
+  const parsed = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: legacyStrategicDiagnosis,
+  });
+
+  assert.equal(parsed.success, false);
+});
+
+test("acepta diagnósticos de recurrencia, capacidad y dependencia del empresario", () => {
+  const recurringPlan = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      diagnosis: {
+        ...validPlan.strategic_diagnosis.diagnosis,
+        affected_area: "retention",
+      },
+    },
+  });
+  const agencyPlan = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      diagnosis: {
+        ...validPlan.strategic_diagnosis.diagnosis,
+        affected_area: "capacity",
+      },
+      bottleneck: {
+        ...validPlan.strategic_diagnosis.bottleneck,
+        area: "owner_dependency",
+      },
+    },
+  });
+
+  assert.equal(recurringPlan.success, true);
+  assert.equal(agencyPlan.success, true);
+});
+
+test("no inventa variables de ecommerce no proporcionadas", () => {
+  const ecommercePlan = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      business_understanding: {
+        ...validPlan.strategic_diagnosis.business_understanding,
+        business_model: "Venta de productos por comercio electrónico.",
+        revenue_engine: "No determinado con la información disponible.",
+      },
+      unknowns: ["CAC, margen e inventario no fueron proporcionados."],
+      evidence: validPlan.strategic_diagnosis.evidence.filter(
+        (item) => item.source_field !== "diagnostic.salesProcess",
+      ),
+    },
+  });
+
+  assert.equal(ecommercePlan.success, true);
+  assert.equal(
+    ecommercePlan.success && ecommercePlan.data.strategic_diagnosis.unknowns.length,
+    1,
+  );
+});
+
+test("permite confianza baja y unknowns relevantes con información insuficiente", () => {
+  const sparsePlan = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      confidence: "low",
+      unknowns: [
+        "No se conoce el volumen de clientes ni el proceso comercial completo.",
+      ],
+      alternative_hypothesis: null,
+    },
+  });
+
+  assert.equal(sparsePlan.success, true);
+});
+
+test("exige evidencia trazable y permite target_metric sin cifra", () => {
+  const invalidEvidence = CEOPlanSchema.safeParse({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      evidence: [
+        {
+          fact: "Dato",
+          source_field: "invented.field",
+          interpretation: "Interpretación",
+        },
+      ],
+    },
+  });
+  const validDecision = CEOPlanSchema.safeParse(validPlan);
+
+  assert.equal(invalidEvidence.success, false);
+  assert.equal(
+    validDecision.success &&
+      validDecision.data.strategic_diagnosis.critical_decision.target_metric,
+    "conversaciones cualificadas",
+  );
+
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_diagnosis: {
+        ...validPlan.strategic_diagnosis,
+        confidence: "certain",
+      },
+    }).success,
+    false,
+  );
+});
+
+test("acepta únicamente rutas de evidencia presentes en los contratos actuales", () => {
+  const validSourceFields = [
+    "business.name",
+    "business.revenueModel",
+    "business.description",
+    "diagnostic.businessStage",
+    "diagnostic.teamSize",
+    "diagnostic.ownerHoursPerWeek",
+    "diagnostic.mainChallenge",
+    "diagnostic.primaryGoal",
+    "diagnostic.customersDescription",
+    "diagnostic.salesProcess",
+    "diagnostic.ownerResponsibilities",
+    "diagnostic.monthlyRevenue",
+    "diagnostic.currencyCode",
+  ];
+
+  for (const sourceField of validSourceFields) {
+    const parsed = CEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_diagnosis: {
+        ...validPlan.strategic_diagnosis,
+        evidence: [
+          {
+            fact: "Dato proporcionado",
+            source_field: sourceField,
+            interpretation: "Interpretación verificable",
+          },
+        ],
+      },
+    });
+
+    assert.equal(parsed.success, true, sourceField);
+  }
+
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_diagnosis: {
+        ...validPlan.strategic_diagnosis,
+        evidence: [
+          {
+            fact: "Dato inventado",
+            source_field: "diagnostic.profitMargin",
+            interpretation: "No debe aceptarse",
+          },
+        ],
+      },
+    }).success,
+    false,
+  );
+});
+
+test("rechaza confidence high cuando hay múltiples unknowns", () => {
+  const highWithManyUnknowns = {
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      confidence: "high" as const,
+      unknowns: ["Falta A", "Falta B"],
+    },
+  };
+
+  assert.equal(CEOPlanSchema.safeParse(highWithManyUnknowns).success, true);
+  assert.equal(
+    validateCEOPlanBusinessRules(highWithManyUnknowns).success,
+    false,
+  );
+  assert.equal(
+    validateCEOPlanBusinessRules({
+      ...highWithManyUnknowns,
+      strategic_diagnosis: {
+        ...highWithManyUnknowns.strategic_diagnosis,
+        unknowns: ["Una ausencia no crítica"],
+      },
+    }).success,
+    true,
+  );
+});
+
+test("documenta que la validez semántica de una decisión requiere evaluación del modelo", () => {
+  const taskLikeDecision = {
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      critical_decision: {
+        question: "¿Debemos enviar mensajes?",
+        recommended_direction: "Enviar mensajes.",
+        rationale: "Es una opción para aprender.",
+        expected_outcome: "Observar respuestas.",
+        target_metric: "respuestas",
+      },
+    },
+  };
+
+  assert.equal(
+    validateCEOPlanBusinessRules(taskLikeDecision).success,
+    true,
+  );
+});
+
+test("deriva el diagnóstico textual legacy del resumen estratégico", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+
+  const result = await generateCEOPlan(input, async () => ({
+    finalOutput: {
+      ...validPlan,
+      diagnosis: "Texto legacy divergente",
+    },
+  }));
+
+  assert.equal(
+    result.diagnosis,
+    result.strategic_diagnosis.diagnosis.summary,
+  );
 });
 
 test("mantiene los tres tipos y detecta más de una acción asistida", () => {
@@ -148,7 +434,10 @@ test("reintenta una salida inválida una sola vez y acepta la corregida", async 
   });
 
   assert.equal(attempts, 2);
-  assert.deepEqual(result, validPlan);
+  assert.deepEqual(result, {
+    ...validPlan,
+    diagnosis: validPlan.strategic_diagnosis.diagnosis.summary,
+  });
 });
 
 test("no reintenta errores que no son de salida", async () => {
@@ -208,4 +497,26 @@ test("usa una RPC transaccional y limpia acciones parciales", () => {
   assert.match(migration, /insert into public\.weekly_actions/);
   assert.match(migration, /set status = 'ready'/);
   assert.match(migration, /create or replace function public\.fail_ceo_plan/);
+});
+
+test("persiste el razonamiento estratégico junto al plan", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261022010000_add_strategic_diagnosis_to_ceo_plans.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /add column strategic_diagnosis jsonb/);
+  assert.match(
+    migration,
+    /p_strategic_diagnosis jsonb/,
+  );
+  assert.match(
+    migration,
+    /perform public\.complete_ceo_plan\(/,
+  );
 });

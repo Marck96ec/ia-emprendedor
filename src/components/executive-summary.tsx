@@ -1,15 +1,18 @@
-import type { DashboardPriority } from "@/lib/dashboard-types";
+import type {
+  DashboardPriority,
+  DashboardStrategicDiagnosis,
+} from "@/lib/dashboard-types";
 import { ExecutiveContextDialog } from "@/components/executive-context-dialog";
 
 type ExecutiveSummaryProps = {
   summary: string;
-  diagnosis: string;
+  strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
 };
 
 export function ExecutiveSummary({
   summary,
-  diagnosis,
+  strategicDiagnosis,
   priorities,
 }: ExecutiveSummaryProps) {
   return (
@@ -29,7 +32,7 @@ export function ExecutiveSummary({
 
         <ExecutiveContextDialog
           summary={summary}
-          diagnosis={diagnosis}
+          strategicDiagnosis={strategicDiagnosis}
           priorities={priorities}
         />
       </div>
