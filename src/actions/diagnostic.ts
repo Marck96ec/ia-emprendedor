@@ -3,155 +3,44 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { DiagnosticOnboardingSchema } from "@/lib/onboarding-validation";
 import { createClient } from "@/lib/supabase/server";
 
-const VALID_BUSINESS_STAGES = [
-  "starting",
-  "operating",
-  "growing",
-  "stalled",
-] as const;
-
 export async function createDiagnostic(formData: FormData) {
-  const businessStage = String(
-    formData.get("business_stage") ?? "",
-  ).trim();
+  const parsed = DiagnosticOnboardingSchema.safeParse({
+    business_stage: formData.get("business_stage"),
+    team_size: formData.get("team_size"),
+    owner_hours_per_week: formData.get("owner_hours_per_week"),
+    main_challenge: formData.get("main_challenge"),
+    primary_goal: formData.get("primary_goal"),
+    customers_description: formData.get("customers_description"),
+    sales_process: formData.get("sales_process"),
+    owner_responsibilities: formData.get("owner_responsibilities"),
+    monthly_revenue: formData.get("monthly_revenue"),
+    currency_code: formData.get("currency_code"),
+  });
 
-  const teamSizeRaw = String(
-    formData.get("team_size") ?? "",
-  ).trim();
-
-  const mainChallenge = String(
-    formData.get("main_challenge") ?? "",
-  ).trim();
-
-  const primaryGoal = String(
-    formData.get("primary_goal") ?? "",
-  ).trim();
-
-  const customersDescription = String(
-    formData.get("customers_description") ?? "",
-  ).trim();
-
-  const salesProcess = String(
-    formData.get("sales_process") ?? "",
-  ).trim();
-
-  const monthlyRevenueRaw = String(
-    formData.get("monthly_revenue") ?? "",
-  ).trim();
-
-  const currencyCodeRaw = String(
-    formData.get("currency_code") ?? "",
-  )
-    .trim()
-    .toUpperCase();
-
-  if (
-    !VALID_BUSINESS_STAGES.includes(
-      businessStage as (typeof VALID_BUSINESS_STAGES)[number],
-    )
-  ) {
+  if (!parsed.success) {
     redirect(
       "/onboarding/diagnostic?error=" +
         encodeURIComponent(
-          "Selecciona una etapa válida para tu negocio.",
+          "Completa todos los datos del diagnóstico. Puedes usar valores aproximados.",
         ),
     );
   }
 
-  const teamSize = Number.parseInt(teamSizeRaw, 10);
-
-  if (
-    !Number.isInteger(teamSize) ||
-    teamSize < 1 ||
-    teamSize > 10000
-  ) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Ingresa un tamaño de equipo válido.",
-        ),
-    );
-  }
-
-  if (
-    mainChallenge.length < 10 ||
-    mainChallenge.length > 1000
-  ) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Describe tu principal problema con al menos 10 caracteres.",
-        ),
-    );
-  }
-
-  if (
-    primaryGoal.length < 10 ||
-    primaryGoal.length > 1000
-  ) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Describe tu objetivo principal con al menos 10 caracteres.",
-        ),
-    );
-  }
-
-  if (
-    customersDescription.length < 10 ||
-    customersDescription.length > 1000
-  ) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Describe tus clientes con al menos 10 caracteres.",
-        ),
-    );
-  }
-
-  if (
-    salesProcess.length < 10 ||
-    salesProcess.length > 1500
-  ) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Describe cómo consigues ventas con al menos 10 caracteres.",
-        ),
-    );
-  }
-
-  let monthlyRevenue: number | null = null;
-  let currencyCode: string | null = null;
-
-  if (monthlyRevenueRaw) {
-    monthlyRevenue = Number(monthlyRevenueRaw);
-
-    if (
-      !Number.isFinite(monthlyRevenue) ||
-      monthlyRevenue < 0
-    ) {
-      redirect(
-        "/onboarding/diagnostic?error=" +
-          encodeURIComponent(
-            "Ingresa una facturación mensual válida.",
-          ),
-      );
-    }
-
-    if (currencyCodeRaw.length !== 3) {
-      redirect(
-        "/onboarding/diagnostic?error=" +
-          encodeURIComponent(
-            "Selecciona una moneda válida.",
-          ),
-      );
-    }
-
-    currencyCode = currencyCodeRaw;
-  }
+  const {
+    business_stage: businessStage,
+    team_size: teamSize,
+    owner_hours_per_week: ownerHoursPerWeek,
+    main_challenge: mainChallenge,
+    primary_goal: primaryGoal,
+    customers_description: customersDescription,
+    sales_process: salesProcess,
+    owner_responsibilities: ownerResponsibilities,
+    monthly_revenue: monthlyRevenue,
+    currency_code: currencyCode,
+  } = parsed.data;
 
   const supabase = await createClient();
 
@@ -226,6 +115,8 @@ export async function createDiagnostic(formData: FormData) {
       primary_goal: primaryGoal,
       customers_description: customersDescription,
       sales_process: salesProcess,
+      owner_hours_per_week: ownerHoursPerWeek,
+      owner_responsibilities: ownerResponsibilities,
       monthly_revenue: monthlyRevenue,
       currency_code: currencyCode,
     });

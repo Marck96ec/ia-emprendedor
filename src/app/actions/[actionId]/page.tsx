@@ -57,7 +57,7 @@ export default async function ActionWorkspacePage({
     .maybeSingle();
   const { data: business } = await supabase
     .from("businesses")
-    .select("id, owner_id, name, business_type, description")
+    .select("id, owner_id, name, revenue_model, description")
     .eq("id", plan?.business_id ?? "")
     .maybeSingle();
 

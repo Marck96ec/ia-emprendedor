@@ -55,7 +55,7 @@ export async function generateCEOPlanAction() {
         `
           id,
           name,
-          business_type,
+          revenue_model,
           description
         `,
       )
@@ -91,10 +91,12 @@ export async function generateCEOPlanAction() {
       `
         business_stage,
         team_size,
+        owner_hours_per_week,
         main_challenge,
         primary_goal,
         customers_description,
         sales_process,
+        owner_responsibilities,
         monthly_revenue,
         currency_code
       `,
@@ -604,8 +606,8 @@ if (latestPlan?.status === "generating") {
     const output = await generateCEOPlan({
       business: {
         name: business.name,
-        businessType:
-          business.business_type,
+        revenueModel:
+          business.revenue_model,
         description:
           business.description,
       },
@@ -616,6 +618,9 @@ if (latestPlan?.status === "generating") {
 
         teamSize:
           diagnostic.team_size,
+
+        ownerHoursPerWeek:
+          diagnostic.owner_hours_per_week,
 
         mainChallenge:
           diagnostic.main_challenge,
@@ -629,12 +634,11 @@ if (latestPlan?.status === "generating") {
         salesProcess:
           diagnostic.sales_process,
 
+        ownerResponsibilities:
+          diagnostic.owner_responsibilities,
+
         monthlyRevenue:
-          diagnostic.monthly_revenue === null
-            ? null
-            : Number(
-                diagnostic.monthly_revenue,
-              ),
+          Number(diagnostic.monthly_revenue),
 
         currencyCode:
           diagnostic.currency_code,

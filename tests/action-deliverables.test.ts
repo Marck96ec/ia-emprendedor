@@ -89,16 +89,18 @@ test("conserva borrador, feedback y contexto en una revisión", () => {
   const prompt = buildCommercialMessagesPrompt({
     business: {
       name: "Taller Norte",
-      business_type: "Servicios de reparación",
+      revenue_model: "Cobro por reparaciones a pequeños comercios.",
       description: "Reparaciones para pequeños comercios.",
     },
     diagnostic: {
       business_stage: "validating",
       team_size: 2,
+      owner_hours_per_week: 5,
       main_challenge: "Pocas conversaciones comerciales",
       primary_goal: "Aumentar solicitudes",
       customers_description: "Comercios de barrio",
       sales_process: "Referidos y WhatsApp",
+      owner_responsibilities: "Vendo, coordino el trabajo y reviso las finanzas.",
       monthly_revenue: 1200,
       currency_code: "USD",
     },

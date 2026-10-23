@@ -56,16 +56,18 @@ const validPlan: CEOPlan = {
 const input: GenerateCEOPlanInput = {
   business: {
     name: "Taller Norte",
-    businessType: "Servicios",
+    revenueModel: "Cobro por servicios de reparación.",
     description: "Reparaciones para comercios.",
   },
   diagnostic: {
     businessStage: "validating",
     teamSize: 2,
+    ownerHoursPerWeek: 6,
     mainChallenge: "Pocas conversaciones",
     primaryGoal: "Aumentar solicitudes",
     customersDescription: "Comercios locales",
     salesProcess: "Referidos",
+    ownerResponsibilities: "Vendo, coordino el equipo y reviso las finanzas.",
     monthlyRevenue: 1200,
     currencyCode: "USD",
   },

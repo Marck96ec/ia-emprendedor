@@ -10,16 +10,18 @@ import { commercialMessagesAgent } from "./commercial-messages-agent";
 export type CommercialMessagesContext = {
   business: {
     name: string;
-    business_type: string | null;
+    revenue_model: string;
     description: string | null;
   };
   diagnostic: {
     business_stage: string;
     team_size: number;
+    owner_hours_per_week: number;
     main_challenge: string;
     primary_goal: string;
     customers_description: string;
     sales_process: string;
+    owner_responsibilities: string;
     monthly_revenue: number | null;
     currency_code: string | null;
   };

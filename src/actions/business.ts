@@ -3,25 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { BusinessOnboardingSchema } from "@/lib/onboarding-validation";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createBusiness(formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const businessType = String(
-    formData.get("business_type") ?? "",
-  ).trim();
-  const description = String(
-    formData.get("description") ?? "",
-  ).trim();
+  const parsed = BusinessOnboardingSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description"),
+    revenue_model: formData.get("revenue_model"),
+  });
 
-  if (name.length < 2 || name.length > 120) {
+  if (!parsed.success) {
     redirect(
       "/onboarding/business?error=" +
         encodeURIComponent(
-          "El nombre del negocio debe tener entre 2 y 120 caracteres.",
+          "Completa el nombre, la descripción y cómo gana dinero tu empresa.",
         ),
     );
   }
+
+  const { name, description, revenue_model: revenueModel } = parsed.data;
 
   const supabase = await createClient();
 
@@ -62,8 +63,8 @@ export async function createBusiness(formData: FormData) {
   const { error } = await supabase.from("businesses").insert({
     owner_id: userId,
     name,
-    business_type: businessType || null,
-    description: description || null,
+    revenue_model: revenueModel,
+    description,
   });
 
   if (error) {

@@ -13,7 +13,7 @@ const steps = [
   },
   {
     number: 3,
-    label: "Tu primera semana",
+    label: "Siguiente paso",
   },
 ] as const;
 
