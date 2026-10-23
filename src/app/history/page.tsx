@@ -47,7 +47,7 @@ export default async function HistoryPage() {
         `
           id,
           name,
-          business_type
+          revenue_model
         `,
       )
       .eq("owner_id", userId)

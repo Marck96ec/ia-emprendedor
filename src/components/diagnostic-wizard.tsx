@@ -104,6 +104,13 @@ export function DiagnosticWizard({
                   </label>
                   <input id="team_size" name="team_size" type="number" min={1} max={10000} defaultValue={1} required className="form-field" />
                 </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="owner_hours_per_week" className="field-label">
+                    ¿Cuántas horas por semana puedes dedicar realmente a decisiones y mejoras del negocio?
+                  </label>
+                  <input id="owner_hours_per_week" name="owner_hours_per_week" type="number" min={0} max={168} required placeholder="Ej. 5" className="form-field" />
+                  <p className="mt-2 text-xs text-slate-500">Es una estimación: incluye solo tiempo que puedas sostener.</p>
+                </div>
               </div>
             </fieldset>
 
@@ -135,23 +142,31 @@ export function DiagnosticWizard({
                   <textarea id="customers_description" name="customers_description" minLength={10} maxLength={1000} rows={4} required placeholder="Ej. Familias y trabajadores de la zona que compran productos todos los días." className="form-field resize-none" />
                 </div>
                 <div>
-                  <label htmlFor="sales_process" className="field-label">
-                    ¿Cómo consigues clientes y realizas ventas actualmente?
+                    <label htmlFor="sales_process" className="field-label">
+                      Resume cómo consigues clientes y realizas ventas hoy
                   </label>
-                  <textarea id="sales_process" name="sales_process" minLength={10} maxLength={1500} rows={4} required placeholder="Ej. Los clientes llegan por recomendaciones, Instagram y personas que pasan frente al local." className="form-field resize-none" />
+                    <textarea id="sales_process" name="sales_process" minLength={10} maxLength={1500} rows={4} required placeholder="Ej. Llegan por recomendaciones e Instagram; luego cotizo por WhatsApp y doy seguimiento." className="form-field resize-none" />
                 </div>
               </div>
             </fieldset>
 
             <fieldset data-step="3" hidden={currentStep !== 3}>
-              <legend className="sr-only">Contexto opcional</legend>
-              <div>
-                <label htmlFor="monthly_revenue" className="field-label">
-                  Facturación mensual aproximada <span className="text-slate-400">(opcional)</span>
-                </label>
-                <div className="mt-2 grid grid-cols-3 gap-3">
-                  <input id="monthly_revenue" name="monthly_revenue" type="number" min={0} step="0.01" placeholder="5000" className="form-field col-span-2" />
-                  <select name="currency_code" defaultValue="USD" className="form-field bg-white">
+              <legend className="sr-only">Contexto del empresario y facturación</legend>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="owner_responsibilities" className="field-label">
+                    ¿Qué funciones principales realizas personalmente hoy?
+                  </label>
+                  <textarea id="owner_responsibilities" name="owner_responsibilities" minLength={10} maxLength={1500} rows={4} required placeholder="Ej. Vendo, atiendo clientes, coordino al equipo y reviso las finanzas." className="form-field resize-none" />
+                </div>
+                <div>
+                  <label htmlFor="monthly_revenue" className="field-label">
+                    ¿Cuál ha sido la facturación mensual promedio de tu empresa durante los últimos 3 meses?
+                  </label>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Indica los ingresos antes de gastos e impuestos. Puedes usar un valor aproximado.</p>
+                  <div className="mt-2 grid grid-cols-3 gap-3">
+                    <input id="monthly_revenue" name="monthly_revenue" type="number" min={0} step="0.01" placeholder="5000" required className="form-field col-span-2" />
+                    <select name="currency_code" defaultValue="USD" required className="form-field bg-white">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                     <option value="COP">COP</option>
@@ -161,10 +176,10 @@ export function DiagnosticWizard({
                     <option value="ARS">ARS</option>
                   </select>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Puedes dejar este campo vacío.</p>
-              </div>
+                  </div>
+                </div>
 
-              <div className="mt-4 rounded-xl bg-slate-50 p-3">
+              <div className="rounded-xl bg-slate-50 p-3">
                 <p className="text-sm font-semibold text-slate-800">¿Qué ocurrirá después?</p>
                 <p className="mt-1 text-sm leading-5 text-slate-600">
                   Prepararemos un diagnóstico, tres prioridades y un plan práctico para tus próximos 7 días.

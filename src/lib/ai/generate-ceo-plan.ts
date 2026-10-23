@@ -33,17 +33,19 @@ const defaultCEOPlanRunner: CEOPlanRunner = (
 export type GenerateCEOPlanInput = {
   business: {
     name: string;
-    businessType: string | null;
+    revenueModel: string;
     description: string | null;
   };
 
   diagnostic: {
     businessStage: string;
     teamSize: number;
+    ownerHoursPerWeek: number;
     mainChallenge: string;
     primaryGoal: string;
     customersDescription: string;
     salesProcess: string;
+    ownerResponsibilities: string;
     monthlyRevenue: number | null;
     currencyCode: string | null;
   };

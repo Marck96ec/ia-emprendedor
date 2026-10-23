@@ -58,10 +58,10 @@ export default async function BusinessOnboardingPage({
           {error && <div className="alert-box mt-6">{error}</div>}
 
           <form action={createBusiness} className="mt-5 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="field-label">
-                  Nombre del negocio
+                  Nombre de la empresa
                 </label>
 
                 <input
@@ -71,38 +71,42 @@ export default async function BusinessOnboardingPage({
                   required
                   minLength={2}
                   maxLength={120}
-                  placeholder="Ej. Starbucks"
+                  placeholder="Ej. Taller Norte"
                   className="form-field"
                 />
               </div>
 
               <div>
-                <label htmlFor="business_type" className="field-label">
-                  Tipo de negocio
+                <label htmlFor="description" className="field-label">
+                  ¿Qué hace tu empresa?
                 </label>
-
-                <input
-                  id="business_type"
-                  name="business_type"
-                  type="text"
-                  placeholder="Ej. cafetería y bebidas"
-                  className="form-field"
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={3}
+                  required
+                  minLength={10}
+                  maxLength={1500}
+                  placeholder="Qué vendes o haces y qué necesidad resuelves."
+                  className="form-field resize-y"
                 />
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="description" className="field-label">
-                Describe brevemente tu negocio
-              </label>
-
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                placeholder="¿Qué vendes, a quién y cómo funciona tu negocio?"
-                className="form-field resize-y"
-              />
+              <div>
+                <label htmlFor="revenue_model" className="field-label">
+                  ¿Cómo gana dinero tu empresa?
+                </label>
+                <textarea
+                  id="revenue_model"
+                  name="revenue_model"
+                  rows={3}
+                  required
+                  minLength={10}
+                  maxLength={1000}
+                  placeholder="Qué vendes, a quién cobras y cómo se realiza el pago."
+                  className="form-field resize-y"
+                />
+              </div>
             </div>
 
             <button type="submit" className="primary-button w-full">

@@ -74,7 +74,7 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
   const { data: business, error: businessError } = await supabase
     .from("businesses")
-    .select("id, owner_id, name, business_type, description")
+    .select("id, owner_id, name, revenue_model, description")
     .eq("id", plan?.business_id ?? "")
     .maybeSingle();
 
@@ -110,7 +110,7 @@ export async function workOnActionWithAI(formData: FormData) {
 
   const { data: diagnostic, error: diagnosticError } = await supabase
     .from("business_diagnostics")
-    .select("business_stage, team_size, main_challenge, primary_goal, customers_description, sales_process, monthly_revenue, currency_code")
+    .select("business_stage, team_size, owner_hours_per_week, main_challenge, primary_goal, customers_description, sales_process, owner_responsibilities, monthly_revenue, currency_code")
     .eq("business_id", business.id)
     .maybeSingle();
 
@@ -140,7 +140,7 @@ export async function workOnActionWithAI(formData: FormData) {
           await generateCommercialMessages({
             business: {
               name: business.name,
-              business_type: business.business_type,
+              revenue_model: business.revenue_model,
               description: business.description,
             },
             diagnostic,
@@ -168,7 +168,7 @@ export async function workOnActionWithAI(formData: FormData) {
           await generateValueProposition({
             business: {
               name: business.name,
-              business_type: business.business_type,
+              revenue_model: business.revenue_model,
               description: business.description,
             },
             diagnostic,

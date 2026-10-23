@@ -51,7 +51,7 @@ export default async function DashboardPage({
         `
           id,
           name,
-          business_type,
+          revenue_model,
           description,
           created_at
         `,
