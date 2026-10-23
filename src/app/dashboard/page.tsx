@@ -287,8 +287,8 @@ export default async function DashboardPage({
     : message;
 
   return (
-    <main className={`ambient-shell min-h-screen overflow-x-hidden px-4 py-4 sm:px-6 lg:px-8 ${readyPlan ? "h-dvh overflow-hidden" : ""}`}>
-      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "h-full min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
+    <main className={`ambient-shell min-h-dvh overflow-x-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 ${readyPlan ? "lg:h-dvh lg:overflow-hidden" : ""}`}>
+      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "min-h-[calc(100dvh-2rem)] lg:h-full lg:min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
         <DashboardHeader
           businessName={business.name}
           weekNumber={ceoPlan?.status === "ready" ? ceoPlan.week_number : null}

@@ -12,7 +12,7 @@ export function DashboardHeader({
   weekNumber,
 }: DashboardHeaderProps) {
   return (
-    <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200/80 pb-3">
+    <header className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3 sm:items-center sm:gap-4">
       <div className="min-w-0">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-500">
           TuCEO IA
@@ -29,7 +29,7 @@ export function DashboardHeader({
         </div>
       </div>
 
-      <nav aria-label="Navegación del dashboard" className="flex shrink-0 items-center gap-2">
+      <nav aria-label="Navegación del dashboard" className="flex shrink-0 flex-wrap justify-end gap-2">
         <Link href="/history" aria-label="Ver semanas anteriores" className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-xs">
           Semanas anteriores
         </Link>
