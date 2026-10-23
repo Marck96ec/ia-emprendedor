@@ -352,7 +352,6 @@ export default async function DashboardPage({
           <div className="flex min-h-0 flex-1 flex-col gap-3">
             <ExecutiveSummary
               summary={readyPlan.executive_summary}
-              diagnosis={readyPlan.diagnosis}
               strategicDiagnosis={readyPlan.strategic_diagnosis}
               priorities={readyPlan.priorities}
             />

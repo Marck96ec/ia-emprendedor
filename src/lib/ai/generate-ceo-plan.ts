@@ -137,16 +137,17 @@ revisarlo solo si el contexto actual indica que quedó obsoleto.
 Genera:
 
 - diagnóstico ejecutivo actualizado
-- razonamiento estratégico explícito con business_understanding, diagnosis,
-  bottleneck, evidence, uncertainty, alternative_hypothesis y
-  critical_decision
+- razonamiento estratégico explícito, en este orden:
+  business_understanding, diagnosis, bottleneck, evidence, confidence,
+  unknowns, alternative_hypothesis y critical_decision
 - exactamente 3 prioridades
 - exactamente 7 acciones, una para cada día del 1 al 7
 
 La decisión crítica es la unidad central del plan. No saltes directamente
 del contexto a las prioridades: explica primero el entendimiento del negocio,
-el diagnóstico, el cuello de botella, la evidencia, la incertidumbre y una
-hipótesis alternativa. El diagnóstico ejecutivo debe resumir ese razonamiento.
+el diagnóstico, el cuello de botella, la evidencia, la confianza, los
+desconocidos relevantes y una hipótesis alternativa. El diagnóstico textual
+legacy debe resumir strategic_diagnosis.diagnosis.summary.
 
 Para cada acción, decide explícitamente execution_mode y action_type
 siguiendo estas reglas:
@@ -197,7 +198,11 @@ ${retryInstructions}
         );
       }
 
-      return businessRules.data;
+      return {
+        ...businessRules.data,
+        diagnosis:
+          businessRules.data.strategic_diagnosis.diagnosis.summary,
+      };
     } catch (error) {
       const normalized = toSafeCEOPlanError(error);
 

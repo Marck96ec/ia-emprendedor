@@ -8,14 +8,78 @@ const PrioritySchema = z.object({
   expected_impact: z.string(),
 });
 
-const StrategicDiagnosisSchema = z.object({
-  business_understanding: z.string(),
-  diagnosis: z.string(),
-  bottleneck: z.string(),
-  evidence: z.string(),
-  uncertainty: z.string(),
-  alternative_hypothesis: z.string(),
-  critical_decision: z.string(),
+const EvidenceSourceFieldSchema = z.string().refine(
+  (sourceField) =>
+    [
+      "business.",
+      "diagnostic.",
+      "previousWeek.",
+      "businessKnowledge.",
+    ].some((prefix) => sourceField.startsWith(prefix)),
+  {
+    message: "source_field debe identificar un campo del contexto disponible",
+  },
+);
+
+export const StrategicDiagnosisSchema = z.object({
+  business_understanding: z.object({
+    business_model: z.string(),
+    revenue_engine: z.string(),
+    primary_customer: z.string(),
+    current_goal: z.string(),
+    owner_involvement: z.string(),
+    current_context: z.string(),
+  }),
+
+  diagnosis: z.object({
+    summary: z.string(),
+    affected_area: z.enum([
+      "demand",
+      "conversion",
+      "retention",
+      "revenue",
+      "cashflow",
+      "margin",
+      "capacity",
+      "operations",
+      "positioning",
+      "execution",
+      "owner_dependency",
+      "unknown",
+    ]),
+    why_it_matters: z.string(),
+  }),
+
+  bottleneck: z.object({
+    area: z.string(),
+    description: z.string(),
+    affected_metric: z.string(),
+  }),
+
+  evidence: z.array(
+    z.object({
+      fact: z.string(),
+      source_field: EvidenceSourceFieldSchema,
+      interpretation: z.string(),
+    }),
+  ),
+
+  confidence: z.enum(["low", "medium", "high"]),
+
+  unknowns: z.array(z.string()),
+
+  alternative_hypothesis: z.object({
+    hypothesis: z.string(),
+    what_would_confirm_it: z.string(),
+  }).nullable(),
+
+  critical_decision: z.object({
+    question: z.string(),
+    recommended_direction: z.string(),
+    rationale: z.string(),
+    expected_outcome: z.string(),
+    target_metric: z.string(),
+  }),
 });
 
 const WeeklyPlanItemSchema = z.object({
@@ -134,17 +198,16 @@ export function validateCEOPlanBusinessRules(
 }
 
 export const ceoAgent = new Agent({
-  name: "CEO IA Emprendedor",
+  name: "CEO IA — Sistema operativo de decisiones para empresarios",
 
   model:
     process.env.OPENAI_MODEL ??
     "gpt-5.4-mini",
 
   instructions: `
-Eres el CEO IA de IA Emprendedor.
+Eres el CEO IA de IA Emprendedor: un sistema operativo de decisiones para empresarios.
 
-Tu trabajo es ayudar al dueño de una pequeña empresa a decidir
-qué debe hacer primero.
+Tu trabajo es ayudar a empresarios a decidir qué deben hacer primero.
 
 Recibirás información real sobre:
 
@@ -205,30 +268,46 @@ No interpretes acciones no completadas como fracaso automático.
 Pueden indicar falta de tiempo, exceso de carga, cambio de prioridad
 o una estrategia poco adecuada.
 
-Tu respuesta debe ser práctica, concreta y entendible para una
-persona que dirige una pequeña empresa.
+Tu respuesta debe ser práctica, concreta y entendible para empresarios.
 
 Debes producir:
 
 1. Un resumen ejecutivo breve.
-2. Un razonamiento estratégico explícito con estos siete campos, en este orden:
-  business_understanding, diagnosis, bottleneck, evidence, uncertainty,
-  alternative_hypothesis y critical_decision.
-3. Un diagnóstico breve que resuma el campo diagnosis del razonamiento estratégico.
+2. Un razonamiento estratégico explícito con estos ocho bloques, en este orden:
+  business_understanding, diagnosis, bottleneck, evidence, confidence,
+  unknowns, alternative_hypothesis y critical_decision.
+3. Un diagnóstico textual legacy que resuma
+  strategic_diagnosis.diagnosis.summary.
 4. Exactamente 3 prioridades, ordenadas del 1 al 3.
 5. Exactamente 7 acciones, una para cada día del 1 al 7.
 
-El razonamiento estratégico es obligatorio y debe conectar cada afirmación
-con los datos disponibles. El bottleneck debe ser el cuello de botella
-actual, evidence debe citar señales concretas del contexto, uncertainty debe
-señalar qué no puede saberse todavía, alternative_hypothesis debe ofrecer
-una explicación plausible distinta y critical_decision debe expresar la
-decisión empresarial que el dueño debe tomar antes de ejecutar tareas.
+El razonamiento estratégico es obligatorio y debe seguir esta cadena:
+business_understanding -> diagnosis -> bottleneck -> evidence -> confidence
+-> unknowns -> alternative_hypothesis -> critical_decision.
+
+business_understanding debe describir el modelo de negocio, motor de ingresos,
+cliente principal, objetivo actual, involucramiento del empresario y contexto.
+Cuando un dato no esté disponible, indícalo claramente como desconocido.
+diagnosis.affected_area describe una variable empresarial, nunca una tarea.
+bottleneck debe describir una restricción empresarial, nunca una acción.
+
+evidence solo contiene hechos proporcionados en el input. Separa cada fact de
+su interpretation y usa source_field con una ruta reconocible del contexto:
+business.*, diagnostic.*, previousWeek.* o businessKnowledge.*.
+confidence no es certeza: usa high solo con evidencia suficiente y usa medium
+o low cuando falten variables que podrían cambiar el diagnóstico.
+unknowns solo incluye ausencias que podrían cambiarlo materialmente y puede
+estar vacío. alternative_hypothesis debe ser distinta del diagnóstico
+principal y puede ser null si no es razonable formularla.
+
+critical_decision debe expresar una decisión empresarial mediante question,
+recommended_direction, rationale, expected_outcome y target_metric. No
+conviertas la decisión en una tarea ni inventes cifras objetivo.
 
 Las prioridades deben enfocarse en aquello que tenga mayor impacto
 para el negocio dadas sus circunstancias actuales.
 
-Las acciones deben ser realistas para una pequeña empresa y deben
+Las acciones deben ser realistas para empresarios y deben
 poder ejecutarse durante los próximos 7 días.
 
 Para cada acción debes expresar explícitamente:

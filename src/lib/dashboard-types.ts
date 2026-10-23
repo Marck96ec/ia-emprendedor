@@ -34,11 +34,52 @@ export type DashboardPriority = {
 };
 
 export type DashboardStrategicDiagnosis = {
-  business_understanding: string;
-  diagnosis: string;
-  bottleneck: string;
-  evidence: string;
-  uncertainty: string;
-  alternative_hypothesis: string;
-  critical_decision: string;
+  business_understanding: {
+    business_model: string;
+    revenue_engine: string;
+    primary_customer: string;
+    current_goal: string;
+    owner_involvement: string;
+    current_context: string;
+  };
+  diagnosis: {
+    summary: string;
+    affected_area:
+      | "demand"
+      | "conversion"
+      | "retention"
+      | "revenue"
+      | "cashflow"
+      | "margin"
+      | "capacity"
+      | "operations"
+      | "positioning"
+      | "execution"
+      | "owner_dependency"
+      | "unknown";
+    why_it_matters: string;
+  };
+  bottleneck: {
+    area: string;
+    description: string;
+    affected_metric: string;
+  };
+  evidence: Array<{
+    fact: string;
+    source_field: string;
+    interpretation: string;
+  }>;
+  confidence: "low" | "medium" | "high";
+  unknowns: string[];
+  alternative_hypothesis: {
+    hypothesis: string;
+    what_would_confirm_it: string;
+  } | null;
+  critical_decision: {
+    question: string;
+    recommended_direction: string;
+    rationale: string;
+    expected_outcome: string;
+    target_metric: string;
+  };
 };
