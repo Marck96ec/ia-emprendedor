@@ -192,7 +192,7 @@ test("keeps evidence failure separate from the ready CEO plan", () => {
   const migration = readFileSync(
     join(
       process.cwd(),
-      "supabase/migrations/20261025020000_add_external_evidence.sql",
+      "supabase/migrations/20261025030000_add_external_evidence.sql",
     ),
     "utf8",
   );
