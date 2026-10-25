@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createWeeklyReview } from "@/actions/weekly-review";
+import { StrategicDiagnosisSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
+import { DecisionHypothesisSchema } from "@/lib/decision-learning";
 
 type WeeklyReviewPageProps = {
   searchParams: Promise<{
@@ -45,7 +47,7 @@ export default async function WeeklyReviewPage({
   const { data: ceoPlan, error: planError } =
     await supabase
       .from("ceo_plans")
-      .select("id, week_number, status")
+      .select("id, week_number, status, strategic_diagnosis, decision_hypothesis")
       .eq("business_id", business.id)
       .order("week_number", { ascending: false })
       .limit(1)
@@ -58,6 +60,13 @@ export default async function WeeklyReviewPage({
 
   if (!ceoPlan || ceoPlan.status !== "ready") {
     redirect("/dashboard");
+  }
+
+  const strategicDiagnosis = StrategicDiagnosisSchema.safeParse(ceoPlan.strategic_diagnosis);
+  const decisionHypothesis = DecisionHypothesisSchema.safeParse(ceoPlan.decision_hypothesis);
+
+  if (!strategicDiagnosis.success || !decisionHypothesis.success) {
+    redirect("/dashboard?error=" + encodeURIComponent("Este plan no tiene una hipótesis estratégica revisable."));
   }
 
   const { data: existingReview, error: reviewError } = await supabase
@@ -124,6 +133,29 @@ export default async function WeeklyReviewPage({
             </p>
           </div>
 
+          <section className="mt-6 rounded-[1.5rem] border border-slate-200 p-5" aria-labelledby="decision-learning-title">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Aprendizaje de la decisión</p>
+            <h2 id="decision-learning-title" className="mt-2 text-lg font-semibold text-slate-950">Qué estamos tratando de aprender</h2>
+            <dl className="mt-4 space-y-4 text-sm">
+              <div>
+                <dt className="font-semibold text-slate-700">Decisión evaluada</dt>
+                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.question}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-700">Hipótesis</dt>
+                <dd className="mt-1 leading-5 text-slate-600">{decisionHypothesis.data.statement}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-700">Métrica objetivo</dt>
+                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.target_metric}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-700">Resultado esperado</dt>
+                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.expected_outcome}</dd>
+              </div>
+            </dl>
+          </section>
+
           {pageError && <div className="alert-box mt-6">{pageError}</div>}
 
           <form action={createWeeklyReview} className="mt-8 space-y-7">
@@ -154,71 +186,51 @@ export default async function WeeklyReviewPage({
             </fieldset>
 
             <div>
-              <label htmlFor="outcome_summary" className="field-label">
-                ¿Qué cambió realmente?
+              <label htmlFor="observed_result" className="field-label">
+                ¿Qué ocurrió realmente después de ejecutar este plan?
               </label>
-
-              <textarea
-                id="outcome_summary"
-                name="outcome_summary"
-                required
-                minLength={5}
-                maxLength={1000}
-                rows={3}
-                placeholder="Ej. La nueva propuesta generó más respuestas."
-                className="form-field resize-y"
-              />
+              <textarea id="observed_result" name="observed_result" required minLength={5} maxLength={2000} rows={4} placeholder="Describe el resultado observado, sin interpretar más de lo que muestran los hechos." className="form-field resize-y" />
             </div>
 
             <div>
-              <label htmlFor="what_worked" className="field-label">
-                ¿Qué funcionó bien esta semana?
+              <label htmlFor="evidence" className="field-label">
+                ¿Qué evidencia concreta apareció?
               </label>
-
-              <textarea
-                id="what_worked"
-                name="what_worked"
-                required
-                minLength={5}
-                maxLength={2000}
-                rows={4}
-                placeholder="Ej. Contactar clientes antiguos produjo varias conversaciones nuevas."
-                className="form-field resize-y"
-              />
+              <textarea id="evidence" name="evidence" required minLength={5} maxLength={2000} rows={3} placeholder="Ej. Se contactaron 12 clientes y solo uno pidió información." className="form-field resize-y" />
             </div>
 
             <div>
-              <label htmlFor="what_didnt_work" className="field-label">
-                ¿Qué no funcionó o qué no pudiste completar?
+              <label htmlFor="learning" className="field-label">
+                ¿Qué aprendiste que debería cambiar la próxima decisión?
               </label>
-
-              <textarea
-                id="what_didnt_work"
-                name="what_didnt_work"
-                required
-                minLength={5}
-                maxLength={2000}
-                rows={4}
-                placeholder="Ej. No pude completar algunas llamadas porque tuve que atender problemas operativos."
-                className="form-field resize-y"
-              />
+              <textarea id="learning" name="learning" required minLength={5} maxLength={2000} rows={4} placeholder="Escribe el aprendizaje estratégico, incluso si la evidencia todavía es inconclusa." className="form-field resize-y" />
             </div>
 
-            <div>
-              <label htmlFor="business_changes" className="field-label">
-                ¿Qué cambió en el negocio esta semana?
-              </label>
+            <fieldset>
+              <legend className="field-label">¿Cómo queda la hipótesis?</legend>
+              <div className="mt-3 space-y-3">
+                {[
+                  ["validated", "Validada"],
+                  ["rejected", "Rechazada"],
+                  ["inconclusive", "Todavía no sabemos"],
+                ].map(([value, label]) => (
+                  <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4">
+                    <input type="radio" name="hypothesis_status" value={value} required className="h-4 w-4" />
+                    <span className="font-medium text-slate-800">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
-              <textarea
-                id="business_changes"
-                name="business_changes"
-                required
-                minLength={5}
-                maxLength={2000}
-                rows={4}
-                placeholder="Ej. Conseguimos dos clientes nuevos y descubrimos que las recomendaciones convierten mejor."
-                className="form-field resize-y"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="metric_before" className="field-label">Métrica antes <span className="ml-1 text-slate-400">(opcional)</span></label>
+                <input id="metric_before" name="metric_before" maxLength={500} placeholder="Ej. 0 respuestas" className="form-field mt-2" />
+              </div>
+              <div>
+                <label htmlFor="metric_after" className="field-label">Métrica después <span className="ml-1 text-slate-400">(opcional)</span></label>
+                <input id="metric_after" name="metric_after" maxLength={500} placeholder="Ej. 1 respuesta" className="form-field mt-2" />
+              </div>
             </div>
 
             <div>

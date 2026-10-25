@@ -20,6 +20,11 @@ type WeeklyReviewRow = {
   total_actions: number;
   outcome_status: "positive" | "mixed" | "no_change" | "negative";
   outcome_summary: string;
+  decision_learning: {
+    decision_question: string;
+    hypothesis_status: "validated" | "rejected" | "inconclusive";
+    learning: string;
+  } | null;
 };
 
 export default async function HistoryPage() {
@@ -162,7 +167,8 @@ export default async function HistoryPage() {
           completed_actions,
           total_actions,
           outcome_status,
-          outcome_summary
+          outcome_summary,
+          decision_learning
         `,
       )
       .in("ceo_plan_id", planIds);
@@ -236,6 +242,7 @@ export default async function HistoryPage() {
             nextWeekFocus: review.next_week_focus,
             outcomeStatus: review.outcome_status,
             outcomeSummary: review.outcome_summary,
+            decisionLearning: review.decision_learning,
           }
         : null,
     };

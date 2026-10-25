@@ -17,6 +17,11 @@ export type HistoryWeek = {
     nextWeekFocus: string | null;
     outcomeStatus: "positive" | "mixed" | "no_change" | "negative";
     outcomeSummary: string;
+    decisionLearning: {
+      decision_question: string;
+      hypothesis_status: "validated" | "rejected" | "inconclusive";
+      learning: string;
+    } | null;
   } | null;
 };
 
@@ -29,6 +34,12 @@ const outcomeLabels = {
   mixed: "Avance parcial",
   no_change: "Sin cambio claro",
   negative: "Hubo retroceso",
+} as const;
+
+const hypothesisStatusLabels = {
+  validated: "Validada",
+  rejected: "Rechazada",
+  inconclusive: "Todavía no sabemos",
 } as const;
 
 function statusLabel(status: HistoryWeek["status"]) {
@@ -176,6 +187,14 @@ export function HistoryTimeline({ weeks }: HistoryTimelineProps) {
 
                 {selectedWeek.review ? (
                   <div className="mt-4 space-y-4">
+                    {selectedWeek.review.decisionLearning && (
+                      <div className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Aprendizaje estratégico</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-900">{selectedWeek.review.decisionLearning.decision_question}</p>
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Hipótesis: {hypothesisStatusLabels[selectedWeek.review.decisionLearning.hypothesis_status]}</p>
+                        <p className="mt-1.5 text-sm leading-5 text-slate-700">{selectedWeek.review.decisionLearning.learning}</p>
+                      </div>
+                    )}
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
                       <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-emerald-700">Resultado observado</p>
                       <p className="mt-1 text-sm font-semibold text-slate-900">{outcomeLabels[selectedWeek.review.outcomeStatus]}</p>

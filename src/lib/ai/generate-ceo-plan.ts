@@ -83,6 +83,17 @@ export type GenerateCEOPlanInput = {
       totalActions: number;
       outcomeStatus: "positive" | "mixed" | "no_change" | "negative";
       outcomeSummary: string;
+      decisionLearning: {
+        decisionQuestion: string;
+        recommendedDirection: string;
+        hypothesis: string;
+        targetMetric: string;
+        expectedOutcome: string;
+        observedResult: string;
+        evidence: string[];
+        learning: string;
+        hypothesisStatus: "validated" | "rejected" | "inconclusive";
+      } | null;
     };
   } | null;
   businessKnowledge: BusinessKnowledge;
@@ -132,6 +143,15 @@ semana y debes utilizar el resultado real y los aprendizajes de la
 semana anterior para adaptar tus decisiones. Distingue siempre la
 ejecución del resultado: completar acciones no equivale a éxito.
 
+Antes de recomendar la siguiente decisión, revisa explícitamente
+previousWeek.review.decisionLearning cuando exista. Si la hipótesis fue
+validated, escala, profundiza o pasa al siguiente bottleneck en lugar de
+repetir la misma prueba. Si fue rejected, cuestiona la dirección anterior y
+considera una hipótesis alternativa o un nuevo bottleneck. Si fue
+inconclusive, decide si hace falta mejor evidencia, una prueba más fuerte o
+si la decisión ya no merece más tiempo. No trates una hipótesis como verdad:
+la evidencia puede sostenerla, contradecirla o seguir siendo insuficiente.
+
 Un esfuerzo alto con no_change exige reevaluar la estrategia y no
 repetir mecánicamente el plan. Un resultado positive con pocas
 acciones exige identificar qué produjo el impacto. Si hubo negative,
@@ -146,15 +166,22 @@ Genera:
 - diagnóstico ejecutivo actualizado
 - razonamiento estratégico explícito, en este orden:
   business_understanding, diagnosis, bottleneck, evidence, confidence,
-  unknowns, alternative_hypothesis y critical_decision
-- exactamente 3 prioridades
-- entre 1 y 5 acciones, únicamente las necesarias para ejecutar o validar la decisión crítica
+  unknowns, alternative_hypothesis, critical_decision y decision_hypothesis
+  - exactamente 3 prioridades después de la hipótesis
+  - entre 1 y 5 acciones después de las prioridades, únicamente las necesarias
+    para ejecutar o validar la decisión crítica
 
 La decisión crítica es la unidad central del plan. No saltes directamente
 del contexto a las prioridades: explica primero el entendimiento del negocio,
 el diagnóstico, el cuello de botella, la evidencia, la confianza, los
 desconocidos relevantes y una hipótesis alternativa. El diagnóstico textual
 legacy debe resumir strategic_diagnosis.diagnosis.summary.
+
+Después de critical_decision formula decision_hypothesis directamente a
+partir de esa decisión. statement responde qué creemos que ocurrirá si
+seguimos recommended_direction; validation_signal describe la señal que
+permitiría saber si estábamos en lo correcto. Puede ser cualitativa o
+cuantitativa, pero no inventes objetivos numéricos sin evidencia.
 
 Para cada acción, decide explícitamente execution_mode y action_type
 siguiendo estas reglas:

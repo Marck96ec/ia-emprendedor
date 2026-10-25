@@ -18,6 +18,7 @@
     "src/lib/ai/ceo-agent.ts",
     "src/lib/ai/ceo-plan-errors.ts",
     "src/lib/ai/generate-ceo-plan.ts",
+    "src/lib/decision-learning.ts",
     "src/lib/business-knowledge-types.ts",
     "src/lib/ai/value-proposition-agent.ts",
     "src/lib/ai/generate-commercial-messages.ts",
