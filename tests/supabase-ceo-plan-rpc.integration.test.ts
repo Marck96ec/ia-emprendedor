@@ -212,6 +212,84 @@ function createPlanPayload(actions = validActions()) {
   };
 }
 
+type V4Action = {
+  sequence: number;
+  action: string;
+  objective: string;
+  reason: string;
+  success_metric: string;
+  expected_result: string;
+  role_recommendation: "execute" | "delegate" | "automate" | "defer";
+  role_reason: string;
+  estimated_hours: number;
+  execution_mode: "manual" | "ai_assisted";
+  action_type: "generic" | "value_proposition" | "commercial_messages";
+};
+
+function validRoleActions(): V4Action[] {
+  return [
+    {
+      sequence: 1,
+      action: "Validar la hipótesis con clientes",
+      objective: "Aprender qué segmento responde mejor.",
+      reason: "Requiere criterio y aprendizaje directo del empresario.",
+      success_metric: "Tres conversaciones registradas",
+      expected_result: "Identificar el segmento con mayor señal.",
+      role_recommendation: "execute",
+      role_reason: "La conversación requiere criterio estratégico del empresario.",
+      estimated_hours: 2,
+      execution_mode: "manual",
+      action_type: "generic",
+    },
+    {
+      sequence: 2,
+      action: "Configurar un seguimiento repetible",
+      objective: "Reducir trabajo operativo recurrente.",
+      reason: "El proceso puede estructurarse con reglas simples.",
+      success_metric: "El seguimiento queda definido",
+      expected_result: "Menos atención personal en tareas repetitivas.",
+      role_recommendation: "automate",
+      role_reason: "Es repetitivo y de bajo juicio estratégico.",
+      estimated_hours: 1,
+      execution_mode: "manual",
+      action_type: "generic",
+    },
+    {
+      sequence: 3,
+      action: "Revisar una iniciativa secundaria",
+      objective: "Conservarla para otro ciclo.",
+      reason: "No mueve el bottleneck actual.",
+      success_metric: "La iniciativa queda fuera del ciclo",
+      expected_result: "Preservar capacidad para la decisión crítica.",
+      role_recommendation: "defer",
+      role_reason: "Compite con una prioridad de mayor impacto esta semana.",
+      estimated_hours: 0,
+      execution_mode: "manual",
+      action_type: "generic",
+    },
+  ];
+}
+
+function createV4PlanPayload(
+  actions: ReadonlyArray<V4Action> = validRoleActions(),
+  timeAllocation = {
+    available_hours: 6,
+    allocated_hours: 3,
+    reserved_hours: 3,
+    rationale: "Se conserva capacidad para responder al aprendizaje.",
+  },
+) {
+  return {
+    p_executive_summary: "Resumen válido v4",
+    p_diagnosis: "Diagnóstico válido v4",
+    p_priorities: validPriorities(),
+    p_weekly_plan: actions,
+    p_actions: actions,
+    p_strategic_diagnosis: { confidence: "medium" },
+    p_time_allocation: timeAllocation,
+  };
+}
+
 async function createTestUser(
   admin: SupabaseClient,
   config: LocalSupabaseConfig,
@@ -262,6 +340,30 @@ async function createBusiness(
   assert.ifError(error);
   assert.ok(data);
   return data.id;
+}
+
+async function createDiagnostic(
+  admin: SupabaseClient,
+  businessId: string,
+  ownerHoursPerWeek = 6,
+) {
+  const { error } = await admin
+    .from("business_diagnostics")
+    .insert({
+      business_id: businessId,
+      business_stage: "operating",
+      team_size: 1,
+      owner_hours_per_week: ownerHoursPerWeek,
+      owner_responsibilities: "Ventas, decisiones y revisión del negocio.",
+      main_challenge: "La captación comercial necesita más foco.",
+      primary_goal: "Aumentar conversaciones cualificadas.",
+      customers_description: "Comercios locales con una necesidad concreta.",
+      sales_process: "Conversaciones directas y seguimiento semanal.",
+      monthly_revenue: 1200,
+      currency_code: "USD",
+    });
+
+  assert.ifError(error);
 }
 
 async function createPlan(
@@ -328,6 +430,34 @@ async function getActionSequences(
   return (data ?? []).map((action) => action.sequence);
 }
 
+async function getRoleActions(
+  admin: SupabaseClient,
+  planId: string,
+) {
+  const { data, error } = await admin
+    .from("weekly_actions")
+    .select("sequence, role_recommendation, role_reason, estimated_hours")
+    .eq("ceo_plan_id", planId)
+    .order("sequence", { ascending: true });
+
+  assert.ifError(error);
+  return data ?? [];
+}
+
+async function getTimeAllocation(
+  admin: SupabaseClient,
+  planId: string,
+) {
+  const { data, error } = await admin
+    .from("ceo_plans")
+    .select("time_allocation")
+    .eq("id", planId)
+    .single();
+
+  assert.ifError(error);
+  return data.time_allocation;
+}
+
 test(
   "CEO plan RPC en Supabase local protege propietarios, estados y atomicidad",
   { skip: !enabled },
@@ -347,6 +477,7 @@ test(
     const owner = await createTestUser(admin, config, "owner");
     const otherUser = await createTestUser(admin, config, "other");
     const businessId = await createBusiness(admin, owner.id);
+    await createDiagnostic(admin, businessId);
     const planId = await createPlan(admin, businessId, 1);
     const expectedActions = validActions();
 
@@ -369,6 +500,151 @@ test(
         "ready",
       );
       assert.deepEqual(await getActionSequences(admin, planId), [1, 2, 3]);
+
+      const validV4PlanId = await createPlan(admin, businessId, 6);
+      const validV4Result = await owner.client.rpc(
+        "complete_ceo_plan",
+        {
+          p_plan_id: validV4PlanId,
+          ...createV4PlanPayload(),
+        },
+      );
+      assert.ifError(validV4Result.error);
+      assert.equal(
+        (await getPlanStatus(admin, validV4PlanId)).status,
+        "ready",
+      );
+      assert.deepEqual(await getRoleActions(admin, validV4PlanId), [
+        {
+          sequence: 1,
+          role_recommendation: "execute",
+          role_reason: "La conversación requiere criterio estratégico del empresario.",
+          estimated_hours: 2,
+        },
+        {
+          sequence: 2,
+          role_recommendation: "automate",
+          role_reason: "Es repetitivo y de bajo juicio estratégico.",
+          estimated_hours: 1,
+        },
+        {
+          sequence: 3,
+          role_recommendation: "defer",
+          role_reason: "Compite con una prioridad de mayor impacto esta semana.",
+          estimated_hours: 0,
+        },
+      ]);
+      assert.deepEqual(await getTimeAllocation(admin, validV4PlanId), {
+        available_hours: 6,
+        allocated_hours: 3,
+        reserved_hours: 3,
+        rationale: "Se conserva capacidad para responder al aprendizaje.",
+      });
+
+      const invalidV4Cases = [
+        {
+          week: 7,
+          actions: validRoleActions().map((action) =>
+            action.sequence === 3
+              ? { ...action, estimated_hours: 1 }
+              : action,
+          ),
+          timeAllocation: {
+            available_hours: 6,
+            allocated_hours: 4,
+            reserved_hours: 2,
+            rationale: "Reserva válida.",
+          },
+        },
+        {
+          week: 8,
+          actions: validRoleActions().map((action) =>
+            action.sequence === 1
+              ? { ...action, estimated_hours: 0 }
+              : action,
+          ),
+          timeAllocation: {
+            available_hours: 6,
+            allocated_hours: 1,
+            reserved_hours: 5,
+            rationale: "Reserva válida.",
+          },
+        },
+        {
+          week: 9,
+          actions: validRoleActions(),
+          timeAllocation: {
+            available_hours: 6,
+            allocated_hours: 4,
+            reserved_hours: 2,
+            rationale: "Asignación inconsistente.",
+          },
+        },
+        {
+          week: 10,
+          actions: validRoleActions(),
+          timeAllocation: {
+            available_hours: 6,
+            allocated_hours: 3,
+            reserved_hours: 8,
+            rationale: "Reserva inconsistente.",
+          },
+        },
+      ];
+
+      for (const invalidCase of invalidV4Cases) {
+        const invalidV4PlanId = await createPlan(
+          admin,
+          businessId,
+          invalidCase.week,
+        );
+        const invalidV4Result = await owner.client.rpc(
+          "complete_ceo_plan",
+          {
+            p_plan_id: invalidV4PlanId,
+            ...createV4PlanPayload(
+              invalidCase.actions,
+              invalidCase.timeAllocation,
+            ),
+          },
+        );
+
+        assert.ok(invalidV4Result.error);
+        assert.equal(
+          (await getPlanStatus(admin, invalidV4PlanId)).status,
+          "generating",
+        );
+        assert.equal(await countActions(admin, invalidV4PlanId), 0);
+      }
+
+      await admin
+        .from("business_diagnostics")
+        .update({ owner_hours_per_week: 5 })
+        .eq("business_id", businessId);
+      const overCapacityPlanId = await createPlan(admin, businessId, 11);
+      const overCapacityActions = validRoleActions().map((action) =>
+        action.sequence === 2
+          ? { ...action, estimated_hours: 4 }
+          : action,
+      );
+      const overCapacityResult = await owner.client.rpc(
+        "complete_ceo_plan",
+        {
+          p_plan_id: overCapacityPlanId,
+          ...createV4PlanPayload(overCapacityActions, {
+            available_hours: 5,
+            allocated_hours: 6,
+            reserved_hours: 0,
+            rationale: "No debe persistirse.",
+          }),
+        },
+      );
+      assert.ok(overCapacityResult.error);
+      assert.equal(
+        (await getPlanStatus(admin, overCapacityPlanId)).status,
+        "generating",
+      );
+      assert.equal(await countActions(admin, overCapacityPlanId), 0);
 
       const nonOwnerFailure = await otherUser.client.rpc(
         "fail_ceo_plan",

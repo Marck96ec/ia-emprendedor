@@ -41,6 +41,11 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public
 as $$
+declare
+  owner_hours numeric;
+  available_hours numeric;
+  allocated_hours numeric;
+  reserved_hours numeric;
 begin
   if jsonb_typeof(p_time_allocation) is distinct from 'object'
     or btrim(coalesce(p_time_allocation->>'rationale', '')) = ''
@@ -82,6 +87,33 @@ begin
     raise exception using
       errcode = '22023',
       message = 'CEO actions contain invalid role or time values';
+  end if;
+
+  select bd.owner_hours_per_week::numeric
+  into owner_hours
+  from public.ceo_plans cp
+  join public.business_diagnostics bd
+    on bd.business_id = cp.business_id
+  where cp.id = p_plan_id;
+
+  select coalesce(sum(item.estimated_hours), 0::numeric)
+  into allocated_hours
+  from jsonb_to_recordset(p_actions) as item(
+    estimated_hours numeric
+  );
+
+  available_hours := (p_time_allocation->>'available_hours')::numeric;
+  reserved_hours := (p_time_allocation->>'reserved_hours')::numeric;
+
+  if owner_hours is null
+    or available_hours <> owner_hours
+    or (p_time_allocation->>'allocated_hours')::numeric <> allocated_hours
+    or reserved_hours <> available_hours - allocated_hours
+    or allocated_hours > owner_hours
+  then
+    raise exception using
+      errcode = '22023',
+      message = 'CEO time allocation is inconsistent with actions or capacity';
   end if;
 
   if exists (

@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v3-strategic-diagnosis";
+const PROMPT_VERSION = "v4-role-time-allocation";
 
 const GENERATING_STALE_AFTER_MS =
   15 * 60 * 1000;
