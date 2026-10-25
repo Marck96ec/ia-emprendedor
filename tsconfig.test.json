@@ -13,6 +13,7 @@
   "include": [
     "tests/action-deliverables.test.ts",
     "tests/ceo-plan-output-schema.test.ts",
+    "tests/external-evidence.test.ts",
     "tests/supabase-ceo-plan-rpc.integration.test.ts",
     "src/lib/ai/action-deliverables.ts",
     "src/lib/ai/ceo-agent.ts",
@@ -22,6 +23,9 @@
     "src/lib/business-knowledge-types.ts",
     "src/lib/ai/value-proposition-agent.ts",
     "src/lib/ai/generate-commercial-messages.ts",
-    "src/lib/ai/commercial-messages-agent.ts"
+    "src/lib/ai/commercial-messages-agent.ts",
+    "src/lib/ai/external-evidence.ts",
+    "src/lib/ai/evidence-agent.ts",
+    "src/lib/ai/generate-external-evidence.ts"
   ]
 }
