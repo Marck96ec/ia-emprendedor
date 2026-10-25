@@ -111,6 +111,8 @@ export async function generateCEOPlan(
     );
   }
 
+  let previousIssuePaths: string[] = [];
+
   for (
     let attempt = 1;
     attempt <= MAX_GENERATION_ATTEMPTS;
@@ -125,7 +127,15 @@ La respuesta anterior no cumplió el contrato. Corrige únicamente su
 estructura y coherencia de clasificación. Devuelve un plan completo,
 no una explicación del error. Si excediste la capacidad semanal, reduce,
 delega, automatiza o difiere acciones hasta respetar las horas disponibles.
-`;
+
+Si el error anterior fue causado por confidence high con múltiples unknowns,
+conserva los unknowns relevantes y reduce confidence a medium o low.
+No borres incertidumbre real solo para pasar la validación.
+${
+  previousIssuePaths.length > 0
+    ? `\nCampos que fallaron validación:\n${previousIssuePaths.join("\n")}\n`
+    : ""
+}`;
 
       const result = await runner(
         ceoAgent,
@@ -176,6 +186,13 @@ del contexto a las prioridades: explica primero el entendimiento del negocio,
 el diagnóstico, el cuello de botella, la evidencia, la confianza, los
 desconocidos relevantes y una hipótesis alternativa. El diagnóstico textual
 legacy debe resumir strategic_diagnosis.diagnosis.summary.
+
+Mantén coherencia entre confidence y unknowns:
+
+- high: máximo 1 unknown relevante.
+- medium/low: puede contener múltiples unknowns cuando la información
+  disponible no permite mayor certeza.
+- Nunca elimines unknowns reales para aparentar mayor confianza.
 
 Después de critical_decision formula decision_hypothesis directamente a
 partir de esa decisión. statement responde qué creemos que ocurrirá si
@@ -268,6 +285,7 @@ ${retryInstructions}
         attempt < MAX_GENERATION_ATTEMPTS &&
         isRetryableCEOPlanError(normalized)
       ) {
+        previousIssuePaths = normalized.issuePaths;
         continue;
       }
 

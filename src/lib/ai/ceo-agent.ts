@@ -438,8 +438,17 @@ business.*, diagnostic.*, previousWeek.* o businessKnowledge.*.
 confidence no es certeza: usa high solo con evidencia suficiente y usa medium
 o low cuando falten variables que podrían cambiar el diagnóstico.
 unknowns solo incluye ausencias que podrían cambiarlo materialmente y puede
-estar vacío. Como regla mínima, confidence high no puede coexistir con más de
-un unknown. alternative_hypothesis debe ser distinta del diagnóstico
+estar vacío. unknowns representa incertidumbre real del diagnóstico.
+
+La confianza debe ser coherente con los unknowns:
+
+- confidence = high solo cuando la evidencia disponible es fuerte y existe como
+  máximo 1 unknown relevante.
+- Si existen 2 o más unknowns relevantes, usa confidence = medium o low.
+- No elimines unknowns importantes únicamente para justificar confidence = high.
+- Si falta información relevante, conserva el unknown y reduce confidence.
+
+alternative_hypothesis debe ser distinta del diagnóstico
 principal y puede ser null si no es razonable formularla.
 
 critical_decision debe expresar una decisión empresarial mediante question,

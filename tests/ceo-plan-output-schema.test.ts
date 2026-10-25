@@ -381,6 +381,73 @@ test("rechaza confidence high cuando hay múltiples unknowns", () => {
   );
 });
 
+test("valida la coherencia entre confidence y cantidad de unknowns", () => {
+  const withDiagnosis = (
+    confidence: "low" | "medium" | "high",
+    unknowns: string[],
+  ) => ({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      confidence,
+      unknowns,
+    },
+  });
+
+  const cases: Array<[
+    "low" | "medium" | "high",
+    string[],
+    boolean,
+  ]> = [
+    ["high", [], true],
+    ["high", ["A"], true],
+    ["high", ["A", "B"], false],
+    ["medium", ["A", "B", "C"], true],
+    ["low", ["A", "B", "C"], true],
+  ];
+
+  for (const [confidence, unknowns, expected] of cases) {
+    assert.equal(
+      validateCEOPlanBusinessRules(withDiagnosis(confidence, unknowns)).success,
+      expected,
+      `${confidence} con ${unknowns.length} unknowns`,
+    );
+  }
+});
+
+test("reintenta high con múltiples unknowns y acepta medium conservándolos", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const unknowns = ["A", "B"];
+  const prompts: string[] = [];
+  let attempts = 0;
+
+  const result = await generateCEOPlan(input, async (_agent, prompt) => {
+    attempts += 1;
+    prompts.push(prompt);
+
+    return {
+      finalOutput: {
+        ...validPlan,
+        strategic_diagnosis: {
+          ...validPlan.strategic_diagnosis,
+          confidence: attempts === 1 ? "high" : "medium",
+          unknowns,
+        },
+      },
+    };
+  });
+
+  assert.equal(attempts, 2);
+  assert.equal(result.strategic_diagnosis.confidence, "medium");
+  assert.deepEqual(result.strategic_diagnosis.unknowns, unknowns);
+  assert.equal(prompts[0].includes("Campos que fallaron validación"), false);
+  assert.match(
+    prompts[1],
+    /Campos que fallaron validación:\s+strategic_diagnosis\.unknowns/,
+  );
+  assert.match(prompts[1], /reduce confidence a medium o low/);
+});
+
 test("documenta que la validez semántica de una decisión requiere evaluación del modelo", () => {
   const taskLikeDecision = {
     ...validPlan,
