@@ -68,6 +68,9 @@ export type GenerateCEOPlanInput = {
       reason: string;
       successMetric: string;
       expectedResult: string;
+      roleRecommendation: "execute" | "delegate" | "automate" | "defer";
+      roleReason: string;
+      estimatedHours: number;
       status: string;
     }>;
 
@@ -109,7 +112,8 @@ export async function generateCEOPlan(
           : `
 La respuesta anterior no cumplió el contrato. Corrige únicamente su
 estructura y coherencia de clasificación. Devuelve un plan completo,
-no una explicación del error.
+no una explicación del error. Si excediste la capacidad semanal, reduce,
+delega, automatiza o difiere acciones hasta respetar las horas disponibles.
 `;
 
       const result = await runner(
@@ -169,6 +173,8 @@ siguiendo estas reglas:
 - Genera únicamente las acciones necesarias. No agregues tareas para completar una cuota.
 - Considera diagnostic.ownerHoursPerWeek, la capacidad real mostrada en previousWeek,
   la confianza, los unknowns y la complejidad del experimento al decidir la cantidad.
+- Clasifica también role_recommendation, role_reason y estimated_hours. La suma
+  de estimated_hours no puede superar diagnostic.ownerHoursPerWeek.
 - Cada acción debe incluir reason, success_metric y expected_result. reason debe relacionarla
   con la decisión crítica, el bottleneck y el diagnóstico; expected_result debe describir
   el aprendizaje o cambio empresarial esperado, no repetir la tarea.
@@ -199,6 +205,7 @@ ${retryInstructions}
 
       const businessRules = validateCEOPlanBusinessRules(
         structuralOutput.data,
+        input.diagnostic.ownerHoursPerWeek,
       );
 
       if (!businessRules.success) {
@@ -210,8 +217,20 @@ ${retryInstructions}
         );
       }
 
+      const allocatedHours = businessRules.data.weekly_plan.reduce(
+        (total, item) => total + item.estimated_hours,
+        0,
+      );
+
       return {
         ...businessRules.data,
+        time_allocation: {
+          ...businessRules.data.time_allocation,
+          available_hours: input.diagnostic.ownerHoursPerWeek,
+          allocated_hours: allocatedHours,
+          reserved_hours:
+            input.diagnostic.ownerHoursPerWeek - allocatedHours,
+        },
         diagnosis:
           businessRules.data.strategic_diagnosis.diagnosis.summary,
       };

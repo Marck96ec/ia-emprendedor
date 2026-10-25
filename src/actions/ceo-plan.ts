@@ -477,6 +477,9 @@ if (latestPlan?.status === "generating") {
           expected_result,
           execution_mode,
           action_type,
+          role_recommendation,
+          role_reason,
+          estimated_hours,
           status
         `,
       )
@@ -573,6 +576,12 @@ if (latestPlan?.status === "generating") {
               action.execution_mode,
             actionType:
               action.action_type,
+            roleRecommendation:
+              action.role_recommendation,
+            roleReason:
+              action.role_reason,
+            estimatedHours:
+              Number(action.estimated_hours),
             status: action.status,
           }),
         ),
@@ -663,6 +672,7 @@ if (latestPlan?.status === "generating") {
         p_priorities: output.priorities,
         p_weekly_plan: output.weekly_plan,
         p_actions: output.weekly_plan,
+        p_time_allocation: output.time_allocation,
       });
 
     if (completePlanError) {

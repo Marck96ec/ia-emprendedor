@@ -14,3 +14,13 @@ export const ACTION_TYPES = [
 
 export type ActionType =
   (typeof ACTION_TYPES)[number];
+
+export const ACTION_ROLE_RECOMMENDATIONS = [
+  "execute",
+  "delegate",
+  "automate",
+  "defer",
+] as const;
+
+export type ActionRoleRecommendation =
+  (typeof ACTION_ROLE_RECOMMENDATIONS)[number];
