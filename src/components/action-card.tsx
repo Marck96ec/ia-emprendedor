@@ -31,6 +31,13 @@ function getActionState(action: DashboardAction) {
   };
 }
 
+const roleLabels = {
+  execute: "Tú",
+  delegate: "Delegar",
+  automate: "Automatizar",
+  defer: "Diferir",
+} as const;
+
 export function ActionCard({
   action,
   selected,
@@ -66,6 +73,9 @@ export function ActionCard({
         </p>
         <p className={`mt-0.5 truncate text-[0.62rem] font-medium lg:mt-1 lg:text-[0.68rem] ${selected ? "text-slate-300" : state.className.split(" ").at(-1)}`}>
           {state.label}
+        </p>
+        <p className={`mt-1 truncate text-[0.58rem] font-semibold ${selected ? "text-slate-300" : "text-slate-500"}`}>
+          {roleLabels[action.role_recommendation]} · {action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}
         </p>
         {recommended && action.status === "pending" && (
           <p className={`mt-1 text-[0.58rem] font-semibold uppercase tracking-[0.1em] ${selected ? "text-sky-200" : "text-sky-700"}`}>

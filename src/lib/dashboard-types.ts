@@ -1,4 +1,8 @@
-import type { ActionExecutionMode, ActionType } from "@/lib/weekly-action-types";
+import type {
+  ActionExecutionMode,
+  ActionRoleRecommendation,
+  ActionType,
+} from "@/lib/weekly-action-types";
 
 export type DashboardActionResult = {
   id: string;
@@ -13,11 +17,21 @@ export type DashboardAction = {
   reason: string;
   success_metric: string;
   expected_result: string;
+  role_recommendation: ActionRoleRecommendation;
+  role_reason: string;
+  estimated_hours: number;
   status: "pending" | "completed";
   completed_at: string | null;
   execution_mode: ActionExecutionMode;
   action_type: ActionType;
   action_results: DashboardActionResult[];
+};
+
+export type DashboardTimeAllocation = {
+  available_hours: number;
+  allocated_hours: number;
+  reserved_hours: number;
+  rationale: string;
 };
 
 export type DashboardWeeklyReview = {

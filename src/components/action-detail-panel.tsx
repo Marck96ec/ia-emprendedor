@@ -23,6 +23,13 @@ const outcomeLabels = {
   negative: "Hubo retroceso",
 } as const;
 
+const roleLabels = {
+  execute: "Tú debes hacerlo",
+  delegate: "Delegar",
+  automate: "Automatizar",
+  defer: "Diferir",
+} as const;
+
 function CompletionButton({ completed }: { completed: boolean }) {
   const { pending } = useFormStatus();
 
@@ -120,6 +127,14 @@ export function ActionDetailPanel({
           <div className="border-t border-slate-100 pt-4">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Por qué existe</p>
             <p className="mt-1.5 text-sm leading-5 text-slate-700">{action.reason}</p>
+          </div>
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Recomendación de rol</p>
+            <p className="mt-1.5 text-sm font-semibold text-slate-900">{roleLabels[action.role_recommendation]}</p>
+            <p className="mt-1 text-sm leading-5 text-slate-700">{action.role_reason}</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">
+              {action.role_recommendation === "defer" ? "No invertir tiempo esta semana" : `Tiempo tuyo: ${action.estimated_hours} h`}
+            </p>
           </div>
           <div className="border-t border-slate-100 pt-4">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Criterio de éxito</p>

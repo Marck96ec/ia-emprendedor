@@ -82,7 +82,7 @@ export default async function DashboardPage({
     error: diagnosticError,
   } = await supabase
     .from("business_diagnostics")
-    .select("id")
+    .select("id, owner_hours_per_week")
     .eq("business_id", business.id)
     .maybeSingle();
 
@@ -118,6 +118,7 @@ export default async function DashboardPage({
         strategic_diagnosis,
         priorities,
         weekly_plan,
+          time_allocation,
         model,
         generated_at,
         week_number,
@@ -201,6 +202,9 @@ export default async function DashboardPage({
           reason,
           success_metric,
           expected_result,
+          role_recommendation,
+          role_reason,
+          estimated_hours,
           status,
           completed_at,
           execution_mode,
@@ -246,6 +250,22 @@ export default async function DashboardPage({
 
   const totalActions =
     weeklyActions.length;
+
+  const dashboardTimeAllocation =
+    readyPlan?.time_allocation ?? {
+      available_hours: Number(diagnostic.owner_hours_per_week),
+      allocated_hours: weeklyActions.reduce(
+        (total, action) => total + action.estimated_hours,
+        0,
+      ),
+      reserved_hours:
+        Number(diagnostic.owner_hours_per_week) -
+        weeklyActions.reduce(
+          (total, action) => total + action.estimated_hours,
+          0,
+        ),
+      rationale: "Asignación histórica calculada a partir de las acciones persistidas.",
+    };
 
   /*
    * Obtener revisión de la semana actual.
@@ -356,6 +376,7 @@ export default async function DashboardPage({
               summary={readyPlan.executive_summary}
               strategicDiagnosis={readyPlan.strategic_diagnosis}
               priorities={readyPlan.priorities}
+              timeAllocation={dashboardTimeAllocation}
             />
             <WeeklyProgress
               completedActions={completedActions}

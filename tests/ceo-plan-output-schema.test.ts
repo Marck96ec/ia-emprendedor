@@ -16,6 +16,7 @@ import {
 } from "../src/lib/ai/generate-ceo-plan";
 import {
   CEOPlanError,
+  isRetryableCEOPlanError,
   isInvalidCEOPlanOutputError,
   toSafeCEOPlanError,
 } from "../src/lib/ai/ceo-plan-errors";
@@ -88,6 +89,12 @@ const validPlan: CEOPlan = {
       expected_impact: "Decisiones más claras.",
     },
   ],
+  time_allocation: {
+    available_hours: 6,
+    allocated_hours: 3,
+    reserved_hours: 3,
+    rationale: "Se reserva capacidad para responder a hallazgos del experimento.",
+  },
   weekly_plan: Array.from({ length: 3 }, (_, index) => ({
     sequence: index + 1,
     action: `Acción ${index + 1}`,
@@ -95,6 +102,9 @@ const validPlan: CEOPlan = {
     reason: `Razón vinculada a la decisión ${index + 1}`,
     success_metric: `Métrica ${index + 1}`,
     expected_result: `Aprendizaje esperado ${index + 1}`,
+    role_recommendation: "execute" as const,
+    role_reason: "Requiere criterio directo del empresario para validar la hipótesis.",
+    estimated_hours: 1,
     execution_mode: "manual" as const,
     action_type: "generic" as const,
   })),
@@ -412,6 +422,9 @@ test("mantiene los tres tipos y detecta más de una acción asistida", () => {
         reason: "Reduce una incertidumbre comercial.",
         success_metric: "La propuesta se entiende en una prueba",
         expected_result: "Saber si el valor se entiende mejor.",
+        role_recommendation: "execute",
+        role_reason: "La validación requiere aprendizaje directo del empresario.",
+        estimated_hours: 1,
         execution_mode: "ai_assisted",
         action_type: "value_proposition",
       },
@@ -422,6 +435,9 @@ test("mantiene los tres tipos y detecta más de una acción asistida", () => {
         reason: "Valida la dirección comercial recomendada.",
         success_metric: "Registrar respuestas",
         expected_result: "Identificar el ángulo con mayor respuesta.",
+        role_recommendation: "execute",
+        role_reason: "La selección del ángulo requiere criterio comercial directo.",
+        estimated_hours: 1,
         execution_mode: "ai_assisted",
         action_type: "commercial_messages",
       },
@@ -554,5 +570,157 @@ test("persiste el razonamiento estratégico junto al plan", () => {
   assert.match(
     migration,
     /perform public\.complete_ceo_plan\(/,
+  );
+});
+
+test("valida las cuatro recomendaciones de rol y sus horas", () => {
+  const roleCases = [
+    ["execute", 1],
+    ["delegate", 1.5],
+    ["automate", 0.5],
+    ["defer", 0],
+  ] as const;
+
+  for (const [role, hours] of roleCases) {
+    const plan = {
+      ...validPlan,
+      weekly_plan: [{
+        ...validPlan.weekly_plan[0],
+        role_recommendation: role,
+        estimated_hours: hours,
+      }],
+    };
+
+    assert.equal(CEOPlanSchema.safeParse(plan).success, true, role);
+    assert.equal(validateCEOPlanBusinessRules(plan).success, true, role);
+  }
+
+  for (const [role, hours] of [["execute", 0], ["delegate", 0], ["automate", 0], ["defer", 1]] as const) {
+    const plan = {
+      ...validPlan,
+      weekly_plan: [{
+        ...validPlan.weekly_plan[0],
+        role_recommendation: role,
+        estimated_hours: hours,
+      }],
+    };
+
+    assert.equal(validateCEOPlanBusinessRules(plan).success, false, `${role}:${hours}`);
+  }
+
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      weekly_plan: [{ ...validPlan.weekly_plan[0], role_recommendation: "unknown" }],
+    }).success,
+    false,
+  );
+});
+
+test("rechaza capacidad excedida y la generación la trata como error retryable", async () => {
+  const withinCapacity = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item) => ({ ...item, estimated_hours: 1 })),
+  };
+  const overCapacity = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item) => ({ ...item, estimated_hours: 2 })),
+  };
+
+  assert.equal(validateCEOPlanBusinessRules(withinCapacity, 5).success, true);
+  assert.equal(validateCEOPlanBusinessRules(overCapacity, 5).success, false);
+
+  process.env.OPENAI_API_KEY = "test-key";
+  let attempts = 0;
+  await assert.rejects(
+    generateCEOPlan({
+      ...input,
+      diagnostic: { ...input.diagnostic, ownerHoursPerWeek: 5 },
+    }, async () => {
+      attempts += 1;
+      return { finalOutput: overCapacity };
+    }),
+    (error: unknown) =>
+      error instanceof CEOPlanError && isRetryableCEOPlanError(error),
+  );
+  assert.equal(attempts, 2);
+});
+
+test("calcula la reserva de tiempo en la aplicación y no prohíbe delegate con teamSize uno", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const delegatedPlan = {
+    ...validPlan,
+    weekly_plan: [{
+      ...validPlan.weekly_plan[0],
+      role_recommendation: "delegate" as const,
+      estimated_hours: 1,
+    }, {
+      ...validPlan.weekly_plan[1],
+      role_recommendation: "automate" as const,
+      estimated_hours: 1.5,
+    }],
+  };
+  const result = await generateCEOPlan({
+    ...input,
+    diagnostic: { ...input.diagnostic, ownerHoursPerWeek: 8, teamSize: 1 },
+  }, async () => ({ finalOutput: delegatedPlan }));
+
+  assert.deepEqual(result.time_allocation, {
+    available_hours: 8,
+    allocated_hours: 2.5,
+    reserved_hours: 5.5,
+    rationale: validPlan.time_allocation.rationale,
+  });
+  // teamSize = 1 se evalúa por prompt/model evaluation, no por una prohibición determinista.
+  assert.equal(result.weekly_plan[0].role_recommendation, "delegate");
+});
+
+test("la migración de roles y tiempo mantiene la persistencia atómica", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261025000000_add_role_time_allocation.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /add column if not exists time_allocation jsonb/);
+  assert.match(migration, /add column if not exists role_recommendation/);
+  assert.match(migration, /add column if not exists role_reason/);
+  assert.match(migration, /add column if not exists estimated_hours/);
+  assert.match(migration, /p_time_allocation jsonb/);
+  assert.match(migration, /CEO_PLAN_ROLE_PAYLOAD_MISMATCH/);
+  assert.match(migration, /role_recommendation = 'defer' and estimated_hours = 0/);
+  assert.match(migration, /set time_allocation = p_time_allocation/);
+});
+
+test("la migración no expone los overloads legacy de complete_ceo_plan", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261025000000_add_role_time_allocation.sql",
+    ),
+    "utf8",
+  );
+
+  for (const signature of [
+    "uuid, text, text, jsonb, jsonb, jsonb",
+    "uuid, text, text, jsonb, jsonb, jsonb, jsonb",
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(
+        `revoke all on function public\\.complete_ceo_plan\\(${signature.replaceAll(".", "\\.")}\\) from authenticated;`,
+      ),
+    );
+  }
+
+  assert.match(
+    migration,
+    /grant execute on function public\.complete_ceo_plan\(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb\) to authenticated;/,
   );
 });

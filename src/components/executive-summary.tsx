@@ -1,6 +1,7 @@
 import type {
   DashboardPriority,
   DashboardStrategicDiagnosis,
+  DashboardTimeAllocation,
 } from "@/lib/dashboard-types";
 import { ExecutiveContextDialog } from "@/components/executive-context-dialog";
 
@@ -8,12 +9,14 @@ type ExecutiveSummaryProps = {
   summary: string;
   strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
+  timeAllocation: DashboardTimeAllocation;
 };
 
 export function ExecutiveSummary({
   summary,
   strategicDiagnosis,
   priorities,
+  timeAllocation,
 }: ExecutiveSummaryProps) {
   return (
     <section className="surface-card shrink-0 rounded-2xl px-4 py-3 sm:px-5" aria-labelledby="executive-summary-title">
@@ -35,6 +38,17 @@ export function ExecutiveSummary({
           strategicDiagnosis={strategicDiagnosis}
           priorities={priorities}
         />
+      </div>
+      <div className="mt-3 border-t border-slate-100 pt-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+            Tiempo estratégico
+          </p>
+          <p className="text-xs font-semibold text-slate-700">
+            {timeAllocation.available_hours} h disponibles · {timeAllocation.allocated_hours} h asignadas · {timeAllocation.reserved_hours} h reservadas
+          </p>
+        </div>
+        <p className="mt-1 text-xs leading-5 text-slate-600">{timeAllocation.rationale}</p>
       </div>
     </section>
   );
