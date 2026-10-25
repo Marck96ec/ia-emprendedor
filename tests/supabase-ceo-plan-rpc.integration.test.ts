@@ -479,14 +479,45 @@ test(
     const businessId = await createBusiness(admin, owner.id);
     await createDiagnostic(admin, businessId);
     const planId = await createPlan(admin, businessId, 1);
-    const expectedActions = validActions();
+    const expectedActions = validRoleActions();
 
     try {
+      const legacySixPlanId = await createPlan(admin, businessId, 12);
+      const legacySixResult = await owner.client.rpc(
+        "complete_ceo_plan",
+        {
+          p_plan_id: legacySixPlanId,
+          ...createPlanPayload(),
+        },
+      );
+      assert.ok(legacySixResult.error);
+      assert.equal(
+        (await getPlanStatus(admin, legacySixPlanId)).status,
+        "generating",
+      );
+      assert.equal(await countActions(admin, legacySixPlanId), 0);
+
+      const legacySevenPlanId = await createPlan(admin, businessId, 13);
+      const legacySevenResult = await owner.client.rpc(
+        "complete_ceo_plan",
+        {
+          p_plan_id: legacySevenPlanId,
+          ...createPlanPayload(),
+          p_strategic_diagnosis: { confidence: "medium" },
+        },
+      );
+      assert.ok(legacySevenResult.error);
+      assert.equal(
+        (await getPlanStatus(admin, legacySevenPlanId)).status,
+        "generating",
+      );
+      assert.equal(await countActions(admin, legacySevenPlanId), 0);
+
       const completed = await owner.client.rpc(
         "complete_ceo_plan",
         {
           p_plan_id: planId,
-          ...createPlanPayload(expectedActions),
+          ...createV4PlanPayload(expectedActions),
           p_actions: [...expectedActions].reverse(),
         },
       );
@@ -679,7 +710,7 @@ test(
       ] as const;
 
       for (const field of sharedFields) {
-        const weeklyPlan = validActions();
+        const weeklyPlan = validRoleActions();
         const mismatchedActions = weeklyPlan.map(
           (action, index) => {
             if (field === "sequence") {
@@ -747,10 +778,7 @@ test(
           "complete_ceo_plan",
           {
             p_plan_id: mismatchPlanId,
-            p_executive_summary: "Resumen válido",
-            p_diagnosis: "Diagnóstico válido",
-            p_priorities: validPriorities(),
-            p_weekly_plan: weeklyPlan,
+            ...createV4PlanPayload(weeklyPlan),
             p_actions: mismatchedActions,
           },
         );
@@ -769,13 +797,13 @@ test(
       }
 
       const invalidPlanId = await createPlan(admin, businessId, 3);
-      const invalidActions = validActions();
+      const invalidActions = validRoleActions();
       invalidActions[0].action_type = "commercial_messages";
       const invalidResult = await owner.client.rpc(
         "complete_ceo_plan",
         {
           p_plan_id: invalidPlanId,
-          ...createPlanPayload(),
+          ...createV4PlanPayload(),
           p_weekly_plan: invalidActions,
           p_actions: invalidActions,
         },
@@ -783,7 +811,7 @@ test(
       assert.ok(invalidResult.error);
 
       const multipleAssistedPlanId = await createPlan(admin, businessId, 4);
-      const multipleAssisted = validActions().map((action, index) =>
+      const multipleAssisted = validRoleActions().map((action, index) =>
         index < 2
           ? {
               ...action,
@@ -796,7 +824,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: multipleAssistedPlanId,
-          ...createPlanPayload(),
+          ...createV4PlanPayload(),
           p_weekly_plan: multipleAssisted,
           p_actions: multipleAssisted,
         },
@@ -804,13 +832,13 @@ test(
       assert.ok(multipleAssistedResult.error);
 
       const rollbackPlanId = await createPlan(admin, businessId, 5);
-      const oversizedActions = validActions();
+  const oversizedActions = validRoleActions();
       oversizedActions[0].action = "x".repeat(1001);
       const rollbackResult = await owner.client.rpc(
         "complete_ceo_plan",
         {
           p_plan_id: rollbackPlanId,
-          ...createPlanPayload(),
+          ...createV4PlanPayload(),
           p_weekly_plan: oversizedActions,
           p_actions: oversizedActions,
         },
@@ -828,7 +856,10 @@ test(
 
       const invalidRetry = await owner.client.rpc(
         "complete_ceo_plan",
-        { p_plan_id: rollbackPlanId, ...createPlanPayload() },
+        {
+          p_plan_id: rollbackPlanId,
+          ...createV4PlanPayload(),
+        },
       );
       assert.ok(invalidRetry.error);
       assert.equal(invalidRetry.error.code, "P0001");
@@ -852,7 +883,10 @@ test(
 
       const retryResult = await owner.client.rpc(
         "complete_ceo_plan",
-        { p_plan_id: rollbackPlanId, ...createPlanPayload() },
+        {
+          p_plan_id: rollbackPlanId,
+          ...createV4PlanPayload(),
+        },
       );
       assert.ifError(retryResult.error);
 

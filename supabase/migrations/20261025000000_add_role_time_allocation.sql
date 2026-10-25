@@ -194,3 +194,11 @@ $$;
 revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb) from public;
 revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb) from anon;
 grant execute on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb) to authenticated;
+
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb) from public;
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb) from anon;
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb) from authenticated;
+
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb) from public;
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb) from anon;
+revoke all on function public.complete_ceo_plan(uuid, text, text, jsonb, jsonb, jsonb, jsonb) from authenticated;

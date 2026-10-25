@@ -695,3 +695,32 @@ test("la migración de roles y tiempo mantiene la persistencia atómica", () => 
   assert.match(migration, /role_recommendation = 'defer' and estimated_hours = 0/);
   assert.match(migration, /set time_allocation = p_time_allocation/);
 });
+
+test("la migración no expone los overloads legacy de complete_ceo_plan", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261025000000_add_role_time_allocation.sql",
+    ),
+    "utf8",
+  );
+
+  for (const signature of [
+    "uuid, text, text, jsonb, jsonb, jsonb",
+    "uuid, text, text, jsonb, jsonb, jsonb, jsonb",
+  ]) {
+    assert.match(
+      migration,
+      new RegExp(
+        `revoke all on function public\\.complete_ceo_plan\\(${signature.replaceAll(".", "\\.")}\\) from authenticated;`,
+      ),
+    );
+  }
+
+  assert.match(
+    migration,
+    /grant execute on function public\.complete_ceo_plan\(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb\) to authenticated;/,
+  );
+});
