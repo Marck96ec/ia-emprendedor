@@ -4,39 +4,58 @@ import type { DashboardAction } from "@/lib/dashboard-types";
 
 type NextActionCardProps = {
   action: DashboardAction | null;
+  pendingCount: number;
   reviewed: boolean;
   allCompleted: boolean;
 };
 
 const cardClassName =
-  "flex flex-col rounded-2xl border-2 border-sky-300 bg-white p-5 shadow-xl shadow-sky-900/10 sm:p-6";
+  "flex flex-col rounded-2xl border border-blue-200 bg-white p-5 shadow-sm ring-1 ring-blue-100 lg:h-full lg:min-h-0";
+
+const celebrationClassName =
+  "anim-rise anim-glow flex flex-col rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm lg:h-full lg:min-h-0";
+
+function CheckBadge() {
+  return (
+    <span className="anim-pop flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-xl text-white" aria-hidden="true">
+      ✓
+    </span>
+  );
+}
 
 export function NextActionCard({
   action,
+  pendingCount,
   reviewed,
   allCompleted,
 }: NextActionCardProps) {
   if (!action) {
     return (
-      <section className={cardClassName} aria-labelledby="next-action-title">
-        <p id="next-action-title" className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sky-700">
-          Qué hacer ahora
+      <section className={reviewed || allCompleted ? celebrationClassName : cardClassName} aria-labelledby="next-action-title">
+        {(reviewed || allCompleted) && <CheckBadge />}
+        <p id="next-action-title" className={`eyebrow ${reviewed || allCompleted ? "mt-3 !text-emerald-700" : "!text-blue-700"}`}>
+          {reviewed ? "Revisión completada" : allCompleted ? "Semana completada" : "Siguiente paso"}
         </p>
-        <h2 className="mt-3 text-lg font-semibold leading-6 text-slate-950">
+        <h2 className="mt-2 text-xl font-semibold leading-snug text-slate-950">
           {reviewed
-            ? "Esta semana ya fue revisada."
+            ? "Tu aprendizaje ya es parte de la memoria del negocio."
             : allCompleted
-              ? "Completaste todas las acciones de la semana."
+              ? "Plan ejecutado."
               : "Todavía no hay acciones para esta semana."}
         </h2>
-        <div className="mt-4">
+        {allCompleted && !reviewed && (
+          <p className="mt-2 text-base leading-6 text-slate-700">
+            Ahora viene la parte más importante: descubrir qué funcionó y qué cambió realmente.
+          </p>
+        )}
+        <div className="mt-4 lg:mt-auto lg:pt-3">
           {reviewed ? (
-            <a href="#tablero-semanal" className="secondary-button min-h-10 px-4 py-2 text-sm">
+            <a href="#tablero-semanal" className="secondary-button min-h-11 px-5 py-2.5 text-sm">
               Ver resultado de la semana
             </a>
           ) : allCompleted ? (
-            <Link href="/weekly-review" className="primary-button min-h-10 px-4 py-2 text-sm">
-              Veamos qué funcionó esta semana
+            <Link href="/weekly-review" className="accent-button min-h-11 w-full px-5 py-2.5 text-base sm:w-auto">
+              Revisar mi semana
             </Link>
           ) : null}
         </div>
@@ -51,33 +70,35 @@ export function NextActionCard({
   return (
     <section className={cardClassName} aria-labelledby="next-action-title">
       <div className="flex items-center justify-between gap-3">
-        <p id="next-action-title" className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sky-700">
-          Qué hacer ahora
+        <p id="next-action-title" className="eyebrow !text-blue-700">
+          {pendingCount === 1 ? "Última acción de la semana" : "Siguiente paso"}
         </p>
         {isAiAssisted && (
-          <span className="rounded-lg bg-slate-100 px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-slate-600">
-            Con IA
+          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+            Con ayuda de IA
           </span>
         )}
       </div>
 
-      <h2 className="mt-3 text-xl font-semibold leading-7 tracking-tight text-slate-950">
+      <h2 className="mt-2 line-clamp-3 text-xl font-semibold leading-snug tracking-tight text-slate-950 lg:line-clamp-2" title={action.action}>
         {action.action}
       </h2>
 
-      <p className="mt-2 text-xs font-medium text-slate-500">
+      <p className="mt-2 inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-700">
         {action.role_recommendation === "defer"
           ? "No requiere tu tiempo esta semana"
           : `Tiempo estimado: ${action.estimated_hours} h`}
       </p>
 
-      <div className="mt-4">
+      <p className="mt-2 line-clamp-2 text-sm leading-5 text-slate-700 sm:text-base sm:leading-6">{action.reason}</p>
+
+      <div className="mt-4 lg:mt-auto lg:pt-3">
         {isAiAssisted ? (
-          <Link href={`/actions/${action.id}`} className="primary-button min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto">
+          <Link href={`/actions/${action.id}`} className="accent-button min-h-10 w-full px-5 py-2 text-base sm:w-auto">
             {ctaLabel}
           </Link>
         ) : (
-          <a href="#tablero-semanal" className="primary-button min-h-11 w-full px-4 py-2.5 text-sm sm:w-auto">
+          <a href="#tablero-semanal" className="accent-button min-h-10 w-full px-5 py-2 text-base sm:w-auto">
             {ctaLabel}
           </a>
         )}

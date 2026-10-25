@@ -1,4 +1,11 @@
-import { ExecutiveContextDialog } from "@/components/executive-context-dialog";
+"use client";
+
+import { useState, type ReactNode } from "react";
+
+import {
+  ExecutiveContextDrawer,
+  type DrawerTab,
+} from "@/components/executive-context-drawer";
 import type {
   DashboardPriority,
   DashboardStrategicDiagnosis,
@@ -8,42 +15,87 @@ type DecisionHeroProps = {
   summary: string;
   strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
+  focusPanel: ReactNode;
+  evidencePanel: ReactNode;
+  evidenceSummary: string;
 };
+
+const certaintyLabels = {
+  low: "Exploratoria",
+  medium: "Media",
+  high: "Alta",
+} as const;
+
+const linkClassName =
+  "inline-flex min-h-9 items-center rounded-lg px-3 py-1.5 text-sm font-medium text-slate-200 underline decoration-white/30 underline-offset-4 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-3 focus-visible:outline-sky-300/60 motion-reduce:transition-none";
 
 export function DecisionHero({
   summary,
   strategicDiagnosis,
   priorities,
+  focusPanel,
+  evidencePanel,
+  evidenceSummary,
 }: DecisionHeroProps) {
   const decision = strategicDiagnosis.critical_decision;
+  const [tab, setTab] = useState<DrawerTab | null>(null);
 
   return (
     <section
-      className="relative flex flex-col overflow-hidden rounded-2xl bg-slate-950 p-5 text-white shadow-xl shadow-slate-950/20 sm:p-6"
+      className="relative flex flex-col overflow-hidden rounded-2xl bg-slate-950 p-5 text-white shadow-sm lg:h-full lg:min-h-0"
       aria-labelledby="decision-hero-title"
     >
-      <p id="decision-hero-title" className="text-[0.68rem] font-bold uppercase tracking-[0.18em] text-sky-300">
-        Tu decisión esta semana
-      </p>
-      <p className="mt-3 text-sm leading-5 text-slate-300">{decision.question}</p>
-      <h2 className="mt-2 text-xl font-semibold leading-7 tracking-tight sm:text-2xl sm:leading-8">
-        {decision.recommended_direction}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <p className="eyebrow !text-sky-300">Decisión de esta semana</p>
+        <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-300/10 px-2.5 py-0.5 text-xs font-medium text-amber-200">
+          Nivel de certeza: {certaintyLabels[strategicDiagnosis.confidence]}
+        </span>
+      </div>
+
+      <h2
+        id="decision-hero-title"
+        title={decision.question}
+        className="mt-3 line-clamp-3 text-2xl font-semibold leading-snug tracking-tight lg:line-clamp-2 lg:text-xl xl:text-2xl"
+      >
+        {decision.question}
       </h2>
 
-      <div className="mt-4 border-t border-white/10 pt-3">
-        <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-400">¿Por qué?</p>
-        <p className="mt-1 line-clamp-3 text-sm leading-5 text-slate-200">{decision.rationale}</p>
+      <p
+        title={decision.recommended_direction}
+        className="mt-3 line-clamp-3 border-l-2 border-sky-400 pl-3 text-base leading-6 text-white lg:line-clamp-2 lg:text-sm xl:text-base"
+      >
+        <span className="font-medium text-sky-200">CEO IA recomienda: </span>
+        {decision.recommended_direction}
+      </p>
+
+      <div className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-1 lg:mt-auto lg:pt-3">
+        <button
+          type="button"
+          onClick={() => setTab("decision")}
+          aria-haspopup="dialog"
+          className="inline-flex min-h-9 items-center rounded-lg border border-white/25 bg-white/10 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-3 focus-visible:outline-sky-300/60 motion-reduce:transition-none"
+        >
+          Entender decisión
+        </button>
+        <button type="button" onClick={() => setTab("evidence")} aria-haspopup="dialog" className={linkClassName}>
+          Ver evidencia
+          <span className="ml-1.5 hidden font-normal text-slate-400 no-underline 2xl:inline">· {evidenceSummary}</span>
+        </button>
+        <button type="button" onClick={() => setTab("priorities")} aria-haspopup="dialog" className={linkClassName}>
+          Ver prioridades
+        </button>
       </div>
 
-      <div className="mt-4">
-        <ExecutiveContextDialog
-          summary={summary}
-          strategicDiagnosis={strategicDiagnosis}
-          priorities={priorities}
-          triggerLabel="Entender la decisión"
-          triggerClassName="inline-flex min-h-9 items-center rounded-lg border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 focus-visible:outline-3 focus-visible:outline-sky-300/60"
-        />
-      </div>
+      <ExecutiveContextDrawer
+        tab={tab}
+        onTabChange={setTab}
+        onClose={() => setTab(null)}
+        summary={summary}
+        strategicDiagnosis={strategicDiagnosis}
+        priorities={priorities}
+        focusPanel={focusPanel}
+        evidencePanel={evidencePanel}
+      />
     </section>
   );
 }

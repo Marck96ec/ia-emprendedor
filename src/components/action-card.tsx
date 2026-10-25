@@ -12,7 +12,8 @@ function getActionState(action: DashboardAction) {
     return {
       label: "Completada",
       icon: "✓",
-      className: "border-emerald-200 bg-emerald-50/80 text-emerald-700",
+      iconClassName: "bg-emerald-600 text-white",
+      labelClassName: "text-emerald-800",
     };
   }
 
@@ -20,14 +21,16 @@ function getActionState(action: DashboardAction) {
     return {
       label: "IA lista para revisar",
       icon: "✦",
-      className: "border-sky-200 bg-sky-50/80 text-sky-700",
+      iconClassName: "bg-blue-50 text-blue-700",
+      labelClassName: "text-blue-700",
     };
   }
 
   return {
-    label: "Pendiente",
+    label: "Por hacer",
     icon: "○",
-    className: "border-slate-200 bg-white/80 text-slate-600",
+    iconClassName: "bg-slate-100 text-slate-600",
+    labelClassName: "text-slate-600",
   };
 }
 
@@ -45,7 +48,8 @@ export function ActionCard({
   onSelect,
 }: ActionCardProps) {
   const state = getActionState(action);
-  const highlighted = recommended && action.status === "pending";
+  const completed = action.status === "completed";
+  const highlighted = recommended && !completed;
 
   return (
     <button
@@ -53,42 +57,46 @@ export function ActionCard({
       aria-pressed={selected}
       aria-label={`Seleccionar acción ${action.sequence}: ${action.action}`}
       onClick={onSelect}
-      className={`group flex min-h-[5rem] min-w-0 flex-col justify-between rounded-xl border p-3 text-left transition focus-visible:outline-3 focus-visible:outline-blue-500/30 ${
-        highlighted ? "col-span-full" : ""
+      className={`group flex w-full min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors duration-200 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-blue-500/30 ${
+        selected ? "ring-2 ring-slate-900" : ""
       } ${
-        selected
-          ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/15"
-          : highlighted
-            ? "border-sky-300 bg-sky-50 shadow-md shadow-sky-900/10 hover:border-sky-500"
-            : "hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white"
+        highlighted
+          ? "border-blue-300 bg-blue-50/70 hover:border-blue-400"
+          : completed
+            ? "border-slate-200 bg-slate-50/70 hover:bg-slate-50"
+            : "border-slate-200 bg-white/60 hover:border-slate-300 hover:bg-white"
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${selected ? "bg-white/15 text-white" : state.className}`} aria-hidden="true">
-          {state.icon}
-        </span>
-        {highlighted ? (
-          <span className={`rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] ${selected ? "bg-sky-300 text-slate-950" : "bg-sky-600 text-white"}`}>
-            Recomendada ahora
-          </span>
-        ) : (
-          <span className={`text-[0.65rem] font-bold uppercase tracking-[0.14em] ${selected ? "text-slate-300" : "text-slate-500"}`}>
-            Acción {action.sequence}
-          </span>
-        )}
-      </div>
+      <span
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300 motion-reduce:transition-none ${state.iconClassName}`}
+        aria-hidden="true"
+      >
+        {state.icon}
+      </span>
 
-      <div className="mt-2 min-w-0">
-        <p className={`text-sm font-semibold leading-5 ${highlighted ? "" : "line-clamp-3"} ${selected ? "text-white" : action.status === "completed" ? "text-slate-500" : "text-slate-900"}`} title={action.action}>
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {highlighted ? (
+            <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+              Recomendada ahora
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-slate-500">Acción {action.sequence}</span>
+          )}
+          <span className={`text-xs font-medium ${state.labelClassName}`}>{state.label}</span>
+        </span>
+        <span
+          className={`mt-1 block leading-5 ${
+            highlighted ? "text-base font-semibold leading-6 text-slate-950" : completed ? "text-sm font-medium text-slate-500" : "text-sm font-medium text-slate-800"
+          } ${highlighted ? "line-clamp-3" : "line-clamp-2"}`}
+          title={action.action}
+        >
           {action.action}
-        </p>
-        <p className={`mt-1 text-[0.68rem] font-medium ${selected ? "text-slate-300" : state.className.split(" ").at(-1)}`}>
-          {state.label}
-        </p>
-        <p className={`mt-1 text-[0.62rem] font-semibold ${selected ? "text-slate-300" : "text-slate-500"}`}>
+        </span>
+        <span className="mt-0.5 block text-sm text-slate-500">
           {roleLabels[action.role_recommendation]} · {action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}
-        </p>
-      </div>
+        </span>
+      </span>
     </button>
   );
 }

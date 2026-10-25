@@ -255,7 +255,7 @@ export default async function HistoryPage() {
           <div className="min-w-0">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-500">TuCEO IA</p>
             <div className="mt-1 flex min-w-0 items-baseline gap-2">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">Semanas anteriores</h1>
+              <h1 className="truncate text-lg font-semibold tracking-tight text-slate-950 sm:text-xl">Mi evolución</h1>
               <span className="shrink-0 text-xs font-medium text-slate-500">{business.name}</span>
             </div>
           </div>
