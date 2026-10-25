@@ -27,7 +27,7 @@ export function WeeklyActionBoard({
 
   const selectedAction = actions.find((action) => action.id === selectedActionId) ?? null;
   const activeActionId = selectedAction?.id ?? actions.find((action) => action.status === "pending")?.id ?? actions[0]?.id ?? "";
-  const canReview = actions.length === 7 && !reviewed;
+  const canReview = actions.length > 0 && !reviewed;
 
   function selectAction(actionId: string) {
     setSelectedActionId(actionId);

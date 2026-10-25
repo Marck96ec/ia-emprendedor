@@ -90,7 +90,7 @@ export default async function WeeklyReviewPage({
   const completedActions =
     actions?.filter((action) => action.status === "completed").length ?? 0;
 
-  if (totalActions !== 7) {
+  if (totalActions === 0) {
     redirect("/dashboard");
   }
 
@@ -120,7 +120,7 @@ export default async function WeeklyReviewPage({
           <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
             <p className="text-sm text-slate-500">Ejecución de la semana</p>
             <p className="mt-2 text-2xl font-semibold text-slate-900">
-              {completedActions}/7 acciones completadas
+              {completedActions}/{totalActions} acciones completadas
             </p>
           </div>
 

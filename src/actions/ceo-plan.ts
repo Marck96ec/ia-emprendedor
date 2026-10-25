@@ -469,17 +469,19 @@ if (latestPlan?.status === "generating") {
       .from("weekly_actions")
       .select(
         `
-          day,
+          sequence,
           action,
           objective,
+          reason,
           success_metric,
+          expected_result,
           execution_mode,
           action_type,
           status
         `,
       )
       .eq("ceo_plan_id", contextPlan.id)
-      .order("day", {
+      .order("sequence", {
         ascending: true,
       });
 
@@ -494,12 +496,9 @@ if (latestPlan?.status === "generating") {
       );
     }
 
-    if (
-      !contextActions ||
-      contextActions.length !== 7
-    ) {
+    if (!contextActions || contextActions.length === 0) {
       throw new Error(
-        "La semana anterior no tiene las 7 acciones esperadas.",
+        "La semana anterior no tiene acciones persistidas.",
       );
     }
 
@@ -562,11 +561,14 @@ if (latestPlan?.status === "generating") {
       actions:
         (contextActions ?? []).map(
           (action) => ({
-            day: action.day,
+            sequence: action.sequence,
             action: action.action,
             objective: action.objective,
+            reason: action.reason,
             successMetric:
               action.success_metric,
+            expectedResult:
+              action.expected_result,
             executionMode:
               action.execution_mode,
             actionType:
@@ -703,7 +705,7 @@ if (latestPlan?.status === "generating") {
   redirect(
     "/dashboard?message=" +
       encodeURIComponent(
-        `Tu semana ${weekNumber} está lista. Empieza por el Día 1.`,
+        `Tu semana ${weekNumber} está lista. Revisa tu plan de ejecución.`,
       ),
   );
 }

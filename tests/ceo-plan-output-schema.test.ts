@@ -88,11 +88,13 @@ const validPlan: CEOPlan = {
       expected_impact: "Decisiones más claras.",
     },
   ],
-  weekly_plan: Array.from({ length: 7 }, (_, index) => ({
-    day: index + 1,
+  weekly_plan: Array.from({ length: 3 }, (_, index) => ({
+    sequence: index + 1,
     action: `Acción ${index + 1}`,
     objective: `Objetivo ${index + 1}`,
+    reason: `Razón vinculada a la decisión ${index + 1}`,
     success_metric: `Métrica ${index + 1}`,
+    expected_result: `Aprendizaje esperado ${index + 1}`,
     execution_mode: "manual" as const,
     action_type: "generic" as const,
   })),
@@ -120,11 +122,41 @@ const input: GenerateCEOPlanInput = {
   businessKnowledge: { valueProposition: null },
 };
 
-test("acepta un plan estructuralmente válido de siete acciones", () => {
+test("acepta un plan estructuralmente válido de tres acciones", () => {
   const parsed = CEOPlanSchema.safeParse(validPlan);
 
   assert.equal(parsed.success, true);
-  assert.equal(parsed.success && parsed.data.weekly_plan.length, 7);
+  assert.equal(parsed.success && parsed.data.weekly_plan.length, 3);
+});
+
+test("acepta entre una y cinco acciones y rechaza cantidades fuera del rango", () => {
+  for (const count of [1, 2, 3, 5]) {
+    const weeklyPlan = Array.from({ length: count }, (_, index) => ({
+      ...validPlan.weekly_plan[0],
+      sequence: index + 1,
+    }));
+    assert.equal(CEOPlanSchema.safeParse({ ...validPlan, weekly_plan: weeklyPlan }).success, true, `${count} acciones`);
+  }
+
+  for (const count of [0, 6, 7]) {
+    const weeklyPlan = Array.from({ length: count }, (_, index) => ({
+      ...validPlan.weekly_plan[0],
+      sequence: index + 1,
+    }));
+    assert.equal(CEOPlanSchema.safeParse({ ...validPlan, weekly_plan: weeklyPlan }).success, false, `${count} acciones`);
+  }
+});
+
+test("exige secuencias positivas, únicas y consecutivas desde uno", () => {
+  for (const sequences of [[1, 1], [1, 3], [2, 3]]) {
+    const weeklyPlan = sequences.map((sequence, index) => ({
+      ...validPlan.weekly_plan[0],
+      sequence,
+      action: `Acción ${index + 1}`,
+    }));
+    assert.equal(CEOPlanSchema.safeParse({ ...validPlan, weekly_plan: weeklyPlan }).success, false, sequences.join(","));
+  }
+  assert.equal(CEOPlanSchema.safeParse({ ...validPlan, weekly_plan: validPlan.weekly_plan.slice(0, 2) }).success, true);
 });
 
 test("rechaza el contrato estratégico antiguo basado únicamente en strings", () => {
@@ -374,18 +406,22 @@ test("mantiene los tres tipos y detecta más de una acción asistida", () => {
     weekly_plan: [
       ...validPlan.weekly_plan.slice(0, 5),
       {
-        day: 6,
+        sequence: 4,
         action: "Mejorar la propuesta",
         objective: "Aclarar el valor",
+        reason: "Reduce una incertidumbre comercial.",
         success_metric: "La propuesta se entiende en una prueba",
+        expected_result: "Saber si el valor se entiende mejor.",
         execution_mode: "ai_assisted",
         action_type: "value_proposition",
       },
       {
-        day: 7,
+        sequence: 5,
         action: "Escribir mensajes comerciales",
         objective: "Probar tres ángulos",
+        reason: "Valida la dirección comercial recomendada.",
         success_metric: "Registrar respuestas",
+        expected_result: "Identificar el ángulo con mayor respuesta.",
         execution_mode: "ai_assisted",
         action_type: "commercial_messages",
       },

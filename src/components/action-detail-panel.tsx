@@ -88,7 +88,7 @@ export function ActionDetailPanel({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-500">
-              Detalle · Día {action.day}
+              Detalle · Acción {action.sequence}
             </p>
             <span className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.68rem] font-semibold ${status.className}`}>
               <span aria-hidden="true">{status.icon}</span>
@@ -118,8 +118,16 @@ export function ActionDetailPanel({
             <p className="mt-1.5 text-sm leading-5 text-slate-700">{action.objective}</p>
           </div>
           <div className="border-t border-slate-100 pt-4">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Por qué existe</p>
+            <p className="mt-1.5 text-sm leading-5 text-slate-700">{action.reason}</p>
+          </div>
+          <div className="border-t border-slate-100 pt-4">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Criterio de éxito</p>
             <p className="mt-1.5 text-sm leading-5 text-slate-700">{action.success_metric}</p>
+          </div>
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Resultado esperado</p>
+            <p className="mt-1.5 text-sm leading-5 text-slate-700">{action.expected_result}</p>
           </div>
         </div>
 

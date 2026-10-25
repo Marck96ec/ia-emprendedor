@@ -42,7 +42,7 @@ export default async function ActionWorkspacePage({
 
   const { data: action, error: actionError } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, day, action, objective, success_metric, status, execution_mode, action_type")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type")
     .eq("id", actionId)
     .maybeSingle();
 
@@ -110,7 +110,7 @@ export default async function ActionWorkspacePage({
         <Link href="/dashboard" className="link-button text-sm">Volver a mi semana</Link>
 
         <header className="mt-8 border-b border-slate-200 pb-7">
-          <p className="badge-chip">Trabajar con IA · Día {action.day}</p>
+          <p className="badge-chip">Trabajar con IA · Acción {action.sequence}</p>
           <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{action.action}</h1>
           <p className="mt-3 max-w-2xl text-lg text-slate-600">{action.objective}</p>
           <p className="mt-3 text-sm text-slate-500">Cómo saber si funcionó: {action.success_metric}</p>

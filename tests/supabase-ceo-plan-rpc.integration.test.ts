@@ -188,19 +188,20 @@ function validPriorities() {
   }));
 }
 
-function validActions() {
-  return Array.from({ length: 7 }, (_, index) => ({
-    day: index + 1,
+function validActions(count = 3) {
+  return Array.from({ length: count }, (_, index) => ({
+    sequence: index + 1,
     action: `Acción ${index + 1}`,
     objective: `Objetivo ${index + 1}`,
+    reason: `Razón ${index + 1}`,
     success_metric: `Métrica ${index + 1}`,
+    expected_result: `Resultado ${index + 1}`,
     execution_mode: "manual",
     action_type: "generic",
   }));
 }
 
-function createPlanPayload() {
-  const actions = validActions();
+function createPlanPayload(actions = validActions()) {
 
   return {
     p_executive_summary: "Resumen válido",
@@ -252,8 +253,8 @@ async function createBusiness(
     .insert({
       owner_id: ownerId,
       name: `RPC test ${ownerId.slice(0, 8)}`,
-      business_type: "Servicios",
       description: "Negocio para pruebas locales.",
+      revenue_model: "Cobro por servicios profesionales.",
     })
     .select("id")
     .single();
@@ -313,18 +314,18 @@ async function getPlanStatus(
   return data;
 }
 
-async function getActionDays(
+async function getActionSequences(
   admin: SupabaseClient,
   planId: string,
 ) {
   const { data, error } = await admin
     .from("weekly_actions")
-    .select("day")
+    .select("sequence")
     .eq("ceo_plan_id", planId)
-    .order("day", { ascending: true });
+    .order("sequence", { ascending: true });
 
   assert.ifError(error);
-  return (data ?? []).map((action) => action.day);
+  return (data ?? []).map((action) => action.sequence);
 }
 
 test(
@@ -347,52 +348,56 @@ test(
     const otherUser = await createTestUser(admin, config, "other");
     const businessId = await createBusiness(admin, owner.id);
     const planId = await createPlan(admin, businessId, 1);
+    const expectedActions = validActions();
 
     try {
       const completed = await owner.client.rpc(
         "complete_ceo_plan",
         {
           p_plan_id: planId,
-          ...createPlanPayload(),
-          p_actions: validActions().reverse(),
+          ...createPlanPayload(expectedActions),
+          p_actions: [...expectedActions].reverse(),
         },
       );
       assert.ifError(completed.error);
-      assert.equal(await countActions(admin, planId), 7);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
       assert.equal(
         (await getPlanStatus(admin, planId)).status,
         "ready",
       );
-      assert.deepEqual(await getActionDays(admin, planId), [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-      ]);
+      assert.deepEqual(await getActionSequences(admin, planId), [1, 2, 3]);
 
       const nonOwnerFailure = await otherUser.client.rpc(
         "fail_ceo_plan",
         { p_plan_id: planId },
       );
       assert.ok(nonOwnerFailure.error);
-      assert.equal(await countActions(admin, planId), 7);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
 
       const readyFailure = await owner.client.rpc(
         "fail_ceo_plan",
         { p_plan_id: planId },
       );
       assert.ok(readyFailure.error);
-      assert.equal(await countActions(admin, planId), 7);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
 
       const mismatchPlanId = await createPlan(admin, businessId, 2);
       const sharedFields = [
-        "day",
+        "sequence",
         "action",
         "objective",
+        "reason",
         "success_metric",
+        "expected_result",
         "execution_mode",
         "action_type",
       ] as const;
@@ -401,11 +406,11 @@ test(
         const weeklyPlan = validActions();
         const mismatchedActions = weeklyPlan.map(
           (action, index) => {
-            if (field === "day") {
+            if (field === "sequence") {
               return index === 0
-                ? { ...action, day: 2 }
+                ? { ...action, sequence: 2 }
                 : index === 1
-                  ? { ...action, day: 1 }
+                  ? { ...action, sequence: 1 }
                   : action;
             }
 
@@ -427,6 +432,18 @@ test(
                     ...action,
                     success_metric: "Métrica inconsistente",
                   }
+                : action;
+            }
+
+            if (field === "reason") {
+              return index === 0
+                ? { ...action, reason: "Razón inconsistente" }
+                : action;
+            }
+
+            if (field === "expected_result") {
+              return index === 0
+                ? { ...action, expected_result: "Resultado inconsistente" }
                 : action;
             }
 
@@ -568,16 +585,11 @@ test(
         rollbackPlanId,
       );
       assert.equal(completedRetryPlan.status, "ready");
-      assert.equal(await countActions(admin, rollbackPlanId), 7);
-      assert.deepEqual(await getActionDays(admin, rollbackPlanId), [
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-      ]);
+      assert.equal(
+        await countActions(admin, rollbackPlanId),
+        expectedActions.length,
+      );
+      assert.deepEqual(await getActionSequences(admin, rollbackPlanId), [1, 2, 3]);
     } finally {
       await admin.from("businesses").delete().eq("id", businessId);
       await admin.auth.admin.deleteUser(owner.id);

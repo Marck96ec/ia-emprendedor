@@ -59,7 +59,7 @@ export async function workOnActionWithAI(formData: FormData) {
   const { supabase, userId } = await getAuthenticatedUser();
   const { data: action, error: actionErrorResult } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, day, action, objective, success_metric, status, execution_mode, action_type")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type")
     .eq("id", parsed.data.action_id)
     .maybeSingle();
 
@@ -148,7 +148,7 @@ export async function workOnActionWithAI(formData: FormData) {
               action: action.action,
               objective: action.objective,
               success_metric: action.success_metric,
-              day: action.day,
+              sequence: action.sequence,
               action_type: "commercial_messages",
             },
             plan: {
@@ -176,7 +176,7 @@ export async function workOnActionWithAI(formData: FormData) {
               action: action.action,
               objective: action.objective,
               success_metric: action.success_metric,
-              day: action.day,
+              sequence: action.sequence,
               action_type: actionType,
             },
             plan: {

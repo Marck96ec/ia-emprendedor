@@ -62,10 +62,12 @@ export type GenerateCEOPlanInput = {
     weeklyPlan: unknown;
 
     actions: Array<{
-      day: number;
+      sequence: number;
       action: string;
       objective: string;
+      reason: string;
       successMetric: string;
+      expectedResult: string;
       status: string;
     }>;
 
@@ -142,7 +144,7 @@ Genera:
   business_understanding, diagnosis, bottleneck, evidence, confidence,
   unknowns, alternative_hypothesis y critical_decision
 - exactamente 3 prioridades
-- exactamente 7 acciones, una para cada día del 1 al 7
+- entre 1 y 5 acciones, únicamente las necesarias para ejecutar o validar la decisión crítica
 
 La decisión crítica es la unidad central del plan. No saltes directamente
 del contexto a las prioridades: explica primero el entendimiento del negocio,
@@ -161,6 +163,15 @@ siguiendo estas reglas:
 - Si no es relevante, todas deben ser manual/generic.
 - value_proposition y commercial_messages siempre implican ai_assisted.
 - generic siempre implica manual.
+- Todas las acciones deben derivarse explícitamente de strategic_diagnosis.critical_decision
+  y del bottleneck; deben ejecutar la dirección recomendada, validar una hipótesis,
+  reducir incertidumbre o medir la variable objetivo.
+- Genera únicamente las acciones necesarias. No agregues tareas para completar una cuota.
+- Considera diagnostic.ownerHoursPerWeek, la capacidad real mostrada en previousWeek,
+  la confianza, los unknowns y la complejidad del experimento al decidir la cantidad.
+- Cada acción debe incluir reason, success_metric y expected_result. reason debe relacionarla
+  con la decisión crítica, el bottleneck y el diagnóstico; expected_result debe describir
+  el aprendizaje o cambio empresarial esperado, no repetir la tarea.
 ${retryInstructions}
 `,
       );
