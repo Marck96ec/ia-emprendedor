@@ -4,6 +4,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
+  EXTERNAL_EVIDENCE_URL_PROVENANCE,
   generateExternalEvidence,
   type GenerateExternalEvidenceInput,
 } from "../src/lib/ai/generate-external-evidence";
@@ -143,9 +144,9 @@ test("requires a demonstrated Web Search call and sends only decision context", 
       finalOutput: validEvidence,
       newItems: [
         {
-          type: "hosted_tool_call",
           rawItem: {
-            providerData: { type: "web_search_call" },
+            type: "hosted_tool_call",
+            name: "web_search_call",
           },
         },
       ],
@@ -162,6 +163,25 @@ test("requires a demonstrated Web Search call and sends only decision context", 
   }));
   assert.equal(withoutSearch.status, "insufficient");
   assert.deepEqual(withoutSearch.items, []);
+
+  const providerDataOnly = await generateExternalEvidence(input, async () => ({
+    finalOutput: validEvidence,
+    newItems: [
+      {
+        rawItem: {
+          type: "hosted_tool_call",
+          name: "other_hosted_tool",
+          providerData: { type: "web_search_call" },
+        },
+      },
+    ],
+  }));
+  assert.equal(providerDataOnly.status, "insufficient");
+  assert.deepEqual(providerDataOnly.items, []);
+});
+
+test("documents that URL provenance is not verified by SDK v0.16.1", () => {
+  assert.equal(EXTERNAL_EVIDENCE_URL_PROVENANCE, "unverified");
 });
 
 test("keeps evidence failure separate from the ready CEO plan", () => {

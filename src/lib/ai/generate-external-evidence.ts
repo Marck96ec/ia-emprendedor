@@ -1,4 +1,5 @@
 import { run } from "@openai/agents";
+import type { HostedToolCallItem } from "@openai/agents";
 
 import type { DecisionHypothesis } from "../decision-learning";
 import type { StrategicDiagnosis } from "./ceo-agent";
@@ -9,6 +10,15 @@ import {
 } from "./external-evidence";
 
 const MAX_GENERATION_ATTEMPTS = 2;
+
+export const EVIDENCE_PROMPT_VERSION = "v1-external-evidence";
+
+// URL provenance is not programmatically verified in v1 because the installed
+// SDK does not expose a stable public text-search source list.
+export const EXTERNAL_EVIDENCE_URL_PROVENANCE = "unverified" as const;
+
+// TODO: Validate source_url against public web-search citation URLs when the SDK
+// exposes that source list as a stable public API.
 
 export type GenerateExternalEvidenceInput = {
   business: {
@@ -21,13 +31,7 @@ export type GenerateExternalEvidenceInput = {
 };
 
 type EvidenceRunItem = {
-  type?: unknown;
-  rawItem?: {
-    type?: unknown;
-    providerData?: {
-      type?: unknown;
-    };
-  };
+  rawItem?: HostedToolCallItem;
 };
 
 type EvidenceRunResult = {
@@ -95,13 +99,11 @@ evidencia es favorable, mixta, contradictoria o insuficiente.
 }
 
 function hasWebSearchCall(items: EvidenceRunItem[] | undefined): boolean {
-  return (items ?? []).some((item) => {
-    const providerType = item.rawItem?.providerData?.type;
-    return (
-      item.type === "hosted_tool_call" &&
-      (providerType === "web_search_call" || providerType === "web_search")
-    );
-  });
+  return (items ?? []).some(
+    (item) =>
+      item.rawItem?.type === "hosted_tool_call" &&
+      item.rawItem?.name === "web_search_call",
+  );
 }
 
 function insufficientEvidence(reason: string): ExternalEvidence {
