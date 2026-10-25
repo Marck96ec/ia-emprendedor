@@ -20,7 +20,10 @@ import {
   isInvalidCEOPlanOutputError,
   toSafeCEOPlanError,
 } from "../src/lib/ai/ceo-plan-errors";
-import { DecisionLearningSchema } from "../src/lib/decision-learning";
+import {
+  buildDecisionLearning,
+  DecisionLearningSchema,
+} from "../src/lib/decision-learning";
 
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
@@ -864,8 +867,45 @@ test("el review construye el snapshot estratégico desde el plan en servidor", (
   );
 
   assert.match(source, /strategic_diagnosis, decision_hypothesis/);
-  assert.match(source, /decision_question:\s*strategicDiagnosis\.data/);
+  assert.match(source, /buildDecisionLearning\(\{/);
   assert.match(source, /decision_learning: decisionLearning/);
   assert.doesNotMatch(source, /formData\.get\("decision_question"\)/);
   assert.doesNotMatch(source, /formData\.get\("target_metric"\)/);
+});
+
+test("buildDecisionLearning conserva el contexto confiable del plan", () => {
+  const learning = buildDecisionLearning({
+    strategicDiagnosis: {
+      ...validPlan.strategic_diagnosis,
+      critical_decision: {
+        ...validPlan.strategic_diagnosis.critical_decision,
+        question: "¿Debemos priorizar retención?",
+        recommended_direction: "Validar retención",
+        target_metric: "reactivaciones",
+        expected_outcome: "Observar demanda recuperable.",
+      },
+    },
+    decisionHypothesis: {
+      statement: "Clientes actuales responderán",
+      validation_signal: "Aparecen reactivaciones observables.",
+    },
+    observedResult: "Solo uno respondió",
+    evidence: "1 de 12 respondió",
+    learning: "La señal fue débil",
+    hypothesisStatus: "rejected",
+    metricBefore: null,
+    metricAfter: null,
+  });
+
+  assert.deepEqual(learning, {
+    decision_question: "¿Debemos priorizar retención?",
+    recommended_direction: "Validar retención",
+    hypothesis: "Clientes actuales responderán",
+    target_metric: "reactivaciones",
+    expected_outcome: "Observar demanda recuperable.",
+    observed_result: "Solo uno respondió",
+    evidence: ["1 de 12 respondió"],
+    learning: "La señal fue débil",
+    hypothesis_status: "rejected",
+  });
 });

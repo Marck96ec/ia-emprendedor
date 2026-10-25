@@ -412,17 +412,19 @@ Tu respuesta debe ser práctica, concreta y entendible para empresarios.
 Debes producir:
 
 1. Un resumen ejecutivo breve.
-2. Un razonamiento estratégico explícito con estos ocho bloques, en este orden:
-  business_understanding, diagnosis, bottleneck, evidence, confidence,
-  unknowns, alternative_hypothesis y critical_decision.
+2. Un razonamiento estratégico explícito siguiendo esta secuencia:
+  business_understanding -> diagnosis -> bottleneck -> evidence -> confidence
+  -> unknowns -> alternative_hypothesis -> critical_decision
+  -> decision_hypothesis -> priorities -> actions.
 3. Un diagnóstico textual legacy que resuma
   strategic_diagnosis.diagnosis.summary.
 4. Exactamente 3 prioridades, ordenadas del 1 al 3.
 5. Entre 1 y 5 acciones, ordenadas por secuencia recomendada.
 
-El razonamiento estratégico es obligatorio y debe seguir esta cadena:
+El razonamiento estratégico es obligatorio y debe seguir esta cadena completa:
 business_understanding -> diagnosis -> bottleneck -> evidence -> confidence
--> unknowns -> alternative_hypothesis -> critical_decision.
+-> unknowns -> alternative_hypothesis -> critical_decision
+-> decision_hypothesis -> priorities -> actions.
 
 business_understanding debe describir el modelo de negocio, motor de ingresos,
 cliente principal, objetivo actual, involucramiento del empresario y contexto.
@@ -445,6 +447,16 @@ recommended_direction, rationale, expected_outcome y target_metric. No
 conviertas la decisión en una tarea ni inventes cifras objetivo.
 La distinción semántica entre una decisión y una tarea será evaluada con
 casos de modelo; no depende de una lista frágil de palabras.
+
+Después de critical_decision debes generar decision_hypothesis con:
+
+- statement: qué creemos que ocurrirá si seguimos la dirección recomendada.
+- validation_signal: qué evidencia permitiría sostener o cuestionar esa
+  hipótesis.
+
+No inventes precisión numérica en statement ni validation_signal si no existe
+evidencia que la justifique. La hipótesis debe derivarse de critical_decision,
+no ser una estrategia desconectada.
 
 Las prioridades deben enfocarse en aquello que tenga mayor impacto
 para el negocio dadas sus circunstancias actuales.

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { StrategicDiagnosis } from "./ai/ceo-agent";
+
 export const HypothesisStatusSchema = z.enum([
   "validated",
   "rejected",
@@ -32,3 +34,51 @@ export const DecisionLearningSchema = z.object({
 
 export type DecisionHypothesis = z.infer<typeof DecisionHypothesisSchema>;
 export type DecisionLearning = z.infer<typeof DecisionLearningSchema>;
+
+type BuildDecisionLearningInput = {
+  strategicDiagnosis: StrategicDiagnosis;
+  decisionHypothesis: DecisionHypothesis;
+  observedResult: string;
+  evidence: string;
+  learning: string;
+  hypothesisStatus: z.infer<typeof HypothesisStatusSchema>;
+  metricBefore: string | null;
+  metricAfter: string | null;
+};
+
+export function buildDecisionLearning({
+  strategicDiagnosis,
+  decisionHypothesis,
+  observedResult,
+  evidence,
+  learning,
+  hypothesisStatus,
+  metricBefore,
+  metricAfter,
+}: BuildDecisionLearningInput): DecisionLearning {
+  return DecisionLearningSchema.parse({
+    decision_question:
+      strategicDiagnosis.critical_decision.question,
+    recommended_direction:
+      strategicDiagnosis.critical_decision.recommended_direction,
+    hypothesis: decisionHypothesis.statement,
+    target_metric:
+      strategicDiagnosis.critical_decision.target_metric,
+    expected_outcome:
+      strategicDiagnosis.critical_decision.expected_outcome,
+    observed_result: observedResult,
+    evidence: [evidence],
+    learning,
+    hypothesis_status: hypothesisStatus,
+    ...(metricBefore || metricAfter
+      ? {
+          metric_observation: {
+            metric_name:
+              strategicDiagnosis.critical_decision.target_metric,
+            before: metricBefore,
+            after: metricAfter,
+          },
+        }
+      : {}),
+  });
+}

@@ -167,8 +167,9 @@ Genera:
 - razonamiento estratégico explícito, en este orden:
   business_understanding, diagnosis, bottleneck, evidence, confidence,
   unknowns, alternative_hypothesis, critical_decision y decision_hypothesis
-- exactamente 3 prioridades
-- entre 1 y 5 acciones, únicamente las necesarias para ejecutar o validar la decisión crítica
+  - exactamente 3 prioridades después de la hipótesis
+  - entre 1 y 5 acciones después de las prioridades, únicamente las necesarias
+    para ejecutar o validar la decisión crítica
 
 La decisión crítica es la unidad central del plan. No saltes directamente
 del contexto a las prioridades: explica primero el entendimiento del negocio,
