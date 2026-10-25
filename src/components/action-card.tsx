@@ -43,7 +43,7 @@ export function ActionCard({
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={`Seleccionar día ${action.day}: ${action.action}`}
+      aria-label={`Seleccionar acción ${action.sequence}: ${action.action}`}
       onClick={onSelect}
       className={`group flex min-h-[5rem] min-w-0 flex-col justify-between rounded-xl border p-2 text-left transition focus-visible:outline-3 focus-visible:outline-blue-500/30 lg:min-h-[7rem] lg:p-3 ${
         selected
@@ -56,7 +56,7 @@ export function ActionCard({
           {state.icon}
         </span>
         <span className={`text-[0.65rem] font-bold uppercase tracking-[0.14em] ${selected ? "text-slate-300" : "text-slate-500"}`}>
-          Día {action.day}
+          Acción {action.sequence}
         </span>
       </div>
 

@@ -29,7 +29,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Cuéntanos qué está pasando en tu negocio. TuCEO IA analiza el contexto, identifica las decisiones de mayor impacto y las convierte en un plan práctico para los próximos 7 días.
+              Cuéntanos qué está pasando en tu negocio. TuCEO IA analiza el contexto, identifica las decisiones de mayor impacto y las convierte en un plan práctico de acciones prioritarias.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -169,7 +169,7 @@ export default function Home() {
                 },
                 {
                   title: "Llévalas a la práctica",
-                  text: "Convierte las decisiones en acciones para los próximos 7 días.",
+                      text: "Convierte las decisiones en acciones prioritarias y medibles.",
                 },
               ].map((step) => (
                 <div key={step.title} className="rounded-[1.5rem] border border-slate-700 bg-slate-900 p-5">
@@ -191,7 +191,7 @@ export default function Home() {
             </h2>
 
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-600">
-              Obtén una lectura de tu situación, tus 3 prioridades y un plan de ejecución de 7 días.
+              Obtén una lectura de tu situación, tus 3 prioridades y un plan de ejecución enfocado.
             </p>
 
             <Link href="/signup" className="primary-button mt-7 inline-flex px-6 py-3">

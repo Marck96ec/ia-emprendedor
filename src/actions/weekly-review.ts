@@ -200,10 +200,10 @@ export async function createWeeklyReview(
     );
   }
 
-  if (!actions || actions.length !== 7) {
+  if (!actions || actions.length === 0) {
     redirect(
       reviewError(
-        "Tu plan semanal todavía no tiene las 7 acciones esperadas.",
+        "Tu plan semanal todavía no tiene acciones persistidas.",
       ),
     );
   }

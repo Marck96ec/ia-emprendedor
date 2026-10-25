@@ -106,7 +106,7 @@ test("conserva borrador, feedback y contexto en una revisión", () => {
     },
     action: {
       ...actionContext,
-      day: 2,
+      sequence: 2,
       action_type: "commercial_messages",
     },
     plan: {

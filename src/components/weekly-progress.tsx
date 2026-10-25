@@ -10,7 +10,7 @@ export function WeeklyProgress({
   const progress = totalActions === 0
     ? 0
     : Math.round((completedActions / totalActions) * 100);
-  const achievementUnlocked = totalActions === 7 && completedActions === 7;
+  const achievementUnlocked = totalActions > 0 && completedActions === totalActions;
 
   return (
     <section className="shrink-0 rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3 shadow-sm sm:px-5" aria-label="Progreso semanal">
@@ -30,7 +30,7 @@ export function WeeklyProgress({
       </div>
       <p className="mt-2 text-xs text-slate-600" aria-live="polite">
         {achievementUnlocked
-          ? "Semana completada: ejecutaste las 7 decisiones."
+          ? "Plan completado: ejecutaste todas las acciones."
           : `Te faltan ${totalActions - completedActions} decisiones para completar la semana.`}
       </p>
     </section>

@@ -29,7 +29,7 @@ export type CommercialMessagesContext = {
     action: string;
     objective: string;
     success_metric: string;
-    day: number;
+    sequence: number;
     action_type: "commercial_messages";
   };
   plan: {

@@ -27,7 +27,7 @@ export type ValuePropositionContext = {
     action: string;
     objective: string;
     success_metric: string;
-    day: number;
+    sequence: number;
     action_type: string;
   };
   plan: {

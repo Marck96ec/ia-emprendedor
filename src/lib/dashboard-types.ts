@@ -7,10 +7,12 @@ export type DashboardActionResult = {
 
 export type DashboardAction = {
   id: string;
-  day: number;
+  sequence: number;
   action: string;
   objective: string;
+  reason: string;
   success_metric: string;
+  expected_result: string;
   status: "pending" | "completed";
   completed_at: string | null;
   execution_mode: ActionExecutionMode;

@@ -5,7 +5,7 @@ import { ThinkingOrb } from "thinking-orbs";
 const progressMessages = [
   "Analizando tu negocio...",
   "Identificando tus principales oportunidades...",
-  "Preparando tu plan de 7 días...",
+  "Preparando tu plan de ejecución...",
 ] as const;
 
 export function PlanGeneratingStatus() {

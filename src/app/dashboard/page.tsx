@@ -195,10 +195,12 @@ export default async function DashboardPage({
       .select(
         `
           id,
-          day,
+          sequence,
           action,
           objective,
+          reason,
           success_metric,
+          expected_result,
           status,
           completed_at,
           execution_mode,
@@ -210,7 +212,7 @@ export default async function DashboardPage({
         `,
       )
       .eq("ceo_plan_id", ceoPlan.id)
-      .order("day", {
+      .order("sequence", {
         ascending: true,
       });
 
@@ -287,7 +289,7 @@ export default async function DashboardPage({
     /^Semana (\d+) preparada\.$/,
   );
   const displayMessage = preparedWeekMessage
-    ? `Tu semana ${preparedWeekMessage[1]} está lista. Empieza por el Día 1.`
+    ? `Tu semana ${preparedWeekMessage[1]} está lista. Revisa tu plan de ejecución.`
     : message;
 
   return (
@@ -308,7 +310,7 @@ export default async function DashboardPage({
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Primera semana</p>
               <h2 className="mt-2 text-2xl font-semibold text-slate-950">Prepara tu primera semana</h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Con lo que nos contaste, el CEO IA identificará qué merece tu atención primero y preparará un plan de siete acciones para llevar tus prioridades a la práctica.
+                Con lo que nos contaste, el CEO IA identificará qué merece tu atención primero y preparará las acciones necesarias para llevar tus prioridades a la práctica.
               </p>
               <form action={generateCEOPlanAction} className="mt-5">
                 <PlanGenerationSubmit label="Generar mi plan" />
@@ -320,7 +322,7 @@ export default async function DashboardPage({
               <div className="mt-4 space-y-3">
                 {[
                   ["01", "Tres prioridades claras", "Qué merece atención primero."],
-                  ["02", "Siete acciones concretas", "Un paso útil para cada día."],
+                  ["02", "Acciones prioritarias", "Solo los pasos necesarios para avanzar."],
                   ["03", "Un plan adaptado a tu negocio", "Basado en lo que nos contaste."],
                 ].map(([number, title, description]) => (
                   <div key={number} className="flex gap-3 rounded-xl bg-slate-50 p-3">
