@@ -486,6 +486,29 @@ test(
     const expectedActions = validRoleActions();
 
     try {
+      for (const actionCount of [1, 3, 5]) {
+        const { error } = await admin
+          .from("ceo_plans")
+          .update({ weekly_plan: validActions(actionCount) })
+          .eq("id", planId);
+
+        assert.ifError(error);
+      }
+
+      for (const actionCount of [0, 6, 7]) {
+        const { error } = await admin
+          .from("ceo_plans")
+          .update({ weekly_plan: validActions(actionCount) })
+          .eq("id", planId);
+
+        assert.ok(error);
+        assert.equal(error.code, "23514");
+        assert.match(
+          error.message,
+          /ceo_plans_weekly_plan_array_check/,
+        );
+      }
+
       const legacySixPlanId = await createPlan(admin, businessId, 12);
       const legacySixResult = await owner.client.rpc(
         "complete_ceo_plan",
@@ -701,6 +724,11 @@ test(
         expectedActions.length,
       );
 
+      await admin
+        .from("business_diagnostics")
+        .update({ owner_hours_per_week: 6 })
+        .eq("business_id", businessId);
+
       const mismatchPlanId = await createPlan(admin, businessId, 2);
       const sharedFields = [
         "sequence",
@@ -791,7 +819,9 @@ test(
         assert.equal(mismatchResult.error.code, "22023");
         assert.equal(
           mismatchResult.error.message,
-          "CEO_PLAN_PAYLOAD_MISMATCH",
+          field === "sequence"
+            ? "CEO_PLAN_ROLE_PAYLOAD_MISMATCH"
+            : "CEO_PLAN_PAYLOAD_MISMATCH",
         );
         assert.equal(
           (await getPlanStatus(admin, mismatchPlanId)).status,
