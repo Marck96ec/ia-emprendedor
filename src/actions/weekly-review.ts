@@ -243,7 +243,7 @@ export async function createWeeklyReview(
       completed_actions:
         completedActions,
 
-      total_actions: 7,
+      total_actions: actions.length,
     });
 
   if (error) {

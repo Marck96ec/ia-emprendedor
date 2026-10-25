@@ -31,7 +31,7 @@ export function WeeklyProgress({
       <p className="mt-2 text-xs text-slate-600" aria-live="polite">
         {achievementUnlocked
           ? "Plan completado: ejecutaste todas las acciones."
-          : `Te faltan ${totalActions - completedActions} decisiones para completar la semana.`}
+          : `Te faltan ${totalActions - completedActions} acciones para completar la semana.`}
       </p>
     </section>
   );

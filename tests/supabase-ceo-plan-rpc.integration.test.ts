@@ -201,8 +201,7 @@ function validActions(count = 3) {
   }));
 }
 
-function createPlanPayload() {
-  const actions = validActions();
+function createPlanPayload(actions = validActions()) {
 
   return {
     p_executive_summary: "Resumen válido",
@@ -254,8 +253,8 @@ async function createBusiness(
     .insert({
       owner_id: ownerId,
       name: `RPC test ${ownerId.slice(0, 8)}`,
-      business_type: "Servicios",
       description: "Negocio para pruebas locales.",
+      revenue_model: "Cobro por servicios profesionales.",
     })
     .select("id")
     .single();
@@ -349,18 +348,22 @@ test(
     const otherUser = await createTestUser(admin, config, "other");
     const businessId = await createBusiness(admin, owner.id);
     const planId = await createPlan(admin, businessId, 1);
+    const expectedActions = validActions();
 
     try {
       const completed = await owner.client.rpc(
         "complete_ceo_plan",
         {
           p_plan_id: planId,
-          ...createPlanPayload(),
-          p_actions: validActions().reverse(),
+          ...createPlanPayload(expectedActions),
+          p_actions: [...expectedActions].reverse(),
         },
       );
       assert.ifError(completed.error);
-      assert.equal(await countActions(admin, planId), 3);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
       assert.equal(
         (await getPlanStatus(admin, planId)).status,
         "ready",
@@ -372,14 +375,20 @@ test(
         { p_plan_id: planId },
       );
       assert.ok(nonOwnerFailure.error);
-      assert.equal(await countActions(admin, planId), 3);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
 
       const readyFailure = await owner.client.rpc(
         "fail_ceo_plan",
         { p_plan_id: planId },
       );
       assert.ok(readyFailure.error);
-      assert.equal(await countActions(admin, planId), 7);
+      assert.equal(
+        await countActions(admin, planId),
+        expectedActions.length,
+      );
 
       const mismatchPlanId = await createPlan(admin, businessId, 2);
       const sharedFields = [
@@ -576,7 +585,10 @@ test(
         rollbackPlanId,
       );
       assert.equal(completedRetryPlan.status, "ready");
-      assert.equal(await countActions(admin, rollbackPlanId), 3);
+      assert.equal(
+        await countActions(admin, rollbackPlanId),
+        expectedActions.length,
+      );
       assert.deepEqual(await getActionSequences(admin, rollbackPlanId), [1, 2, 3]);
     } finally {
       await admin.from("businesses").delete().eq("id", businessId);
