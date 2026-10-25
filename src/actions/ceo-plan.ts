@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
+import { DecisionLearningSchema } from "@/lib/decision-learning";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import {
   CEOPlanError,
@@ -14,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v4-role-time-allocation";
+const PROMPT_VERSION = "v5-strategic-learning";
 
 const GENERATING_STALE_AFTER_MS =
   15 * 60 * 1000;
@@ -445,7 +446,8 @@ if (latestPlan?.status === "generating") {
           diagnosis,
           strategic_diagnosis,
           priorities,
-          weekly_plan
+          weekly_plan,
+          decision_hypothesis
         `,
       )
       .eq("id", contextPlanId)
@@ -519,7 +521,8 @@ if (latestPlan?.status === "generating") {
           completed_actions,
           total_actions,
           outcome_status,
-          outcome_summary
+          outcome_summary,
+          decision_learning
         `,
       )
       .eq("ceo_plan_id", contextPlan.id)
@@ -539,6 +542,22 @@ if (latestPlan?.status === "generating") {
     if (!contextReview) {
       throw new Error(
         "La semana anterior no tiene una revisión válida.",
+      );
+    }
+
+    const previousDecisionLearning =
+      contextReview.decision_learning === null
+        ? null
+        : DecisionLearningSchema.safeParse(
+            contextReview.decision_learning,
+          );
+
+    if (
+      contextReview.decision_learning !== null &&
+      (!previousDecisionLearning || !previousDecisionLearning.success)
+    ) {
+      throw new Error(
+        "La semana anterior tiene un aprendizaje estratégico inválido.",
       );
     }
 
@@ -610,6 +629,30 @@ if (latestPlan?.status === "generating") {
 
         outcomeSummary:
           contextReview.outcome_summary,
+
+        decisionLearning:
+          previousDecisionLearning && previousDecisionLearning.success
+            ? {
+                decisionQuestion:
+                  previousDecisionLearning.data.decision_question,
+                recommendedDirection:
+                  previousDecisionLearning.data.recommended_direction,
+                hypothesis:
+                  previousDecisionLearning.data.hypothesis,
+                targetMetric:
+                  previousDecisionLearning.data.target_metric,
+                expectedOutcome:
+                  previousDecisionLearning.data.expected_outcome,
+                observedResult:
+                  previousDecisionLearning.data.observed_result,
+                evidence:
+                  previousDecisionLearning.data.evidence,
+                learning:
+                  previousDecisionLearning.data.learning,
+                hypothesisStatus:
+                  previousDecisionLearning.data.hypothesis_status,
+              }
+            : null,
       },
     };
   }
@@ -669,6 +712,7 @@ if (latestPlan?.status === "generating") {
         p_executive_summary: output.executive_summary,
         p_diagnosis: output.diagnosis,
         p_strategic_diagnosis: output.strategic_diagnosis,
+        p_decision_hypothesis: output.decision_hypothesis,
         p_priorities: output.priorities,
         p_weekly_plan: output.weekly_plan,
         p_actions: output.weekly_plan,

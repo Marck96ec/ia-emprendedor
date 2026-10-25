@@ -116,6 +116,7 @@ export default async function DashboardPage({
         executive_summary,
         diagnosis,
         strategic_diagnosis,
+        decision_hypothesis,
         priorities,
         weekly_plan,
           time_allocation,
@@ -157,6 +158,9 @@ export default async function DashboardPage({
 
           strategic_diagnosis:
             ceoPlan.strategic_diagnosis,
+
+          decision_hypothesis:
+            ceoPlan.decision_hypothesis,
 
           priorities:
             ceoPlan.priorities,
@@ -375,6 +379,7 @@ export default async function DashboardPage({
             <ExecutiveSummary
               summary={readyPlan.executive_summary}
               strategicDiagnosis={readyPlan.strategic_diagnosis}
+              decisionHypothesis={readyPlan.decision_hypothesis}
               priorities={readyPlan.priorities}
               timeAllocation={dashboardTimeAllocation}
             />

@@ -42,6 +42,11 @@ export type DashboardWeeklyReview = {
   outcome_summary: string;
 };
 
+export type DashboardDecisionHypothesis = {
+  statement: string;
+  validation_signal: string;
+};
+
 export type DashboardPriority = {
   rank: number;
   title: string;

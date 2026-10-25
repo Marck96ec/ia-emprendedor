@@ -1,4 +1,5 @@
 import type {
+  DashboardDecisionHypothesis,
   DashboardPriority,
   DashboardStrategicDiagnosis,
   DashboardTimeAllocation,
@@ -10,6 +11,7 @@ type ExecutiveSummaryProps = {
   strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
   timeAllocation: DashboardTimeAllocation;
+  decisionHypothesis: DashboardDecisionHypothesis;
 };
 
 export function ExecutiveSummary({
@@ -17,6 +19,7 @@ export function ExecutiveSummary({
   strategicDiagnosis,
   priorities,
   timeAllocation,
+  decisionHypothesis,
 }: ExecutiveSummaryProps) {
   return (
     <section className="surface-card shrink-0 rounded-2xl px-4 py-3 sm:px-5" aria-labelledby="executive-summary-title">
@@ -49,6 +52,13 @@ export function ExecutiveSummary({
           </p>
         </div>
         <p className="mt-1 text-xs leading-5 text-slate-600">{timeAllocation.rationale}</p>
+      </div>
+      <div className="mt-3 border-t border-slate-100 pt-3">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+          Hipótesis de esta semana
+        </p>
+        <p className="mt-1 text-sm font-medium leading-5 text-slate-800">{decisionHypothesis.statement}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-600">Señal de validación: {decisionHypothesis.validation_signal}</p>
       </div>
     </section>
   );

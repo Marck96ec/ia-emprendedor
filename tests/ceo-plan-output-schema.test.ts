@@ -20,6 +20,7 @@ import {
   isInvalidCEOPlanOutputError,
   toSafeCEOPlanError,
 } from "../src/lib/ai/ceo-plan-errors";
+import { DecisionLearningSchema } from "../src/lib/decision-learning";
 
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
@@ -68,6 +69,10 @@ const validPlan: CEOPlan = {
       expected_outcome: "Aprender qué segmento genera conversaciones cualificadas.",
       target_metric: "conversaciones cualificadas",
     },
+  },
+  decision_hypothesis: {
+    statement: "Un segmento prioritario mostrará interés suficiente para justificar profundizar.",
+    validation_signal: "Aparecen conversaciones cualificadas con ese segmento.",
   },
   priorities: [
     {
@@ -723,4 +728,144 @@ test("la migración no expone los overloads legacy de complete_ceo_plan", () => 
     migration,
     /grant execute on function public\.complete_ceo_plan\(uuid, text, text, jsonb, jsonb, jsonb, jsonb, jsonb\) to authenticated;/,
   );
+});
+
+test("exige una hipótesis de decisión completa", () => {
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      decision_hypothesis: undefined,
+    }).success,
+    false,
+  );
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      decision_hypothesis: {
+        statement: "",
+        validation_signal: "Señal",
+      },
+    }).success,
+    false,
+  );
+  assert.equal(
+    CEOPlanSchema.safeParse({
+      ...validPlan,
+      decision_hypothesis: {
+        statement: "Hipótesis",
+        validation_signal: "",
+      },
+    }).success,
+    false,
+  );
+});
+
+test("la migración de aprendizaje exige la hipótesis y el snapshot del review", () => {
+  const migration = readFileSync(
+    join(
+      process.cwd(),
+      "supabase",
+      "migrations",
+      "20261025010000_add_strategic_learning.sql",
+    ),
+    "utf8",
+  );
+
+  assert.match(migration, /add column if not exists decision_hypothesis jsonb/);
+  assert.match(migration, /add column if not exists decision_learning jsonb/);
+  assert.match(migration, /p_decision_hypothesis jsonb/);
+  assert.match(migration, /CEO decision hypothesis is required/);
+  assert.match(migration, /revoke all on function public\.complete_ceo_plan/);
+});
+
+test("transporta el aprendizaje de la semana anterior al siguiente prompt", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  let prompt = "";
+
+  await generateCEOPlan(
+    {
+      ...input,
+      previousWeek: {
+        weekNumber: 1,
+        executiveSummary: "Priorizar clientes actuales.",
+        diagnosis: "La reactivación no mostró señal.",
+        strategicDiagnosis: validPlan.strategic_diagnosis,
+        priorities: validPlan.priorities,
+        weeklyPlan: validPlan.weekly_plan,
+        actions: validPlan.weekly_plan.map((action) => ({
+          sequence: action.sequence,
+          action: action.action,
+          objective: action.objective,
+          reason: action.reason,
+          successMetric: action.success_metric,
+          expectedResult: action.expected_result,
+          roleRecommendation: action.role_recommendation,
+          roleReason: action.role_reason,
+          estimatedHours: action.estimated_hours,
+          status: "completed",
+        })),
+        review: {
+          whatWorked: "Las conversaciones fueron claras.",
+          whatDidntWork: "La propuesta no generó suficiente interés.",
+          businessChanges: "Un cliente pidió información.",
+          nextWeekFocus: null,
+          completedActions: 3,
+          totalActions: 3,
+          outcomeStatus: "negative",
+          outcomeSummary: "La hipótesis fue rechazada.",
+          decisionLearning: {
+            decisionQuestion: "¿Debemos priorizar reactivación?",
+            recommendedDirection: "Validar reactivación.",
+            hypothesis: "Los clientes inactivos responderán.",
+            targetMetric: "reactivaciones",
+            expectedOutcome: "Observar demanda recuperable.",
+            observedResult: "Solo un cliente mostró interés.",
+            evidence: ["Se contactaron 12 clientes."],
+            learning: "La reactivación no es el canal con mejor señal.",
+            hypothesisStatus: "rejected",
+          },
+        },
+      },
+    },
+    async (_agent, receivedPrompt) => {
+      prompt = receivedPrompt;
+      return { finalOutput: validPlan };
+    },
+  );
+
+  assert.match(prompt, /La reactivación no es el canal con mejor señal/);
+  assert.match(prompt, /hypothesisStatus/);
+});
+
+test("decision_learning solo acepta estados de hipótesis válidos", () => {
+  const learning = {
+    decision_question: "¿Debemos priorizar reactivación?",
+    recommended_direction: "Validar reactivación.",
+    hypothesis: "Los clientes inactivos responderán.",
+    target_metric: "reactivaciones",
+    expected_outcome: "Observar demanda recuperable.",
+    observed_result: "Solo un cliente mostró interés.",
+    evidence: ["Se contactaron 12 clientes."],
+    learning: "La reactivación no es el canal con mejor señal.",
+    hypothesis_status: "rejected",
+  };
+
+  assert.equal(DecisionLearningSchema.safeParse(learning).success, true);
+  assert.equal(
+    DecisionLearningSchema.safeParse({ ...learning, hypothesis_status: "unknown" }).success,
+    false,
+  );
+});
+
+test("el review construye el snapshot estratégico desde el plan en servidor", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src", "actions", "weekly-review.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /strategic_diagnosis, decision_hypothesis/);
+  assert.match(source, /decision_question:\s*strategicDiagnosis\.data/);
+  assert.match(source, /decision_learning: decisionLearning/);
+  assert.doesNotMatch(source, /formData\.get\("decision_question"\)/);
+  assert.doesNotMatch(source, /formData\.get\("target_metric"\)/);
 });

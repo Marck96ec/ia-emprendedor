@@ -270,7 +270,7 @@ function validRoleActions(): V4Action[] {
   ];
 }
 
-function createV4PlanPayload(
+function createV5PlanPayload(
   actions: ReadonlyArray<V4Action> = validRoleActions(),
   timeAllocation = {
     available_hours: 6,
@@ -287,6 +287,10 @@ function createV4PlanPayload(
     p_actions: actions,
     p_strategic_diagnosis: { confidence: "medium" },
     p_time_allocation: timeAllocation,
+    p_decision_hypothesis: {
+      statement: "La dirección elegida producirá una señal comercial suficiente.",
+      validation_signal: "Aparecen conversaciones cualificadas.",
+    },
   };
 }
 
@@ -517,7 +521,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: planId,
-          ...createV4PlanPayload(expectedActions),
+          ...createV5PlanPayload(expectedActions),
           p_actions: [...expectedActions].reverse(),
         },
       );
@@ -537,7 +541,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: validV4PlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
         },
       );
       assert.ifError(validV4Result.error);
@@ -633,7 +637,7 @@ test(
           "complete_ceo_plan",
           {
             p_plan_id: invalidV4PlanId,
-            ...createV4PlanPayload(
+            ...createV5PlanPayload(
               invalidCase.actions,
               invalidCase.timeAllocation,
             ),
@@ -662,7 +666,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: overCapacityPlanId,
-          ...createV4PlanPayload(overCapacityActions, {
+          ...createV5PlanPayload(overCapacityActions, {
             available_hours: 5,
             allocated_hours: 6,
             reserved_hours: 0,
@@ -778,7 +782,7 @@ test(
           "complete_ceo_plan",
           {
             p_plan_id: mismatchPlanId,
-            ...createV4PlanPayload(weeklyPlan),
+            ...createV5PlanPayload(weeklyPlan),
             p_actions: mismatchedActions,
           },
         );
@@ -803,7 +807,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: invalidPlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
           p_weekly_plan: invalidActions,
           p_actions: invalidActions,
         },
@@ -824,7 +828,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: multipleAssistedPlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
           p_weekly_plan: multipleAssisted,
           p_actions: multipleAssisted,
         },
@@ -838,7 +842,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: rollbackPlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
           p_weekly_plan: oversizedActions,
           p_actions: oversizedActions,
         },
@@ -858,7 +862,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: rollbackPlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
         },
       );
       assert.ok(invalidRetry.error);
@@ -885,7 +889,7 @@ test(
         "complete_ceo_plan",
         {
           p_plan_id: rollbackPlanId,
-          ...createV4PlanPayload(),
+          ...createV5PlanPayload(),
         },
       );
       assert.ifError(retryResult.error);

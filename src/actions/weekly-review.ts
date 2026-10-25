@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import {
+  DecisionLearningSchema,
+  DecisionHypothesisSchema,
+} from "@/lib/decision-learning";
+import { StrategicDiagnosisSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
 
 const WeeklyReviewSchema = z.object({
@@ -30,6 +35,16 @@ const WeeklyReviewSchema = z.object({
           "El enfoque debe tener al menos 5 caracteres.",
       },
     ),
+  observed_result: z.string().trim().min(5).max(2000),
+  evidence: z.string().trim().min(5).max(2000),
+  learning: z.string().trim().min(5).max(2000),
+  hypothesis_status: z.enum([
+    "validated",
+    "rejected",
+    "inconclusive",
+  ]),
+  metric_before: z.string().trim().max(500).optional(),
+  metric_after: z.string().trim().max(500).optional(),
 });
 
 function reviewError(message: string) {
@@ -65,6 +80,30 @@ export async function createWeeklyReview(
 
     next_week_focus: String(
       formData.get("next_week_focus") ?? "",
+    ),
+
+    observed_result: String(
+      formData.get("observed_result") ?? "",
+    ),
+
+    evidence: String(
+      formData.get("evidence") ?? "",
+    ),
+
+    learning: String(
+      formData.get("learning") ?? "",
+    ),
+
+    hypothesis_status: String(
+      formData.get("hypothesis_status") ?? "",
+    ),
+
+    metric_before: String(
+      formData.get("metric_before") ?? "",
+    ),
+
+    metric_after: String(
+      formData.get("metric_after") ?? "",
     ),
   });
 
@@ -120,7 +159,7 @@ export async function createWeeklyReview(
   const { data: ceoPlan, error: planError } =
     await supabase
       .from("ceo_plans")
-      .select("id, week_number, status")
+      .select("id, week_number, status, strategic_diagnosis, decision_hypothesis")
       .eq("business_id", business.id)
       .order("week_number", {
         ascending: false,
@@ -143,6 +182,27 @@ export async function createWeeklyReview(
 
   if (!ceoPlan || ceoPlan.status !== "ready") {
     redirect("/dashboard");
+  }
+
+  const strategicDiagnosis = StrategicDiagnosisSchema.safeParse(
+    ceoPlan.strategic_diagnosis,
+  );
+  const decisionHypothesis = DecisionHypothesisSchema.safeParse(
+    ceoPlan.decision_hypothesis,
+  );
+
+  if (!strategicDiagnosis.success || !decisionHypothesis.success) {
+    console.error("WEEKLY_REVIEW_STRATEGIC_CONTEXT_INVALID", {
+      planId: ceoPlan.id,
+      strategicDiagnosis: strategicDiagnosis.success,
+      decisionHypothesis: decisionHypothesis.success,
+    });
+
+    redirect(
+      reviewError(
+        "El plan no tiene una decisión estratégica válida para revisar.",
+      ),
+    );
   }
 
   /*
@@ -217,6 +277,34 @@ export async function createWeeklyReview(
   const nextWeekFocus =
     parsed.data.next_week_focus?.trim() || null;
 
+  const metricBefore = parsed.data.metric_before?.trim() || null;
+  const metricAfter = parsed.data.metric_after?.trim() || null;
+  const decisionLearning = DecisionLearningSchema.parse({
+    decision_question:
+      strategicDiagnosis.data.critical_decision.question,
+    recommended_direction:
+      strategicDiagnosis.data.critical_decision.recommended_direction,
+    hypothesis: decisionHypothesis.data.statement,
+    target_metric:
+      strategicDiagnosis.data.critical_decision.target_metric,
+    expected_outcome:
+      strategicDiagnosis.data.critical_decision.expected_outcome,
+    observed_result: parsed.data.observed_result,
+    evidence: [parsed.data.evidence],
+    learning: parsed.data.learning,
+    hypothesis_status: parsed.data.hypothesis_status,
+    ...(metricBefore || metricAfter
+      ? {
+          metric_observation: {
+            metric_name:
+              strategicDiagnosis.data.critical_decision.target_metric,
+            before: metricBefore,
+            after: metricAfter,
+          },
+        }
+      : {}),
+  });
+
   const { error } = await supabase
     .from("weekly_reviews")
     .insert({
@@ -244,6 +332,8 @@ export async function createWeeklyReview(
         completedActions,
 
       total_actions: actions.length,
+
+      decision_learning: decisionLearning,
     });
 
   if (error) {

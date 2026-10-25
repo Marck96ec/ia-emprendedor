@@ -1,6 +1,8 @@
 import { Agent } from "@openai/agents";
 import { z } from "zod";
 
+import { DecisionHypothesisSchema } from "../decision-learning";
+
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
   title: z.string(),
@@ -45,6 +47,8 @@ const EvidenceSourceFieldSchema = z.enum([
   "previousWeek.review.totalActions",
   "previousWeek.review.outcomeStatus",
   "previousWeek.review.outcomeSummary",
+  "previousWeek.review.decisionLearning",
+  "previousWeek.review.decisionLearning.hypothesisStatus",
   "businessKnowledge.valueProposition.value_proposition",
   "businessKnowledge.valueProposition.target_customer",
   "businessKnowledge.valueProposition.problem_solved",
@@ -182,6 +186,8 @@ export const CEOPlanSchema = z.object({
   diagnosis: z.string(),
 
   strategic_diagnosis: StrategicDiagnosisSchema,
+
+  decision_hypothesis: DecisionHypothesisSchema,
 
   priorities: z
     .array(PrioritySchema)
