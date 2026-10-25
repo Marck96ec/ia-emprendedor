@@ -171,6 +171,9 @@ export default async function DashboardPage({
 
           weekly_plan:
             ceoPlan.weekly_plan,
+
+          time_allocation:
+            ceoPlan.time_allocation,
         })
       : null;
 

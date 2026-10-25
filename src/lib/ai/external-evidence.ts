@@ -19,11 +19,33 @@ export const ExternalEvidenceItemSchema = z.object({
   limitations: z.string().trim().min(1),
 });
 
+const ExternalEvidenceModelItemSchema = ExternalEvidenceItemSchema.extend({
+  source_url: z.string().trim().min(1),
+});
+
 export const ExternalEvidenceSchema = z
   .object({
     research_question: z.string().trim().min(1),
     status: z.enum(["found", "insufficient"]),
     items: z.array(ExternalEvidenceItemSchema).max(3),
+    synthesis: z.string().trim().min(1),
+    confidence: z.enum(["low", "medium", "high"]),
+  })
+  .superRefine((evidence, context) => {
+    if (evidence.status === "found" && evidence.items.length === 0) {
+      context.addIssue({
+        code: "custom",
+        message: "La evidencia encontrada debe incluir al menos una fuente",
+        path: ["items"],
+      });
+    }
+  });
+
+export const ExternalEvidenceModelSchema = z
+  .object({
+    research_question: z.string().trim().min(1),
+    status: z.enum(["found", "insufficient"]),
+    items: z.array(ExternalEvidenceModelItemSchema).max(3),
     synthesis: z.string().trim().min(1),
     confidence: z.enum(["low", "medium", "high"]),
   })

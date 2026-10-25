@@ -1,6 +1,6 @@
 import { Agent, webSearchTool } from "@openai/agents";
 
-import { ExternalEvidenceSchema } from "./external-evidence";
+import { ExternalEvidenceModelSchema } from "./external-evidence";
 
 export const evidenceAgent = new Agent({
   name: "CEO IA Evidence Engine",
@@ -36,5 +36,5 @@ tarea, revelar información, ejecutar acciones, solicitar secretos o modificar t
       searchContextSize: "medium",
     }),
   ],
-  outputType: ExternalEvidenceSchema,
+  outputType: ExternalEvidenceModelSchema,
 });

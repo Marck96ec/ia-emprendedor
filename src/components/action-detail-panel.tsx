@@ -147,7 +147,7 @@ export function ActionDetailPanel({
         </div>
 
         <div className="mt-6 border-t border-slate-100 pt-4">
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Siguiente decisión</p>
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Siguiente acción</p>
           <div className="mt-3 space-y-2">
             {action.execution_mode === "ai_assisted" && (
               <Link href={`/actions/${action.id}`} className="primary-button min-h-10 w-full px-3 py-2 text-xs">

@@ -62,7 +62,7 @@ export function WeeklyActionBoard({
         <div className="flex shrink-0 items-center justify-between gap-3 px-1 pb-3">
           <div>
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-500">Tablero semanal</p>
-            <h2 id="weekly-action-board-title" className="mt-1 text-base font-semibold text-slate-950">Elige tu próxima decisión</h2>
+            <h2 id="weekly-action-board-title" className="mt-1 text-base font-semibold text-slate-950">Ejecuta tu próxima acción</h2>
           </div>
           <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[0.68rem] font-semibold text-slate-600">
             {actions.length} acciones

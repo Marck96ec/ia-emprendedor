@@ -8,7 +8,10 @@ import {
   generateExternalEvidence,
   type GenerateExternalEvidenceInput,
 } from "../src/lib/ai/generate-external-evidence";
-import { ExternalEvidenceSchema } from "../src/lib/ai/external-evidence";
+import {
+  ExternalEvidenceModelSchema,
+  ExternalEvidenceSchema,
+} from "../src/lib/ai/external-evidence";
 
 const validItem = {
   title: "Retention report",
@@ -78,6 +81,16 @@ test("rejects invalid URLs, empty claims, limitations, and more than three items
     }).success,
     false,
   );
+});
+
+test("keeps model output schema compatible with OpenAI while validating URLs before persistence", () => {
+  const modelOutput = {
+    ...validEvidence,
+    items: [{ ...validItem, source_url: "not-a-url" }],
+  };
+
+  assert.equal(ExternalEvidenceModelSchema.safeParse(modelOutput).success, true);
+  assert.equal(ExternalEvidenceSchema.safeParse(modelOutput).success, false);
 });
 
 test("allows insufficient evidence without inventing a source", () => {
@@ -205,9 +218,30 @@ test("keeps evidence failure separate from the ready CEO plan", () => {
   assert.match(migration, /'pending', 'ready', 'insufficient', 'failed'/);
   assert.match(actionSource, /generateExternalEvidence/);
   assert.match(evidenceFailureBlock, /evidence_status: "failed"/);
+  assert.match(evidenceFailureBlock, /error_name/);
+  assert.match(evidenceFailureBlock, /error_message/);
+  assert.match(evidenceFailureBlock, /error_category/);
+  assert.match(evidenceFailureBlock, /prompt_version: EVIDENCE_PROMPT_VERSION/);
+  assert.match(evidenceFailureBlock, /model: EVIDENCE_MODEL/);
   assert.doesNotMatch(evidenceFailureBlock, /fail_ceo_plan/);
   assert.doesNotMatch(
     readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8"),
     /generateExternalEvidence/,
+  );
+});
+
+test("dashboard passes persisted time allocation and retains the legacy fallback", () => {
+  const dashboardSource = readFileSync(
+    join(process.cwd(), "src/app/dashboard/page.tsx"),
+    "utf8",
+  );
+
+  assert.match(
+    dashboardSource,
+    /time_allocation:\s*ceoPlan\.time_allocation/,
+  );
+  assert.match(
+    dashboardSource,
+    /Asignación histórica calculada a partir de las acciones persistidas\./,
   );
 });
