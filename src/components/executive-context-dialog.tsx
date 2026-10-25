@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useId, useRef } from "react";
 
 import type {
   DashboardPriority,
@@ -11,14 +11,43 @@ type ExecutiveContextDialogProps = {
   summary: string;
   strategicDiagnosis: DashboardStrategicDiagnosis;
   priorities: DashboardPriority[];
+  triggerLabel: string;
+  triggerClassName?: string;
+};
+
+const certaintyLabels = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+} as const;
+
+const affectedAreaLabels: Record<
+  DashboardStrategicDiagnosis["diagnosis"]["affected_area"],
+  string
+> = {
+  demand: "Demanda",
+  conversion: "Conversión",
+  retention: "Retención",
+  revenue: "Ingresos",
+  cashflow: "Flujo de caja",
+  margin: "Margen",
+  capacity: "Capacidad",
+  operations: "Operación",
+  positioning: "Posicionamiento",
+  execution: "Ejecución",
+  owner_dependency: "Dependencia del dueño",
+  unknown: "Por definir",
 };
 
 export function ExecutiveContextDialog({
   summary,
   strategicDiagnosis,
   priorities,
+  triggerLabel,
+  triggerClassName = "shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 underline decoration-slate-300 underline-offset-4 focus-visible:outline-3 focus-visible:outline-blue-500/30",
 }: ExecutiveContextDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   function openDialog() {
     dialogRef.current?.showModal();
@@ -30,14 +59,14 @@ export function ExecutiveContextDialog({
         type="button"
         onClick={openDialog}
         aria-haspopup="dialog"
-        className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 underline decoration-slate-300 underline-offset-4 focus-visible:outline-3 focus-visible:outline-blue-500/30"
+        className={triggerClassName}
       >
-        Entender el foco
+        {triggerLabel}
       </button>
 
       <dialog
         ref={dialogRef}
-        aria-labelledby="executive-context-title"
+        aria-labelledby={titleId}
         className="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm"
       >
         <div className="flex max-h-[calc(100dvh-2rem)] min-h-0 flex-col">
@@ -46,8 +75,8 @@ export function ExecutiveContextDialog({
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-500">
                 Contexto de la semana
               </p>
-              <h2 id="executive-context-title" className="mt-1 text-lg font-semibold tracking-tight text-slate-950">
-                Decisión y prioridades
+              <h2 id={titleId} className="mt-1 text-lg font-semibold tracking-tight text-slate-950">
+                ¿Por qué esta decisión?
               </h2>
             </div>
             <form method="dialog">
@@ -64,6 +93,18 @@ export function ExecutiveContextDialog({
           <div className="min-h-0 overflow-y-auto px-4 py-4 text-sm sm:px-6 sm:py-5">
             <section>
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+                Decisión de esta semana
+              </p>
+              <p className="mt-2 font-medium leading-6 text-slate-700">{strategicDiagnosis.critical_decision.question}</p>
+              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.critical_decision.recommended_direction}</p>
+              <p className="mt-1 leading-6 text-slate-600">{strategicDiagnosis.critical_decision.rationale}</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Métrica que observaremos: {strategicDiagnosis.critical_decision.target_metric}
+              </p>
+            </section>
+
+            <section className="mt-5 border-t border-slate-100 pt-4">
+              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
                 Resumen completo
               </p>
               <p className="mt-2 leading-6 text-slate-700">{summary}</p>
@@ -75,14 +116,14 @@ export function ExecutiveContextDialog({
               </p>
               <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.diagnosis.summary}</p>
               <p className="mt-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
-                Área afectada: {strategicDiagnosis.diagnosis.affected_area}
+                Área afectada: {affectedAreaLabels[strategicDiagnosis.diagnosis.affected_area]}
               </p>
               <p className="mt-2 leading-6 text-slate-600">{strategicDiagnosis.diagnosis.why_it_matters}</p>
             </section>
 
             <section className="mt-5 border-t border-slate-100 pt-4">
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
-                Cuello de botella
+                Principal restricción
               </p>
               <p className="mt-2 font-medium leading-6 text-slate-700">{strategicDiagnosis.bottleneck.description}</p>
               <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -92,40 +133,45 @@ export function ExecutiveContextDialog({
 
             <section className="mt-5 border-t border-slate-100 pt-4">
               <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
-                Confianza
+                Nivel de certeza
               </p>
-              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.confidence}</p>
+              <p className="mt-2 leading-6 text-slate-700">{certaintyLabels[strategicDiagnosis.confidence]}</p>
+              {strategicDiagnosis.unknowns.length > 0 && (
+                <>
+                  <p className="mt-3 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
+                    Lo que aún no sabemos
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 leading-6 text-slate-600">
+                    {strategicDiagnosis.unknowns.map((unknown) => (
+                      <li key={unknown}>{unknown}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </section>
 
             <section className="mt-5 border-t border-slate-100 pt-4">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
-                Decisión crítica
-              </p>
-              <p className="mt-2 font-medium leading-6 text-slate-700">{strategicDiagnosis.critical_decision.question}</p>
-              <p className="mt-2 leading-6 text-slate-700">{strategicDiagnosis.critical_decision.recommended_direction}</p>
-              <p className="mt-1 leading-6 text-slate-600">{strategicDiagnosis.critical_decision.rationale}</p>
-            </section>
-
-            <section className="mt-5 border-t border-slate-100 pt-4">
-              <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">
-                Prioridades
-              </p>
-              <ol className="mt-3 grid gap-3 lg:grid-cols-3">
-                {priorities
-                  .slice()
-                  .sort((first, second) => first.rank - second.rank)
-                  .map((priority) => (
-                    <li key={priority.rank} className="rounded-xl bg-slate-50 p-3">
-                      <p className="font-semibold text-slate-900">
-                        {priority.rank}. {priority.title}
-                      </p>
-                      <p className="mt-1 leading-5 text-slate-600">{priority.reason}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        Impacto esperado: {priority.expected_impact}
-                      </p>
-                    </li>
-                  ))}
-              </ol>
+              <details className="group">
+                <summary className="cursor-pointer text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500 focus-visible:outline-3 focus-visible:outline-blue-500/30">
+                  Prioridades de la semana
+                </summary>
+                <ol className="mt-3 grid gap-3 lg:grid-cols-3">
+                  {priorities
+                    .slice()
+                    .sort((first, second) => first.rank - second.rank)
+                    .map((priority) => (
+                      <li key={priority.rank} className="rounded-xl bg-slate-50 p-3">
+                        <p className="font-semibold text-slate-900">
+                          {priority.rank}. {priority.title}
+                        </p>
+                        <p className="mt-1 leading-5 text-slate-600">{priority.reason}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          Impacto esperado: {priority.expected_impact}
+                        </p>
+                      </li>
+                    ))}
+                </ol>
+              </details>
             </section>
           </div>
         </div>

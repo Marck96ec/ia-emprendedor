@@ -27,6 +27,11 @@ export function DashboardHeader({
             </span>
           )}
         </div>
+        {weekNumber === 1 && (
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+            CEO IA analiza tu negocio, identifica qué merece atención y te ayuda a decidir dónde invertir tu tiempo.
+          </p>
+        )}
       </div>
 
       <nav aria-label="Navegación del dashboard" className="flex shrink-0 flex-wrap justify-end gap-2">

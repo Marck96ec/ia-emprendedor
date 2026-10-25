@@ -13,6 +13,7 @@
   "include": [
     "tests/action-deliverables.test.ts",
     "tests/ceo-plan-output-schema.test.ts",
+    "tests/dashboard-ux.test.ts",
     "tests/external-evidence.test.ts",
     "tests/supabase-ceo-plan-rpc.integration.test.ts",
     "src/lib/ai/action-deliverables.ts",

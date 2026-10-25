@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { DecisionHero } from "@/components/decision-hero";
 import { ExecutiveSummary } from "@/components/executive-summary";
+import { NextActionCard } from "@/components/next-action-card";
+import { TimeAllocationCard } from "@/components/time-allocation-card";
 import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
 import { ExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
@@ -267,6 +270,12 @@ export default async function DashboardPage({
   const totalActions =
     weeklyActions.length;
 
+  const firstPendingAction =
+    weeklyActions.find(
+      (action) =>
+        action.status === "pending",
+    ) ?? null;
+
   const dashboardTimeAllocation =
     readyPlan?.time_allocation ?? {
       available_hours: Number(diagnostic.owner_hours_per_week),
@@ -329,8 +338,8 @@ export default async function DashboardPage({
     : message;
 
   return (
-    <main className={`ambient-shell min-h-dvh overflow-x-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 ${readyPlan ? "lg:h-dvh lg:overflow-hidden" : ""}`}>
-      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "min-h-[calc(100dvh-2rem)] lg:h-full lg:min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
+    <main className="ambient-shell min-h-dvh overflow-x-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8">
+      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
         <DashboardHeader
           businessName={business.name}
           weekNumber={ceoPlan?.status === "ready" ? ceoPlan.week_number : null}
@@ -387,23 +396,34 @@ export default async function DashboardPage({
         )}
 
         {readyPlan && ceoPlan && (
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <ExecutiveSummary
-              summary={readyPlan.executive_summary}
-              strategicDiagnosis={readyPlan.strategic_diagnosis}
-              decisionHypothesis={readyPlan.decision_hypothesis}
-              priorities={readyPlan.priorities}
-              timeAllocation={dashboardTimeAllocation}
-            />
-            <ExternalEvidenceSection
-              status={ceoPlan.evidence_status}
-              evidence={externalEvidence?.success ? externalEvidence.data : null}
-              decision={readyPlan.strategic_diagnosis.critical_decision}
-            />
-            <WeeklyProgress
-              completedActions={completedActions}
-              totalActions={totalActions}
-            />
+          <div className="flex flex-col gap-3">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+              <DecisionHero
+                summary={readyPlan.executive_summary}
+                strategicDiagnosis={readyPlan.strategic_diagnosis}
+                priorities={readyPlan.priorities}
+              />
+              <NextActionCard
+                action={firstPendingAction}
+                reviewed={Boolean(weeklyReview)}
+                allCompleted={totalActions > 0 && completedActions === totalActions}
+              />
+              <TimeAllocationCard timeAllocation={dashboardTimeAllocation} />
+              <WeeklyProgress
+                completedActions={completedActions}
+                totalActions={totalActions}
+              />
+              <ExternalEvidenceSection
+                status={ceoPlan.evidence_status}
+                evidence={externalEvidence?.success ? externalEvidence.data : null}
+              />
+              <ExecutiveSummary
+                summary={readyPlan.executive_summary}
+                strategicDiagnosis={readyPlan.strategic_diagnosis}
+                decisionHypothesis={readyPlan.decision_hypothesis}
+                priorities={readyPlan.priorities}
+              />
+            </div>
             <WeeklyActionBoard
               actions={weeklyActions}
               reviewed={Boolean(weeklyReview)}

@@ -45,6 +45,7 @@ export function ActionCard({
   onSelect,
 }: ActionCardProps) {
   const state = getActionState(action);
+  const highlighted = recommended && action.status === "pending";
 
   return (
     <button
@@ -52,36 +53,41 @@ export function ActionCard({
       aria-pressed={selected}
       aria-label={`Seleccionar acción ${action.sequence}: ${action.action}`}
       onClick={onSelect}
-      className={`group flex min-h-[5rem] min-w-0 flex-col justify-between rounded-xl border p-2 text-left transition focus-visible:outline-3 focus-visible:outline-blue-500/30 lg:min-h-[7rem] lg:p-3 ${
+      className={`group flex min-h-[5rem] min-w-0 flex-col justify-between rounded-xl border p-3 text-left transition focus-visible:outline-3 focus-visible:outline-blue-500/30 ${
+        highlighted ? "col-span-full" : ""
+      } ${
         selected
           ? "border-slate-950 bg-slate-950 text-white shadow-lg shadow-slate-950/15"
-          : "hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white"
+          : highlighted
+            ? "border-sky-300 bg-sky-50 shadow-md shadow-sky-900/10 hover:border-sky-500"
+            : "hover:-translate-y-0.5 hover:border-slate-400 hover:bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${selected ? "bg-white/15 text-white" : state.className}`} aria-hidden="true">
           {state.icon}
         </span>
-        <span className={`text-[0.65rem] font-bold uppercase tracking-[0.14em] ${selected ? "text-slate-300" : "text-slate-500"}`}>
-          Acción {action.sequence}
-        </span>
+        {highlighted ? (
+          <span className={`rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] ${selected ? "bg-sky-300 text-slate-950" : "bg-sky-600 text-white"}`}>
+            Recomendada ahora
+          </span>
+        ) : (
+          <span className={`text-[0.65rem] font-bold uppercase tracking-[0.14em] ${selected ? "text-slate-300" : "text-slate-500"}`}>
+            Acción {action.sequence}
+          </span>
+        )}
       </div>
 
-      <div className="mt-1.5 min-w-0 lg:mt-3">
-        <p className={`line-clamp-2 text-xs font-semibold leading-4 lg:text-sm lg:leading-5 ${selected ? "text-white" : action.status === "completed" ? "text-slate-500" : "text-slate-900"}`} title={action.action}>
+      <div className="mt-2 min-w-0">
+        <p className={`text-sm font-semibold leading-5 ${highlighted ? "" : "line-clamp-3"} ${selected ? "text-white" : action.status === "completed" ? "text-slate-500" : "text-slate-900"}`} title={action.action}>
           {action.action}
         </p>
-        <p className={`mt-0.5 truncate text-[0.62rem] font-medium lg:mt-1 lg:text-[0.68rem] ${selected ? "text-slate-300" : state.className.split(" ").at(-1)}`}>
+        <p className={`mt-1 text-[0.68rem] font-medium ${selected ? "text-slate-300" : state.className.split(" ").at(-1)}`}>
           {state.label}
         </p>
-        <p className={`mt-1 truncate text-[0.58rem] font-semibold ${selected ? "text-slate-300" : "text-slate-500"}`}>
+        <p className={`mt-1 text-[0.62rem] font-semibold ${selected ? "text-slate-300" : "text-slate-500"}`}>
           {roleLabels[action.role_recommendation]} · {action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}
         </p>
-        {recommended && action.status === "pending" && (
-          <p className={`mt-1 text-[0.58rem] font-semibold uppercase tracking-[0.1em] ${selected ? "text-sky-200" : "text-sky-700"}`}>
-            Siguiente paso
-          </p>
-        )}
       </div>
     </button>
   );

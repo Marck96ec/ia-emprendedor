@@ -35,7 +35,7 @@ export function WeeklyActionBoard({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
+    <div id="tablero-semanal" className="flex scroll-mt-4 flex-col gap-2">
       <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 lg:hidden" role="tablist" aria-label="Navegación semanal">
         <button
           type="button"
@@ -53,12 +53,12 @@ export function WeeklyActionBoard({
           onClick={() => setMobileView("detail")}
           className={`min-h-9 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${mobileView === "detail" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600"}`}
         >
-          Qué hacer ahora
+          Detalle de la acción
         </button>
       </div>
 
-      <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(21rem,0.9fr)]">
-      <section className={`surface-card min-h-0 flex-col rounded-2xl p-3 sm:p-4 ${mobileView === "actions" ? "flex" : "hidden"} lg:flex`} aria-labelledby="weekly-action-board-title">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(21rem,0.9fr)]">
+      <section className={`surface-card flex-col rounded-2xl p-3 sm:p-4 ${mobileView === "actions" ? "flex" : "hidden"} lg:flex`} aria-labelledby="weekly-action-board-title">
         <div className="flex shrink-0 items-center justify-between gap-3 px-1 pb-3">
           <div>
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-500">Tablero semanal</p>
@@ -70,7 +70,7 @@ export function WeeklyActionBoard({
         </div>
 
         {actions.length > 0 ? (
-          <div className="grid min-h-0 flex-1 content-start grid-cols-2 gap-2 overflow-hidden pr-1 sm:grid-cols-3 lg:auto-rows-fr lg:grid-cols-4">
+          <div className="grid content-start grid-cols-1 gap-2 sm:grid-cols-2">
             {actions.map((action) => (
               <ActionCard
                 key={action.id}
@@ -88,7 +88,7 @@ export function WeeklyActionBoard({
         )}
       </section>
 
-      <div className={`min-h-0 ${mobileView === "detail" ? "flex" : "hidden"} lg:flex`}>
+      <div className={`${mobileView === "detail" ? "flex" : "hidden"} lg:flex`}>
         <ActionDetailPanel
           action={selectedAction}
           recommended={selectedAction?.id === firstPendingAction?.id}
