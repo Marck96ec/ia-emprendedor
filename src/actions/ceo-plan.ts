@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
+import { generateExternalEvidence } from "@/lib/ai/generate-external-evidence";
+import type { CEOPlan } from "@/lib/ai/ceo-agent";
 import { DecisionLearningSchema } from "@/lib/decision-learning";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import {
@@ -253,6 +255,7 @@ if (latestPlan?.status === "generating") {
         week_number: weekNumber,
         previous_plan_id: null,
         status: "generating",
+        evidence_status: "pending",
         model: MODEL,
         prompt_version: PROMPT_VERSION,
       })
@@ -308,6 +311,8 @@ if (latestPlan?.status === "generating") {
         priorities: null,
         weekly_plan: null,
         generated_at: null,
+        external_evidence: null,
+        evidence_status: "pending",
       })
       .eq("id", latestPlan.id)
       .eq("status", "failed")
@@ -427,6 +432,8 @@ if (latestPlan?.status === "generating") {
   /*
    * 5. Construir contexto de la semana anterior.
    */
+
+  let generatedPlanOutput: CEOPlan | null = null;
 
   try {
 
@@ -706,6 +713,8 @@ if (latestPlan?.status === "generating") {
       businessKnowledge,
     });
 
+    generatedPlanOutput = output;
+
     const { error: completePlanError } =
       await supabase.rpc("complete_ceo_plan", {
         p_plan_id: planId,
@@ -752,6 +761,73 @@ if (latestPlan?.status === "generating") {
         "No pudimos generar el plan. Puedes intentarlo nuevamente.",
       ),
     );
+  }
+
+  if (!generatedPlanOutput) {
+    redirect(
+      dashboardError(
+        "No pudimos preparar la evidencia externa.",
+      ),
+    );
+  }
+
+  try {
+    const evidence = await generateExternalEvidence({
+      business: {
+        name: business.name,
+        revenueModel: business.revenue_model,
+        description: business.description,
+      },
+      strategicDiagnosis: generatedPlanOutput.strategic_diagnosis,
+      decisionHypothesis: generatedPlanOutput.decision_hypothesis,
+    });
+
+    const { error: evidenceUpdateError } = await supabase
+      .from("ceo_plans")
+      .update({
+        external_evidence: evidence,
+        evidence_status:
+          evidence.status === "found"
+            ? "ready"
+            : "insufficient",
+      })
+      .eq("id", planId)
+      .eq("status", "ready");
+
+    if (evidenceUpdateError) {
+      throw evidenceUpdateError;
+    }
+
+    console.info("CEO_EVIDENCE_GENERATED", {
+      planId,
+      evidence_status:
+        evidence.status === "found"
+          ? "ready"
+          : "insufficient",
+      item_count: evidence.items.length,
+    });
+  } catch (error) {
+    console.error("CEO_EVIDENCE_GENERATION_ERROR", {
+      planId,
+      evidence_status: "failed",
+      item_count: 0,
+      error: error instanceof Error ? error.message : "unknown",
+    });
+
+    const { error: evidenceFailureUpdateError } = await supabase
+      .from("ceo_plans")
+      .update({
+        evidence_status: "failed",
+      })
+      .eq("id", planId)
+      .eq("status", "ready");
+
+    if (evidenceFailureUpdateError) {
+      console.error("CEO_EVIDENCE_STATUS_UPDATE_ERROR", {
+        planId,
+        evidence_status: "failed",
+      });
+    }
   }
 
   revalidatePath("/dashboard");

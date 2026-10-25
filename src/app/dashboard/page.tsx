@@ -4,6 +4,7 @@ import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { ExecutiveSummary } from "@/components/executive-summary";
 import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
+import { ExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
   DashboardAction,
   DashboardWeeklyReview,
@@ -14,6 +15,7 @@ import { PlanGenerationSubmit } from "@/components/plan-generation-submit";
 import { PlanGeneratingStatus } from "@/components/plan-generating-status";
 import { WeeklyActionBoard } from "@/components/weekly-action-board";
 import { WeeklyProgress } from "@/components/weekly-progress";
+import { ExternalEvidenceSection } from "@/components/external-evidence-section";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -123,7 +125,9 @@ export default async function DashboardPage({
         model,
         generated_at,
         week_number,
-        previous_plan_id
+        previous_plan_id,
+        external_evidence,
+        evidence_status
       `,
     )
     .eq("business_id", business.id)
@@ -173,6 +177,11 @@ export default async function DashboardPage({
   const readyPlan =
     parsedCEOPlan?.success
       ? parsedCEOPlan.data
+      : null;
+
+  const externalEvidence =
+    ceoPlan?.status === "ready"
+      ? ExternalEvidenceSchema.safeParse(ceoPlan.external_evidence)
       : null;
 
   if (
@@ -382,6 +391,11 @@ export default async function DashboardPage({
               decisionHypothesis={readyPlan.decision_hypothesis}
               priorities={readyPlan.priorities}
               timeAllocation={dashboardTimeAllocation}
+            />
+            <ExternalEvidenceSection
+              status={ceoPlan.evidence_status}
+              evidence={externalEvidence?.success ? externalEvidence.data : null}
+              decision={readyPlan.strategic_diagnosis.critical_decision}
             />
             <WeeklyProgress
               completedActions={completedActions}

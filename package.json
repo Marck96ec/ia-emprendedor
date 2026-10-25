@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/action-deliverables.test.js .test-dist/tests/ceo-plan-output-schema.test.js .test-dist/tests/onboarding-validation.test.js .test-dist/tests/supabase-ceo-plan-rpc.integration.test.js"
+    "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/action-deliverables.test.js .test-dist/tests/ceo-plan-output-schema.test.js .test-dist/tests/external-evidence.test.js .test-dist/tests/onboarding-validation.test.js .test-dist/tests/supabase-ceo-plan-rpc.integration.test.js"
   },
   "dependencies": {
     "@openai/agents": "^0.16.1",
