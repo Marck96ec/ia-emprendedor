@@ -13,7 +13,7 @@ import {
   type DashboardJourney,
 } from "@/lib/dashboard-progress";
 import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
-import { ExternalEvidenceSchema } from "@/lib/ai/external-evidence";
+import { StoredExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
   DashboardAction,
   DashboardWeeklyReview,
@@ -193,7 +193,7 @@ export default async function DashboardPage({
 
   const externalEvidence =
     ceoPlan?.status === "ready"
-      ? ExternalEvidenceSchema.safeParse(ceoPlan.external_evidence)
+      ? StoredExternalEvidenceSchema.safeParse(ceoPlan.external_evidence)
       : null;
 
   if (
@@ -405,8 +405,8 @@ export default async function DashboardPage({
     : message;
 
   return (
-    <main className={`ambient-shell min-h-dvh overflow-x-hidden px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 ${readyPlan ? "lg:h-dvh lg:overflow-hidden lg:py-3" : ""}`}>
-      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 ${readyPlan ? "lg:h-full lg:min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
+    <main className={`ambient-shell min-h-dvh px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 ${readyPlan ? "cockpit:h-dvh cockpit:overflow-hidden cockpit:py-3" : ""}`}>
+      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 cockpit:short:gap-2 ${readyPlan ? "cockpit:h-full cockpit:min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
         <DashboardHeader
           businessName={business.name}
           weekNumber={ceoPlan?.status === "ready" ? ceoPlan.week_number : null}
@@ -474,8 +474,8 @@ export default async function DashboardPage({
         )}
 
         {readyPlan && ceoPlan && (
-          <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
-            <div className="grid gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-3 cockpit:min-h-0 cockpit:flex-1 cockpit:short:gap-2">
+            <div className="grid gap-3 cockpit:short:gap-2 min-[900px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
               <DecisionHero
                 summary={readyPlan.executive_summary}
                 strategicDiagnosis={readyPlan.strategic_diagnosis}
@@ -502,7 +502,7 @@ export default async function DashboardPage({
               />
             </div>
 
-            <div className="grid shrink-0 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white/80 shadow-sm lg:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] lg:divide-x lg:divide-y-0">
+            <div className="grid shrink-0 divide-y divide-slate-200/70 rounded-2xl bg-white/70 sm:border sm:border-slate-200 sm:bg-white/80 sm:shadow-sm cockpit:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] cockpit:divide-x cockpit:divide-y-0">
               <WeeklyProgress
                 completedActions={completedActions}
                 totalActions={totalActions}

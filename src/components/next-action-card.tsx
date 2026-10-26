@@ -10,10 +10,10 @@ type NextActionCardProps = {
 };
 
 const cardClassName =
-  "flex flex-col rounded-2xl border border-blue-200 bg-white p-5 shadow-sm ring-1 ring-blue-100 lg:h-full lg:min-h-0";
+  "flex flex-col rounded-2xl border border-blue-200 bg-white p-4 shadow-sm ring-1 ring-blue-100 sm:p-5 cockpit:h-full cockpit:min-h-0 cockpit:short:p-3.5";
 
 const celebrationClassName =
-  "anim-rise anim-glow flex flex-col rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm lg:h-full lg:min-h-0";
+  "anim-rise anim-glow flex flex-col rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm sm:p-5 cockpit:h-full cockpit:min-h-0 cockpit:short:p-3.5";
 
 function CheckBadge() {
   return (
@@ -48,7 +48,7 @@ export function NextActionCard({
             Ahora viene la parte más importante: descubrir qué funcionó y qué cambió realmente.
           </p>
         )}
-        <div className="mt-4 lg:mt-auto lg:pt-3">
+        <div className="mt-4 cockpit:mt-auto cockpit:pt-3">
           {reviewed ? (
             <a href="#tablero-semanal" className="secondary-button min-h-11 px-5 py-2.5 text-sm">
               Ver resultado de la semana
@@ -80,28 +80,27 @@ export function NextActionCard({
         )}
       </div>
 
-      <h2 className="mt-2 line-clamp-3 text-xl font-semibold leading-snug tracking-tight text-slate-950 lg:line-clamp-2" title={action.action}>
+      <h2 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-slate-950">
         {action.action}
       </h2>
 
-      <p className="mt-2 inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-700">
-        {action.role_recommendation === "defer"
-          ? "No requiere tu tiempo esta semana"
-          : `Tiempo estimado: ${action.estimated_hours} h`}
-      </p>
+      <p className="mt-2 hidden line-clamp-2 text-base leading-6 text-slate-700 sm:block cockpit:short:hidden">{action.reason}</p>
 
-      <p className="mt-2 line-clamp-2 text-sm leading-5 text-slate-700 sm:text-base sm:leading-6">{action.reason}</p>
-
-      <div className="mt-4 lg:mt-auto lg:pt-3">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 cockpit:mt-auto cockpit:pt-3">
         {isAiAssisted ? (
-          <Link href={`/actions/${action.id}`} className="accent-button min-h-10 w-full px-5 py-2 text-base sm:w-auto">
+          <Link href={`/actions/${action.id}`} className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto cockpit:min-h-10">
             {ctaLabel}
           </Link>
         ) : (
-          <a href="#tablero-semanal" className="accent-button min-h-10 w-full px-5 py-2 text-base sm:w-auto">
+          <a href="#tablero-semanal" className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto cockpit:min-h-10">
             {ctaLabel}
           </a>
         )}
+        <p className="order-1 inline-flex w-fit items-center rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-700 sm:order-2">
+          {action.role_recommendation === "defer"
+            ? "No requiere tu tiempo esta semana"
+            : `Tiempo estimado: ${action.estimated_hours} h`}
+        </p>
       </div>
     </section>
   );

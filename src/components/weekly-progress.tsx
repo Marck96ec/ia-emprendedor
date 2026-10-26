@@ -80,7 +80,8 @@ export function WeeklyProgress({
       </div>
       <div className="mt-1 flex items-center justify-between gap-3">
         <p className="text-base font-semibold text-slate-950">
-          {completedActions} de {totalActions} acciones completadas
+          {completedActions}<span className="sm:hidden">/{totalActions} completadas</span>
+          <span className="hidden sm:inline"> de {totalActions} acciones completadas</span>
         </p>
         <ol className="flex shrink-0 items-center gap-1" aria-hidden="true">
           {Array.from({ length: totalActions }, (_, index) => (
@@ -110,7 +111,7 @@ export function WeeklyProgress({
 
       <p
         title={detailLine}
-        className={`mt-1.5 min-h-5 text-sm leading-5 lg:truncate ${justCompleted !== null ? "anim-rise font-medium text-emerald-800" : "text-slate-600"}`}
+        className={`mt-1.5 min-h-5 text-sm leading-5 cockpit:truncate ${justCompleted !== null ? "anim-rise font-medium text-emerald-800" : "max-sm:hidden cockpit:short:hidden text-slate-600"}`}
         aria-live="polite"
       >
         {detailLine}

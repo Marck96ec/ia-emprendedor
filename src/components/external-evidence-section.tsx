@@ -1,10 +1,10 @@
-import type { ExternalEvidence } from "@/lib/ai/external-evidence";
+import type { StoredExternalEvidence } from "@/lib/ai/external-evidence";
 
 type EvidenceStatus = "pending" | "ready" | "insufficient" | "failed";
 
 type ExternalEvidenceSectionProps = {
   status: EvidenceStatus;
-  evidence: ExternalEvidence | null;
+  evidence: StoredExternalEvidence | null;
 };
 
 const supportLabels = {
@@ -58,7 +58,7 @@ export function ExternalEvidenceSection({
 
           <div>
               <p className="mt-4 text-base leading-6 text-slate-700">{evidence.synthesis}</p>
-              {evidence.counter_evidence.searched && !evidence.counter_evidence.found && (
+              {evidence.counter_evidence?.searched && !evidence.counter_evidence.found && (
                 <p className="mt-2 text-sm leading-5 text-slate-600">
                   <span className="font-medium text-slate-800">Qué buscamos en contra:</span> {evidence.counter_evidence.summary}
                 </p>
@@ -93,7 +93,7 @@ export function ExternalEvidenceSection({
 
 export function summarizeEvidence(
   status: EvidenceStatus,
-  evidence: ExternalEvidence | null,
+  evidence: StoredExternalEvidence | null,
 ): string {
   if (status === "pending") return "En curso";
   if (status === "failed") return "No disponible";
@@ -104,12 +104,12 @@ export function summarizeEvidence(
     ? "Mixta"
     : evidence.confidence === "high"
       ? "Favorable"
-      : "Favorable pero no concluyente";
+      : "Favorable con límites";
 
   return `${count} ${count === 1 ? "fuente" : "fuentes"} · ${verdict}`;
 }
 
-function evidenceHeadline(evidence: ExternalEvidence): string {
+function evidenceHeadline(evidence: StoredExternalEvidence): string {
   const hasMixedOrChallenging = evidence.items.some(
     (item) => item.support_level !== "supports",
   );
@@ -123,7 +123,11 @@ function evidenceHeadline(evidence: ExternalEvidence): string {
     : "La evidencia respalda parcialmente esta dirección.";
 }
 
-function counterEvidenceMessage(evidence: ExternalEvidence): string {
+function counterEvidenceMessage(evidence: StoredExternalEvidence): string {
+  if (!evidence.counter_evidence) {
+    return "Este análisis se generó antes de registrar la búsqueda de evidencia en contra.";
+  }
+
   const { searched, found, summary } = evidence.counter_evidence;
 
   if (!searched) {

@@ -11,7 +11,7 @@ export type DrawerTab = "decision" | "focus" | "priorities" | "evidence";
 
 const tabLabels: Record<DrawerTab, string> = {
   decision: "Decisión",
-  focus: "Foco e hipótesis",
+  focus: "Foco",
   priorities: "Prioridades",
   evidence: "Evidencia",
 };
@@ -76,13 +76,19 @@ export function ExecutiveContextDrawer({
       ref={dialogRef}
       aria-labelledby={titleId}
       onClose={onClose}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onClose();
+        }
+      }}
       onClick={(event) => {
         if (event.target === dialogRef.current) onClose();
       }}
       className="drawer m-0 ml-auto h-dvh max-h-dvh w-full max-w-xl overflow-hidden border-l border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm sm:rounded-l-2xl"
     >
       <div className="flex h-full min-h-0 flex-col">
-        <header className="shrink-0 border-b border-slate-200 px-5 pt-4">
+        <header className="shrink-0 border-b border-slate-200 px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-5">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="eyebrow">Contexto de la semana</p>
@@ -94,12 +100,12 @@ export function ExecutiveContextDrawer({
               type="button"
               onClick={onClose}
               aria-label="Cerrar contexto"
-              className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-sm"
+              className="secondary-button min-h-11 rounded-lg px-4 py-1.5 text-sm"
             >
               Cerrar
             </button>
           </div>
-          <div className="mt-3 flex gap-1 overflow-x-auto" role="tablist" aria-label="Contexto de la decisión">
+          <div className="mt-3 grid grid-cols-4 gap-0.5 sm:flex sm:gap-1" role="tablist" aria-label="Contexto de la decisión">
             {(Object.keys(tabLabels) as DrawerTab[]).map((key) => (
               <button
                 key={key}
@@ -107,17 +113,24 @@ export function ExecutiveContextDrawer({
                 role="tab"
                 aria-selected={tab === key}
                 onClick={() => onTabChange(key)}
-                className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none ${
+                className={`min-h-11 min-w-0 border-b-2 px-1 py-2 text-sm font-medium transition-colors duration-200 motion-reduce:transition-none sm:shrink-0 sm:px-3 ${
                   tab === key ? "border-blue-600 text-slate-950" : "border-transparent text-slate-600 hover:text-slate-950"
                 }`}
               >
-                {tabLabels[key]}
+                {key === "focus" ? (
+                  <>
+                    <span className="sm:hidden">Foco</span>
+                    <span className="hidden sm:inline">{tabLabels[key]}</span>
+                  </>
+                ) : (
+                  tabLabels[key]
+                )}
               </button>
             ))}
           </div>
         </header>
 
-        <div key={tab ?? "closed"} className="anim-rise min-h-0 flex-1 overflow-y-auto px-5 py-5 text-sm" role="tabpanel">
+        <div key={tab ?? "closed"} className="anim-rise thin-scroll min-h-0 flex-1 overflow-y-auto px-4 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-sm sm:px-5" role="tabpanel">
           {tab === "decision" && (
             <>
               <section>

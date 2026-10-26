@@ -62,58 +62,58 @@ export function WeeklyActionBoard({
   }
 
   return (
-    <div id="tablero-semanal" className="flex scroll-mt-4 flex-col gap-3 lg:min-h-0 lg:flex-1">
-      <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 lg:hidden" role="tablist" aria-label="Navegación semanal">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mobileView === "detail"}
-          onClick={() => setMobileView("detail")}
-          className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mobileView === "detail" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600"}`}
-        >
-          Detalle de la acción
-        </button>
+    <div id="tablero-semanal" className="flex scroll-mt-4 flex-col gap-3 cockpit:min-h-0 cockpit:flex-1">
+      <div className="grid shrink-0 grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 cockpit:hidden" role="tablist" aria-label="Navegación semanal">
         <button
           type="button"
           role="tab"
           aria-selected={mobileView === "actions"}
           onClick={() => setMobileView("actions")}
-          className={`min-h-10 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mobileView === "actions" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600"}`}
+          className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mobileView === "actions" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600"}`}
         >
           Plan semanal
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mobileView === "detail"}
+          onClick={() => setMobileView("detail")}
+          className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${mobileView === "detail" ? "bg-white text-slate-950 shadow-sm" : "text-slate-600"}`}
+        >
+          Acción actual
+        </button>
       </div>
 
-      <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)]">
-      <section className={`min-h-0 flex-col rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm ${mobileView === "actions" ? "flex" : "hidden"} lg:flex`} aria-labelledby="weekly-action-board-title">
-        <div className="flex shrink-0 items-center justify-between gap-3 pb-3">
+      <div className="grid gap-4 cockpit:min-h-0 cockpit:flex-1 cockpit:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] cockpit:grid-rows-[minmax(0,1fr)]">
+      <section className={`min-h-0 flex-col rounded-2xl bg-white/70 p-3 sm:border sm:border-slate-200 sm:bg-white/80 sm:p-4 sm:shadow-sm ${mobileView === "actions" ? "flex" : "hidden"} cockpit:flex`} aria-labelledby="weekly-action-board-title">
+        <div className="flex shrink-0 items-center justify-between gap-3 pb-2">
           <div>
-            <p className="eyebrow">Tablero semanal</p>
-            <h2 id="weekly-action-board-title" className="mt-1 text-lg font-semibold text-slate-950">Ejecuta tu próxima acción</h2>
+            <p className="eyebrow hidden sm:block cockpit:short:hidden">Tablero semanal</p>
+            <h2 id="weekly-action-board-title" className="text-lg font-semibold text-slate-950 sm:mt-1 cockpit:short:mt-0">Ejecuta tu próxima acción</h2>
           </div>
-          <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+          <span className="shrink-0 rounded-full bg-slate-100 px-3 py-0.5 text-sm font-medium text-slate-700">
             {actions.length} acciones
           </span>
         </div>
 
         {actions.length > 0 ? (
-          <div className="min-h-0 space-y-4 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+          <div className="thin-scroll min-h-0 space-y-3 cockpit:flex-1 cockpit:overflow-y-auto cockpit:pr-1">
             {firstPendingAction && (
               <div>
-                <p className="eyebrow mb-2 !text-blue-700">Ahora</p>
-                <ul className="space-y-2">{renderCard(firstPendingAction)}</ul>
+                <p className="eyebrow mb-1.5 !text-blue-700 cockpit:compact:hidden">Ahora</p>
+                <ul className="space-y-1.5">{renderCard(firstPendingAction)}</ul>
               </div>
             )}
             {laterActions.length > 0 && (
               <div>
-                <p className="eyebrow mb-2">Después</p>
-                <ul className="space-y-2">{laterActions.map(renderCard)}</ul>
+                <p className="eyebrow mb-1.5 cockpit:compact:hidden">Después</p>
+                <ul className="space-y-1.5">{laterActions.map(renderCard)}</ul>
               </div>
             )}
             {completedActions.length > 0 && (
               <div>
-                <p className="eyebrow mb-2">Completadas</p>
-                <ul className="space-y-2">{completedActions.map(renderCard)}</ul>
+                <p className="eyebrow mb-1.5 cockpit:compact:hidden">Completadas</p>
+                <ul className="space-y-1.5">{completedActions.map(renderCard)}</ul>
               </div>
             )}
           </div>
@@ -124,13 +124,21 @@ export function WeeklyActionBoard({
         )}
       </section>
 
-      <div className={`${mobileView === "detail" ? "flex" : "hidden"} lg:flex lg:min-h-0`}>
+      <div className={`${mobileView === "detail" ? "flex" : "hidden"} flex-col gap-2 cockpit:flex cockpit:min-h-0`}>
+        <button
+          type="button"
+          onClick={() => setMobileView("actions")}
+          className="inline-flex min-h-11 w-fit items-center rounded-lg px-2 text-sm font-medium text-slate-700 hover:bg-slate-900/5 cockpit:hidden"
+        >
+          ← Volver al plan
+        </button>
         <ActionDetailPanel
           action={selectedAction}
           recommended={selectedAction?.id === firstPendingAction?.id}
           reviewed={reviewed}
           review={review}
           canReview={canReview}
+          weekComplete={actions.length > 0 && completedActions.length === actions.length}
           nextWeekNumber={nextWeekNumber}
         />
       </div>

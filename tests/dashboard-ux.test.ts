@@ -109,7 +109,7 @@ test("focus, hypothesis and evidence live in the drawer instead of reserving pag
   for (const label of ["Entender decisión", "Ver evidencia", "Ver prioridades"]) {
     assert.ok(hero.includes(label), label);
   }
-  for (const tab of ["Decisión", "Foco e hipótesis", "Prioridades", "Evidencia"]) {
+  for (const tab of ["Decisión", "Foco", "Prioridades", "Evidencia"]) {
     assert.ok(drawer.includes(`"${tab}"`), tab);
   }
   assert.match(drawer, /showModal\(\)/);

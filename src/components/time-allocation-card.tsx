@@ -31,7 +31,11 @@ export function TimeAllocationCard({ timeAllocation }: TimeAllocationCardProps) 
       >
         <div className="h-full rounded-full bg-blue-600" style={{ width: `${percentage}%` }} />
       </div>
-      <p title={rationale} className="mt-1.5 text-sm leading-5 text-slate-600 lg:truncate">{rationale}</p>
+      <p title={rationale} className="mt-1.5 hidden text-sm leading-5 text-slate-600 sm:block cockpit:short:hidden cockpit:truncate">{rationale}</p>
+      <details className="mt-1 sm:hidden">
+        <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4">¿Por qué este tiempo?</summary>
+        <p className="pb-2 text-sm leading-5 text-slate-600">{rationale}</p>
+      </details>
     </section>
   );
 }

@@ -28,7 +28,7 @@ function getActionState(action: DashboardAction) {
 
   return {
     label: "Por hacer",
-    icon: "○",
+    icon: String(action.sequence),
     iconClassName: "bg-slate-100 text-slate-600",
     labelClassName: "text-slate-600",
   };
@@ -50,6 +50,8 @@ export function ActionCard({
   const state = getActionState(action);
   const completed = action.status === "completed";
   const highlighted = recommended && !completed;
+  const showMetaLine = highlighted || completed || state.icon === "✦";
+  const meta = `${roleLabels[action.role_recommendation]} · ${action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}`;
 
   return (
     <button
@@ -57,7 +59,7 @@ export function ActionCard({
       aria-pressed={selected}
       aria-label={`Seleccionar acción ${action.sequence}: ${action.action}`}
       onClick={onSelect}
-      className={`group flex w-full min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors duration-200 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-blue-500/30 ${
+      className={`group flex w-full min-w-0 items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors duration-200 motion-reduce:transition-none focus-visible:outline-3 focus-visible:outline-blue-500/30 ${
         selected ? "ring-2 ring-slate-900" : ""
       } ${
         highlighted
@@ -75,26 +77,28 @@ export function ActionCard({
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          {highlighted ? (
-            <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-              Recomendada ahora
-            </span>
-          ) : (
-            <span className="text-xs font-medium text-slate-500">Acción {action.sequence}</span>
-          )}
-          <span className={`text-xs font-medium ${state.labelClassName}`}>{state.label}</span>
-        </span>
-        <span
-          className={`mt-1 block leading-5 ${
-            highlighted ? "text-base font-semibold leading-6 text-slate-950" : completed ? "text-sm font-medium text-slate-500" : "text-sm font-medium text-slate-800"
-          } ${highlighted ? "line-clamp-3" : "line-clamp-2"}`}
-          title={action.action}
-        >
-          {action.action}
-        </span>
-        <span className="mt-0.5 block text-sm text-slate-500">
-          {roleLabels[action.role_recommendation]} · {action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}
+        {showMetaLine && (
+          <span className="mb-1 flex items-center gap-x-2">
+            {highlighted ? (
+              <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+                Recomendada ahora
+              </span>
+            ) : (
+              <span className={`text-xs font-medium ${state.labelClassName}`}>{state.label}</span>
+            )}
+            <span className="ml-auto shrink-0 text-xs font-medium text-slate-500">{meta}</span>
+          </span>
+        )}
+        <span className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:gap-2">
+          <span
+            className={`min-w-0 flex-1 leading-5 ${
+              highlighted ? "text-base font-semibold text-slate-950" : completed ? "line-clamp-3 text-sm font-medium text-slate-500 sm:line-clamp-2" : "line-clamp-3 text-sm font-medium text-slate-800 sm:line-clamp-2"
+            }`}
+            title={action.action}
+          >
+            {action.action}
+          </span>
+          {!showMetaLine && <span className="shrink-0 text-xs font-medium text-slate-500 sm:pt-0.5">{meta}</span>}
         </span>
       </span>
     </button>

@@ -78,6 +78,29 @@ export const ExternalEvidenceModelSchema = z
 
 export type CounterEvidence = z.infer<typeof CounterEvidenceSchema>;
 
+// Planes guardados antes de counter_evidence siguen siendo legibles.
+const LegacyExternalEvidenceSchema = z
+  .object({
+    research_question: z.string().trim().min(1),
+    status: z.enum(["found", "insufficient"]),
+    items: z.array(ExternalEvidenceItemSchema).max(3),
+    synthesis: z.string().trim().min(1),
+    confidence: z.enum(["low", "medium", "high"]),
+  })
+  .refine((evidence) => evidence.status !== "found" || evidence.items.length > 0);
+
+export const StoredExternalEvidenceSchema = z.union([
+  ExternalEvidenceSchema,
+  LegacyExternalEvidenceSchema.transform((evidence) => ({
+    ...evidence,
+    counter_evidence: null,
+  })),
+]);
+
+export type StoredExternalEvidence = Omit<ExternalEvidence, "counter_evidence"> & {
+  counter_evidence: CounterEvidence | null;
+};
+
 export type ExternalEvidence = z.infer<typeof ExternalEvidenceSchema>;
 export type ExternalEvidenceItem = z.infer<
   typeof ExternalEvidenceItemSchema

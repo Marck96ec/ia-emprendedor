@@ -29,14 +29,14 @@ function stepState(stepKey: (typeof loopSteps)[number]["key"], stage: DecisionLo
 
 export function DecisionLoop({ stage }: { stage: DecisionLoopStage }) {
   return (
-    <ol className="flex flex-wrap items-center gap-x-0.5 gap-y-1 text-sm" aria-label="Ciclo de decisión">
+    <ol className="grid grid-cols-4 gap-1 text-[13px] sm:flex sm:flex-wrap sm:items-center sm:gap-x-0.5 sm:gap-y-1 sm:text-sm" aria-label="Ciclo de decisión">
       {loopSteps.map((step, index) => {
         const state = stepState(step.key, stage);
 
         return (
-          <li key={step.key} className="flex items-center gap-1" aria-current={state === "current" ? "step" : undefined}>
+          <li key={step.key} className="flex min-w-0 items-center gap-1" aria-current={state === "current" ? "step" : undefined}>
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-medium transition-colors duration-200 motion-reduce:transition-none ${
+              className={`inline-flex min-h-7 w-full items-center justify-center gap-1 rounded-full px-1.5 py-0.5 font-medium transition-colors duration-200 motion-reduce:transition-none sm:w-auto sm:px-2.5 ${
                 state === "current"
                   ? "bg-blue-600 text-white"
                   : state === "done"
@@ -50,7 +50,7 @@ export function DecisionLoop({ stage }: { stage: DecisionLoopStage }) {
               {state === "current" && <span className="sr-only"> (etapa actual)</span>}
             </span>
             {index < loopSteps.length - 1 && (
-              <span className="text-slate-400" aria-hidden="true">→</span>
+              <span className="hidden text-slate-400 sm:inline" aria-hidden="true">→</span>
             )}
           </li>
         );
@@ -81,7 +81,7 @@ export function WelcomeBanner({
     body = "Ahora revisemos qué cambió realmente.";
   } else if (returning) {
     title = "Bienvenido de vuelta.";
-    body = "Retomemos donde quedaste. Tu próxima acción está lista.";
+    body = "Retomemos donde quedaste.";
   } else if (weekNumber === 1) {
     title = "Tu primera semana.";
     body = "Esta semana CEO IA está aprendiendo cómo funciona tu negocio.";
@@ -94,10 +94,10 @@ export function WelcomeBanner({
   }
 
   return (
-    <p className="anim-rise mt-0.5 text-sm leading-5 text-slate-600 lg:truncate" aria-label="Estado de tu semana">
-      <span className="font-semibold text-slate-950">{title}</span>{" "}
+    <p className="anim-rise mt-0.5 text-sm leading-5 text-slate-600 line-clamp-2 cockpit:line-clamp-1" aria-label="Estado de tu semana">
+      <span className={`font-semibold text-slate-950 ${returning || reviewed || allCompleted ? "" : "max-sm:hidden"}`}>{title}</span>{" "}
       {returning && (
-        <span className="font-medium text-slate-800">
+        <span className="hidden font-medium text-slate-800 sm:inline">
           Semana {weekNumber} · {completedActions} de {totalActions} acciones completadas.{" "}
         </span>
       )}
