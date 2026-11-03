@@ -3,6 +3,7 @@ import type {
   ActionRoleRecommendation,
   ActionType,
 } from "@/lib/weekly-action-types";
+import type { ActionCapture } from "@/lib/action-capture";
 
 export type DashboardActionResult = {
   id: string;
@@ -22,6 +23,8 @@ export type DashboardAction = {
   estimated_hours: number;
   status: "pending" | "completed";
   completed_at: string | null;
+  capture_schema: ActionCapture | null;
+  completion_data: Record<string, unknown> | null;
   execution_mode: ActionExecutionMode;
   action_type: ActionType;
   action_results: DashboardActionResult[];

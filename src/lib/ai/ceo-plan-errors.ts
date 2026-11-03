@@ -13,6 +13,7 @@ export class CEOPlanError extends Error {
     public readonly code: string,
     message: string,
     public readonly issuePaths: string[] = [],
+    public readonly issueMessages: string[] = [],
   ) {
     super(message);
     this.name = "CEOPlanError";
@@ -66,5 +67,6 @@ export function safeCEOPlanLog(error: unknown) {
     code: normalized.code,
     kind: normalized.kind,
     issuePaths: normalized.issuePaths,
+    issueMessages: normalized.issueMessages,
   };
 }

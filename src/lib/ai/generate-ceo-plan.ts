@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 
 import {
   ceoAgent,
+  CEOPlanModelSchema,
   CEOPlanSchema,
   type StrategicDiagnosis,
   validateCEOPlanBusinessRules,
@@ -14,6 +15,7 @@ import {
   isRetryableCEOPlanError,
   toSafeCEOPlanError,
 } from "./ceo-plan-errors";
+import { parseActionCaptureModel } from "../action-capture";
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -72,6 +74,7 @@ export type GenerateCEOPlanInput = {
       roleReason: string;
       estimatedHours: number;
       status: string;
+      completionData?: unknown;
     }>;
 
     review: {
@@ -112,6 +115,7 @@ export async function generateCEOPlan(
   }
 
   let previousIssuePaths: string[] = [];
+  let previousIssueMessages: string[] = [];
 
   for (
     let attempt = 1;
@@ -133,7 +137,7 @@ conserva los unknowns relevantes y reduce confidence a medium o low.
 No borres incertidumbre real solo para pasar la validación.
 ${
   previousIssuePaths.length > 0
-    ? `\nCampos que fallaron validación:\n${previousIssuePaths.join("\n")}\n`
+    ? `\nCampos que fallaron validación:\n${previousIssuePaths.join("\n")}\n\nRazones de validación:\n${previousIssuePaths.map((path, index) => `- ${path}: ${previousIssueMessages[index] ?? "revisa este campo"}`).join("\n")}\n\nThe previous output failed structural validation. Regenerate the complete structured output. For every capture field, including child fields inside repeatable_group:\n- id is required;\n- id must match ^[a-z][a-z0-9_]*$;\n- ids must be unique within the same scope;\n- do not remove required evidence just to satisfy validation.\n`
     : ""
 }`;
 
@@ -152,6 +156,12 @@ Si previousWeek contiene información, estás preparando una nueva
 semana y debes utilizar el resultado real y los aprendizajes de la
 semana anterior para adaptar tus decisiones. Distingue siempre la
 ejecución del resultado: completar acciones no equivale a éxito.
+
+Los resultados de acciones de la semana anterior son evidencia declarada por
+el empresario. Úsalos para confirmar o cuestionar hipótesis, detectar patrones
+e identificar datos faltantes. No necesitas el capture_schema en ese contexto:
+usa solo la acción y su resultado real. Distingue observaciones, percepciones y
+métricas, y no conviertas automáticamente completion_data en verdad absoluta.
 
 Antes de recomendar la siguiente decisión, revisa explícitamente
 previousWeek.review.decisionLearning cuando exista. Si la hipótesis fue
@@ -222,6 +232,8 @@ siguiendo estas reglas:
 - Cada acción debe incluir reason, success_metric y expected_result. reason debe relacionarla
   con la decisión crítica, el bottleneck y el diagnóstico; expected_result debe describir
   el aprendizaje o cambio empresarial esperado, no repetir la tarea.
+- Cada acción debe incluir un capture_schema específico, con preguntas sobre
+  evidencia concreta para una decisión futura y no solo sobre ejecución.
 ${retryInstructions}
 `,
       );
@@ -234,16 +246,56 @@ ${retryInstructions}
         );
       }
 
-      const structuralOutput = CEOPlanSchema.safeParse(
-        result.finalOutput,
-      );
+      const modelOutput = CEOPlanModelSchema.safeParse(result.finalOutput);
+      const appOutput = CEOPlanSchema.safeParse(result.finalOutput);
 
+      if (!modelOutput.success && !appOutput.success) {
+        throw new CEOPlanError(
+          "structural",
+          "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+          "El output del CEO IA no coincide con el contrato estructural.",
+          getIssuePaths(appOutput.error),
+          getIssueMessages(appOutput.error),
+        );
+      }
+
+      let normalizedOutput: CEOPlan;
+      if (appOutput.success) {
+        normalizedOutput = appOutput.data;
+      } else {
+        if (!modelOutput.success) {
+          throw new CEOPlanError(
+            "structural",
+            "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+            "El output del CEO IA no coincide con el contrato estructural.",
+          );
+        }
+        normalizedOutput = {
+          ...modelOutput.data,
+          weekly_plan: modelOutput.data.weekly_plan.map((item) => {
+            const captureSchema = parseActionCaptureModel(item.capture_schema);
+            if (!captureSchema.success) {
+              throw new CEOPlanError(
+                "structural",
+                "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+                "El capture_schema del CEO IA no coincide con el contrato estructural.",
+                getIssuePaths(captureSchema.error),
+                getIssueMessages(captureSchema.error),
+              );
+            }
+            return { ...item, capture_schema: captureSchema.data };
+          }),
+        };
+      }
+
+      const structuralOutput = CEOPlanSchema.safeParse(normalizedOutput);
       if (!structuralOutput.success) {
         throw new CEOPlanError(
           "structural",
           "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
           "El output del CEO IA no coincide con el contrato estructural.",
           getIssuePaths(structuralOutput.error),
+          getIssueMessages(structuralOutput.error),
         );
       }
 
@@ -279,6 +331,7 @@ ${retryInstructions}
           businessRules.data.strategic_diagnosis.diagnosis.summary,
       };
     } catch (error) {
+      logCEOPlanProviderError(error);
       const normalized = toSafeCEOPlanError(error);
 
       if (
@@ -286,7 +339,37 @@ ${retryInstructions}
         isRetryableCEOPlanError(normalized)
       ) {
         previousIssuePaths = normalized.issuePaths;
+        previousIssueMessages = normalized.issueMessages;
         continue;
+      }
+
+      function logCEOPlanProviderError(error: unknown) {
+        if (error instanceof CEOPlanError) {
+          return;
+        }
+
+        const providerError = error as {
+          name?: unknown;
+          message?: unknown;
+          code?: unknown;
+          type?: unknown;
+          status?: unknown;
+          statusCode?: unknown;
+        };
+
+        console.error("CEO_PLAN_PROVIDER_ERROR", {
+          error_name: typeof providerError.name === "string" ? providerError.name : undefined,
+          error_message: typeof providerError.message === "string"
+            ? providerError.message.slice(0, 1000)
+            : undefined,
+          error_code: typeof providerError.code === "string" ? providerError.code : undefined,
+          error_type: typeof providerError.type === "string" ? providerError.type : undefined,
+          status: typeof providerError.status === "number" || typeof providerError.status === "string"
+            ? providerError.status
+            : providerError.statusCode,
+          prompt_version: "v5-strategic-learning",
+          model: process.env.OPENAI_MODEL ?? "gpt-5.4-mini",
+        });
       }
 
       throw normalized;
@@ -304,4 +387,8 @@ function getIssuePaths(error: ZodError): string[] {
   return error.issues.map((issue) =>
     issue.path.join("."),
   );
+}
+
+function getIssueMessages(error: ZodError): string[] {
+  return error.issues.map((issue) => issue.message);
 }

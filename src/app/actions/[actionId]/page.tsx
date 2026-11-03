@@ -6,10 +6,12 @@ import {
   workOnActionWithAI,
 } from "@/actions/action-ai";
 import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
+import { ActionCompletionForm } from "@/components/action-completion-form";
 import { CopyMessageButton } from "@/components/copy-message-button";
 import { parseActionDeliverable } from "@/lib/ai/action-deliverables";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
+import { getActionCaptureSchema } from "@/lib/action-capture";
 
 type ActionPageProps = {
   params: Promise<{ actionId: string }>;
@@ -42,7 +44,7 @@ export default async function ActionWorkspacePage({
 
   const { data: action, error: actionError } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type, capture_schema")
     .eq("id", actionId)
     .maybeSingle();
 
@@ -224,6 +226,14 @@ export default async function ActionWorkspacePage({
                   <ActionWorkspaceSubmit label="Aprobar resultado" pendingLabel="Aprobando..." />
                 </form>
               </div>
+            )}
+            {action.status === "pending" && !isClosed && (
+              <section className="surface-card mt-6 rounded-[2rem] p-6 sm:p-8">
+                <ActionCompletionForm
+                  actionId={action.id}
+                  captureSchema={getActionCaptureSchema(action.capture_schema)}
+                />
+              </section>
             )}
           </>
         )}

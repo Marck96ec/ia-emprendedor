@@ -84,7 +84,9 @@ export function ActionCard({
                 Recomendada ahora
               </span>
             ) : (
-              <span className={`text-xs font-medium ${state.labelClassName}`}>{state.label}</span>
+              <span className={`text-xs font-medium ${state.labelClassName}`}>
+                {state.label}{completed && action.completion_data ? " · Resultado registrado" : ""}
+              </span>
             )}
             <span className="ml-auto shrink-0 text-xs font-medium text-slate-500">{meta}</span>
           </span>

@@ -4,11 +4,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import {
+  getActionCaptureSchema,
+  parsePersistedActionCaptureSchema,
+  validateActionCompletion,
+} from "@/lib/action-capture";
 import { createClient } from "@/lib/supabase/server";
 
 const UpdateWeeklyActionSchema = z.object({
   action_id: z.string().uuid(),
-  status: z.enum(["pending", "completed"]),
+  completion_data: z.string().min(2),
 });
 
 function dashboardError(message: string) {
@@ -26,9 +31,7 @@ export async function updateWeeklyActionStatus(
       formData.get("action_id") ?? "",
     ),
 
-    status: String(
-      formData.get("status") ?? "",
-    ),
+    completion_data: String(formData.get("completion_data") ?? ""),
   });
 
   if (!parsed.success) {
@@ -50,24 +53,52 @@ export async function updateWeeklyActionStatus(
 
   const {
     action_id: actionId,
-    status,
+    completion_data: completionDataText,
   } = parsed.data;
 
-  const { data: updatedAction, error } =
-    await supabase
-      .from("weekly_actions")
-      .update({
-        status,
+  let completionData: unknown;
+  try {
+    completionData = JSON.parse(completionDataText);
+  } catch {
+    redirect(dashboardError("El resultado no tiene un formato válido."));
+  }
 
-        completed_at:
-          status === "completed"
-            ? new Date().toISOString()
-            : null,
-      })
-      .eq("id", actionId)
-      .eq("execution_mode", "manual")
-      .select("id")
-      .maybeSingle();
+  const { data: action, error: actionError } = await supabase
+    .from("weekly_actions")
+    .select("id, capture_schema, status, execution_mode")
+    .eq("id", actionId)
+    .maybeSingle();
+
+  if (actionError || !action || action.status !== "pending") {
+    redirect(dashboardError("No encontramos una acción pendiente para registrar."));
+  }
+
+  const persistedSchema = parsePersistedActionCaptureSchema(action.capture_schema);
+  if (
+    action.capture_schema !== null &&
+    action.capture_schema !== undefined &&
+    !persistedSchema.success
+  ) {
+    console.error("WEEKLY_ACTION_CAPTURE_SCHEMA_INVALID", {
+      actionId,
+      issues: persistedSchema.error.issues,
+    });
+    redirect(dashboardError("Esta acción tiene un esquema de resultado inválido."));
+  }
+
+  const captureSchema = getActionCaptureSchema(action.capture_schema);
+  const validation = validateActionCompletion(captureSchema, completionData);
+  if (!validation.success) {
+    redirect(dashboardError("Completa los campos obligatorios y revisa el resultado."));
+  }
+
+  const { data: updatedAction, error } = await supabase.rpc(
+    "complete_weekly_action_with_evidence",
+    {
+      p_action_id: actionId,
+      p_completion_data: completionData,
+    },
+  );
 
   if (error) {
     console.error(
@@ -97,5 +128,10 @@ export async function updateWeeklyActionStatus(
 
   revalidatePath("/dashboard");
 
-  redirect("/dashboard");
+  redirect(
+    "/dashboard?message=" +
+      encodeURIComponent(
+        "Acción completada. Resultado guardado para el aprendizaje de esta semana.",
+      ),
+  );
 }

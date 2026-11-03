@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
+import { DynamicActionCompletionForm } from "@/components/dynamic-action-completion-form";
+import { getActionCaptureSchema } from "@/lib/action-capture";
 import type { DashboardAction, DashboardWeeklyReview } from "@/lib/dashboard-types";
 
 type ActionDetailPanelProps = {
@@ -30,22 +33,6 @@ const roleLabels = {
   automate: "Automatizar",
   defer: "Diferir",
 } as const;
-
-function CompletionButton({ completed }: { completed: boolean }) {
-  const { pending } = useFormStatus();
-  const completing = pending && !completed;
-
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className={`${completed ? "secondary-button" : "accent-button"} min-h-11 w-full px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-70`}
-    >
-      {completing && <span className="anim-pop mr-2" aria-hidden="true">✓</span>}
-      {pending ? "Guardando..." : completed ? "Volver a dejar por hacer" : "Confirmar acción realizada"}
-    </button>
-  );
-}
 
 function NextWeekButton({ weekNumber }: { weekNumber: number }) {
   const { pending } = useFormStatus();
@@ -82,6 +69,8 @@ export function ActionDetailPanel({
   weekComplete,
   nextWeekNumber,
 }: ActionDetailPanelProps) {
+  const [completionMode, setCompletionMode] = useState<"capture" | "result" | null>(null);
+
   if (!action) {
     return (
       <section className="surface-card flex min-h-0 items-center justify-center rounded-2xl p-6 text-center text-sm text-slate-500">
@@ -92,6 +81,7 @@ export function ActionDetailPanel({
 
   const status = getStatus(action);
   const hasResult = (action.action_results?.length ?? 0) > 0;
+  const captureSchema = getActionCaptureSchema(action.capture_schema);
 
   return (
     <section className="flex min-h-0 w-full flex-col rounded-2xl bg-white/90 shadow-sm sm:border sm:border-slate-200 cockpit:h-full cockpit:flex-1" aria-labelledby="action-detail-title">
@@ -170,12 +160,15 @@ export function ActionDetailPanel({
           </Link>
         )}
 
-        {action.execution_mode === "manual" && !reviewed && (
-          <form action={updateWeeklyActionStatus}>
-            <input type="hidden" name="action_id" value={action.id} />
-            <input name="status" type="hidden" value={action.status === "completed" ? "pending" : "completed"} />
-            <CompletionButton completed={action.status === "completed"} />
-          </form>
+        {action.execution_mode === "manual" && !reviewed && action.status === "pending" && (
+          <button type="button" className="accent-button min-h-11 w-full px-4 py-2.5 text-sm" onClick={() => setCompletionMode("capture")}>
+            Registrar resultado
+          </button>
+        )}
+        {action.status === "completed" && action.completion_data && (
+          <button type="button" className="secondary-button min-h-11 w-full px-4 py-2.5 text-sm" onClick={() => setCompletionMode("result")}>
+            Ver resultado
+          </button>
         )}
 
         {reviewed && (
@@ -196,6 +189,25 @@ export function ActionDetailPanel({
           </Link>
         )}
       </div>
+      {completionMode && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="completion-dialog-title">
+          <div className="max-h-[100dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:p-6">
+            <p id="completion-dialog-title" className="eyebrow mb-4">Resultado de la acción</p>
+            <DynamicActionCompletionForm
+              captureSchema={captureSchema}
+              initialData={action.completion_data ?? undefined}
+              readOnly={completionMode === "result"}
+              onCancel={() => setCompletionMode(null)}
+              onSubmit={(data) => {
+                const formData = new FormData();
+                formData.set("action_id", action.id);
+                formData.set("completion_data", JSON.stringify(data));
+                void updateWeeklyActionStatus(formData);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

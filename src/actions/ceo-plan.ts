@@ -494,7 +494,8 @@ if (latestPlan?.status === "generating") {
           role_recommendation,
           role_reason,
           estimated_hours,
-          status
+          status,
+          completion_data
         `,
       )
       .eq("ceo_plan_id", contextPlan.id)
@@ -614,6 +615,9 @@ if (latestPlan?.status === "generating") {
             estimatedHours:
               Number(action.estimated_hours),
             status: action.status,
+            completionData: action.status === "completed"
+              ? action.completion_data
+              : null,
           }),
         ),
 
@@ -741,10 +745,15 @@ if (latestPlan?.status === "generating") {
       );
     }
   } catch (error) {
-    console.error(
-      "CEO_PLAN_GENERATION_ERROR",
-      safeCEOPlanLog(error),
-    );
+    const safeError = safeCEOPlanLog(error);
+    console.error("CEO_PLAN_GENERATION_ERROR", safeError);
+    if (safeError.code === "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID") {
+      console.error("CEO_PLAN_STRUCTURAL_OUTPUT_INVALID", {
+        issue_paths: safeError.issuePaths,
+        issue_messages: safeError.issueMessages,
+        prompt_version: PROMPT_VERSION,
+      });
+    }
 
     const { error: failedUpdateError } = await supabase.rpc(
       "fail_ceo_plan",

@@ -92,10 +92,10 @@ test("desktop dashboard is a single viewport with internal scrolling areas", () 
   const board = source("src/components/weekly-action-board.tsx");
   const panel = source("src/components/action-detail-panel.tsx");
 
-  assert.match(page, /lg:h-dvh lg:overflow-hidden/);
-  assert.match(board, /lg:overflow-y-auto/);
-  assert.match(board, /lg:min-h-0/);
-  assert.match(panel, /lg:overflow-y-auto/);
+  assert.match(page, /cockpit:h-dvh cockpit:overflow-hidden/);
+  assert.match(board, /cockpit:overflow-y-auto/);
+  assert.match(board, /cockpit:min-h-0/);
+  assert.match(panel, /cockpit:overflow-y-auto/);
 });
 
 test("focus, hypothesis and evidence live in the drawer instead of reserving page space", () => {
@@ -119,8 +119,9 @@ test("primary action CTA stays pinned in the detail panel", () => {
   const panel = source("src/components/action-detail-panel.tsx");
 
   assert.match(panel, /sticky bottom-0/);
-  assert.match(panel, /Confirmar acción realizada/);
+  assert.match(panel, /Registrar resultado/);
   assert.match(panel, /Crear con ayuda de IA/);
+  assert.match(panel, /Ver resultado/);
 });
 
 test("hero shows the decision, recommendation, human certainty and decision links", () => {
@@ -153,7 +154,7 @@ test("evidence renders only inside the drawer and keeps its compact summary and 
   assert.doesNotMatch(section, /<details[^>]*\sopen/);
   assert.match(section, /summarizeEvidence/);
   assert.match(section, /fuentes/);
-  assert.match(section, /Favorable pero no concluyente/);
+  assert.match(section, /Favorable con límites/);
   assert.match(section, /Buscamos también evidencia en contra\./);
   assert.match(section, /No encontramos un caso suficientemente comparable/);
   assert.match(section, /counter_evidence/);
@@ -210,7 +211,7 @@ test("header keeps the compact product explanation for small screens and links t
   const header = source("src/components/dashboard-header.tsx");
 
   assert.match(header, /weekNumber === 1/);
-  assert.match(header, /lg:hidden/);
+  assert.match(header, /sm:hidden/);
   assert.match(
     header,
     /CEO IA analiza tu negocio, identifica qué merece atención y te ayuda a decidir dónde invertir tu tiempo\./,

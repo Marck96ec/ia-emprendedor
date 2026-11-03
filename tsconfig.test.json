@@ -11,6 +11,7 @@
     "noEmitOnError": true
   },
   "include": [
+    "tests/action-capture.test.ts",
     "tests/action-deliverables.test.ts",
     "tests/ceo-plan-output-schema.test.ts",
     "tests/dashboard-ux.test.ts",
@@ -28,6 +29,7 @@
     "src/lib/ai/commercial-messages-agent.ts",
     "src/lib/ai/external-evidence.ts",
     "src/lib/ai/evidence-agent.ts",
-    "src/lib/ai/generate-external-evidence.ts"
+    "src/lib/ai/generate-external-evidence.ts",
+    "src/lib/action-capture.ts"
   ]
 }

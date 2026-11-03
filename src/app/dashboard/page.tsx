@@ -232,6 +232,8 @@ export default async function DashboardPage({
           estimated_hours,
           status,
           completed_at,
+          capture_schema,
+          completion_data,
           execution_mode,
           action_type,
           action_results (
@@ -465,8 +467,10 @@ export default async function DashboardPage({
 
         {ceoPlan?.status === "failed" && (
           <div className="surface-card rounded-2xl p-5 sm:p-6">
-            <h2 className="text-xl font-semibold text-slate-950">No pudimos generar el plan</h2>
-            <p className="mt-2 text-sm text-slate-600">Puedes volver a intentarlo.</p>
+            <h2 className="text-xl font-semibold text-slate-950">No pudimos terminar tu plan</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Tu información está guardada. Puedes intentarlo nuevamente sin repetir el diagnóstico.
+            </p>
             <form action={generateCEOPlanAction} className="mt-5">
               <PlanGenerationSubmit label="Intentar nuevamente" />
             </form>

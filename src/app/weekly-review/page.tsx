@@ -87,7 +87,7 @@ export default async function WeeklyReviewPage({
   const { data: actions, error: actionsError } =
     await supabase
       .from("weekly_actions")
-      .select("status")
+      .select("status, action, completion_data")
       .eq("ceo_plan_id", ceoPlan.id);
 
   if (actionsError) {
@@ -98,6 +98,8 @@ export default async function WeeklyReviewPage({
   const totalActions = actions?.length ?? 0;
   const completedActions =
     actions?.filter((action) => action.status === "completed").length ?? 0;
+  const recordedResults =
+    actions?.filter((action) => action.status === "completed" && action.completion_data !== null) ?? [];
 
   if (totalActions === 0) {
     redirect("/dashboard");
@@ -123,6 +125,15 @@ export default async function WeeklyReviewPage({
           <p className="mt-3 text-lg leading-7 text-slate-700">
             Ahora conviértela en aprendizaje para {business.name}.
           </p>
+
+          {recordedResults.length > 0 && (
+            <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+              <p className="text-sm font-semibold text-blue-950">Ya registraste resultados en {recordedResults.length} acción{recordedResults.length === 1 ? "" : "es"}.</p>
+              <p className="mt-1 text-sm leading-5 text-blue-900/80">
+                Úsalos como evidencia disponible y enfoca esta revisión en qué significan para tu siguiente decisión.
+              </p>
+            </div>
+          )}
 
           <p className="mt-3 text-sm text-slate-600">
             Puedes regresar a tu semana sin guardar esta revisión. Solo se cierra cuando pulses “Guardar aprendizajes de la semana”.
