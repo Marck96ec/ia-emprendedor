@@ -69,10 +69,35 @@ jobs:
       - name: Start ephemeral Supabase
         run: npx supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
 
+      # La base debe ser nueva: todas las migraciones aplicadas y sin datos previos.
+      - name: Verify migrations on a clean database
+        shell: bash
+        run: |
+          expected=$(ls supabase/migrations/*.sql | wc -l)
+          applied=$(docker exec supabase_db_ia-emprendedor psql -U postgres -d postgres -At -c "select count(*) from supabase_migrations.schema_migrations")
+          users=$(docker exec supabase_db_ia-emprendedor psql -U postgres -d postgres -At -c "select count(*) from auth.users")
+          echo "migraciones esperadas=$expected aplicadas=$applied usuarios=$users"
+          test "$applied" -eq "$expected"
+          test "$users" -eq 0
+
+      # Los fixtures se crean dentro de las pruebas con usuarios autenticados.
+      # Falla si alguna prueba falla o se omite.
       - name: Test against ephemeral Supabase
+        shell: bash
         env:
           SUPABASE_LOCAL_TESTS: "1"
-        run: npm test
+        run: |
+          npm test 2>&1 | tee integration-tests.log
+          grep -Eq "^(ℹ|#) fail 0$" integration-tests.log
+          grep -Eq "^(ℹ|#) skipped 0$" integration-tests.log || { echo "::error::Hay pruebas omitidas en db-integration"; exit 1; }
+
+      - name: Upload integration test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-log
+          path: integration-tests.log
+          retention-days: 7
 
       - name: Stop ephemeral Supabase
         if: always()

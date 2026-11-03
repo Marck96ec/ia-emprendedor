@@ -12,6 +12,7 @@ import {
   createDiagnostic,
   createPlan,
   createTestUser,
+  deleteTestUser,
   createV5PlanPayload,
   loadLocalSupabaseConfig,
   supabaseLocalTestsEnabled as enabled,
@@ -50,8 +51,8 @@ function issuePathsFromDetails(error: PostgrestError | null): string[] {
   return (JSON.parse(error.details) as Array<{ path: string }>).map((issue) => issue.path).sort();
 }
 
-async function getAction(admin: SupabaseClient, actionId: string) {
-  const { data, error } = await admin
+async function getAction(client: SupabaseClient, actionId: string) {
+  const { data, error } = await client
     .from("weekly_actions")
     .select("id, status, completion_data, completed_at")
     .eq("id", actionId)
@@ -89,11 +90,11 @@ test(
     const anon = createClient(config.url, config.anonKey);
     const owner = await createTestUser(admin, config, "evidence-owner");
     const otherUser = await createTestUser(admin, config, "evidence-other");
-    const businessId = await createBusiness(admin, owner.id);
 
     try {
-      await createDiagnostic(admin, businessId);
-      const planId = await createPlan(admin, businessId, 1);
+      const businessId = await createBusiness(owner.client, owner.id);
+      await createDiagnostic(owner.client, businessId);
+      const planId = await createPlan(owner.client, businessId, 1);
       const actions = evidenceActions();
       const captureSchemas = [fixtures.schemas.pricing, fixtures.schemas.contacts, null, null];
       const payload = createV5PlanPayload(actions);
@@ -110,7 +111,7 @@ test(
       });
       assert.ifError(planError);
 
-      const { data: rows, error: rowsError } = await admin
+      const { data: rows, error: rowsError } = await owner.client
         .from("weekly_actions")
         .select("id, sequence, status")
         .eq("ceo_plan_id", planId)
@@ -177,7 +178,7 @@ test(
       });
       assertRpcError(emptyEvidence.error, { code: "22023", hint: "COMPLETION_DATA_INVALID" }, "evidencia vacía");
       assert.deepEqual(issuePathsFromDetails(emptyEvidence.error), ["price", "signals"]);
-      assert.equal((await getAction(admin, pricingAction.id)).status, "pending");
+      assert.equal((await getAction(owner.client, pricingAction.id)).status, "pending");
 
       const tooLarge = await owner.client.rpc("complete_weekly_action_with_evidence", {
         p_action_id: genericAction.id,
@@ -197,7 +198,7 @@ test(
         p_completion_data: validPricing,
       });
       assert.ok(anonAttempt.error, "anon no puede completar acciones");
-      assert.equal((await getAction(admin, pricingAction.id)).status, "pending");
+      assert.equal((await getAction(owner.client, pricingAction.id)).status, "pending");
 
       const completed = await owner.client.rpc("complete_weekly_action_with_evidence", {
         p_action_id: pricingAction.id,
@@ -205,7 +206,7 @@ test(
       });
       assert.ifError(completed.error);
       assert.equal(completed.data, pricingAction.id);
-      const persisted = await getAction(admin, pricingAction.id);
+      const persisted = await getAction(owner.client, pricingAction.id);
       assert.equal(persisted.status, "completed");
       assert.deepEqual(persisted.completion_data, validPricing);
 
@@ -216,14 +217,14 @@ test(
       });
       assert.ifError(identicalRetry.error);
       assert.equal(identicalRetry.data, pricingAction.id);
-      assert.equal((await getAction(admin, pricingAction.id)).completed_at, persisted.completed_at);
+      assert.equal((await getAction(owner.client, pricingAction.id)).completed_at, persisted.completed_at);
 
       const differentRetry = await owner.client.rpc("complete_weekly_action_with_evidence", {
         p_action_id: pricingAction.id,
         p_completion_data: { price: 99, signals: ["purchase"] },
       });
       assertRpcError(differentRetry.error, { code: "P0001", hint: "ACTION_ALREADY_COMPLETED" }, "evidencia distinta");
-      assert.deepEqual((await getAction(admin, pricingAction.id)).completion_data, validPricing);
+      assert.deepEqual((await getAction(owner.client, pricingAction.id)).completion_data, validPricing);
 
       // Dos envíos concurrentes distintos: solo uno persiste y el otro no lo sobrescribe.
       const contactsA = { contacts: [1, 2, 3].map((n) => ({ name: `Cliente A${n}`, outcome: "interested" })) };
@@ -239,7 +240,7 @@ test(
       assert.equal(winners.length, 1, "Exactamente un envío concurrente debe persistir");
       assert.equal(losers.length, 1);
       assertRpcError(losers[0].error, { code: "P0001", hint: "ACTION_ALREADY_COMPLETED" }, "envío concurrente");
-      const storedContacts = (await getAction(admin, contactsAction.id)).completion_data;
+      const storedContacts = (await getAction(owner.client, contactsAction.id)).completion_data;
       assert.deepEqual(storedContacts, concurrent[0].error ? contactsB : contactsA);
 
       // Acción con IA: exige un entregable aprobado antes de registrar evidencia.
@@ -265,39 +266,63 @@ test(
 
       const approval = await owner.client.rpc("approve_action_result", { p_action_result_id: draft!.id });
       assert.ifError(approval.error);
-      assert.equal((await getAction(admin, aiAction.id)).status, "pending", "Aprobar no completa la acción sin evidencia");
+      assert.equal((await getAction(owner.client, aiAction.id)).status, "pending", "Aprobar no completa la acción sin evidencia");
 
       const aiCompleted = await owner.client.rpc("complete_weekly_action_with_evidence", {
         p_action_id: aiAction.id,
         p_completion_data: genericEvidence,
       });
       assert.ifError(aiCompleted.error);
-      assert.equal((await getAction(admin, aiAction.id)).status, "completed");
+      assert.equal((await getAction(owner.client, aiAction.id)).status, "completed");
 
-      // D3 y D11: una semana de 4 acciones se cierra con un resumen de hasta 2000 caracteres.
-      const { error: reviewError } = await owner.client.from("weekly_reviews").insert({
-        ceo_plan_id: planId,
-        outcome_status: "mixed",
-        outcome_summary: "Resultado observado. ".repeat(75).slice(0, 1500),
-        what_worked: null,
-        what_didnt_work: null,
-        business_changes: null,
-        next_week_focus: null,
-        completed_actions: 3,
-        total_actions: 4,
-        decision_learning: null,
-      });
+      // D3 y D11: una semana de 4 acciones se cierra con un resumen de hasta 2000 caracteres
+      // y conserva el aprendizaje que alimenta la semana siguiente.
+      const decisionLearning = {
+        decision_question: "¿Debemos priorizar un segmento antes de ampliar la captación?",
+        recommended_direction: "Validar un segmento prioritario esta semana.",
+        hypothesis: payload.p_decision_hypothesis.statement,
+        target_metric: "conversaciones cualificadas",
+        expected_outcome: "Aprender qué segmento genera conversaciones cualificadas.",
+        observed_result: "Dos de tres comercios pidieron precio.",
+        evidence: ["Registro de contactos de la acción 2."],
+        learning: "El segmento responde cuando la oferta incluye mantenimiento.",
+        hypothesis_status: "validated",
+      };
+      const { data: review, error: reviewError } = await owner.client
+        .from("weekly_reviews")
+        .insert({
+          ceo_plan_id: planId,
+          outcome_status: "mixed",
+          outcome_summary: "Resultado observado. ".repeat(75).slice(0, 1500),
+          what_worked: null,
+          what_didnt_work: null,
+          business_changes: null,
+          next_week_focus: null,
+          completed_actions: 3,
+          total_actions: 4,
+          decision_learning: decisionLearning,
+        })
+        .select("id, total_actions, completed_actions, decision_learning")
+        .single();
       assert.ifError(reviewError);
+      assert.equal(review.total_actions, 4);
+      assert.deepEqual(review.decision_learning, decisionLearning, "El aprendizaje persiste tal como se registró");
+
+      const reviewEdit = await owner.client
+        .from("weekly_reviews")
+        .update({ outcome_summary: "Reescrito después del cierre" })
+        .eq("id", review.id);
+      assertRpcError(reviewEdit.error, { code: "42501" }, "la revisión cerrada es inmutable");
 
       const closedWeek = await owner.client.rpc("complete_weekly_action_with_evidence", {
         p_action_id: genericAction.id,
         p_completion_data: genericEvidence,
       });
       assertRpcError(closedWeek.error, { code: "P0001", hint: "WEEKLY_PLAN_CLOSED" }, "semana cerrada");
-      assert.equal((await getAction(admin, genericAction.id)).status, "pending");
+      assert.equal((await getAction(owner.client, genericAction.id)).status, "pending");
 
       // La semana siguiente se genera sobre el plan revisado.
-      const nextPlanId = await createPlan(admin, businessId, 2);
+      const nextPlanId = await createPlan(owner.client, businessId, 2);
       const { error: nextPlanError } = await owner.client.rpc("complete_ceo_plan", {
         p_plan_id: nextPlanId,
         ...payload,
@@ -306,7 +331,7 @@ test(
         p_time_allocation: { ...payload.p_time_allocation, allocated_hours: 3 },
       });
       assert.ifError(nextPlanError);
-      const { data: nextActions, error: nextActionsError } = await admin
+      const { data: nextActions, error: nextActionsError } = await owner.client
         .from("weekly_actions")
         .select("status, capture_schema")
         .eq("ceo_plan_id", nextPlanId);
@@ -314,9 +339,8 @@ test(
       assert.equal(nextActions?.length, 2);
       assert.ok(nextActions?.every((action) => action.status === "pending" && action.capture_schema));
     } finally {
-      await admin.from("businesses").delete().eq("id", businessId);
-      await admin.auth.admin.deleteUser(owner.id);
-      await admin.auth.admin.deleteUser(otherUser.id);
+      await deleteTestUser(admin, owner);
+      await deleteTestUser(admin, otherUser);
     }
   },
 );

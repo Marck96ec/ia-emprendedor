@@ -10,6 +10,7 @@ import {
   createPlan,
   createPlanPayload,
   createTestUser,
+  deleteTestUser,
   createV5PlanPayload,
   loadLocalSupabaseConfig,
   supabaseLocalTestsEnabled as enabled,
@@ -18,10 +19,10 @@ import {
 } from "./support/supabase-local";
 
 async function countActions(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   planId: string,
 ) {
-  const { count, error } = await admin
+  const { count, error } = await client
     .from("weekly_actions")
     .select("id", { count: "exact", head: true })
     .eq("ceo_plan_id", planId);
@@ -31,10 +32,10 @@ async function countActions(
 }
 
 async function getPlanStatus(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   planId: string,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("ceo_plans")
     .select("id, status")
     .eq("id", planId)
@@ -46,10 +47,10 @@ async function getPlanStatus(
 }
 
 async function getActionSequences(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   planId: string,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("weekly_actions")
     .select("sequence")
     .eq("ceo_plan_id", planId)
@@ -60,10 +61,10 @@ async function getActionSequences(
 }
 
 async function getRoleActions(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   planId: string,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("weekly_actions")
     .select("sequence, role_recommendation, role_reason, estimated_hours")
     .eq("ceo_plan_id", planId)
@@ -74,10 +75,10 @@ async function getRoleActions(
 }
 
 async function getTimeAllocation(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   planId: string,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("ceo_plans")
     .select("time_allocation")
     .eq("id", planId)
@@ -105,14 +106,15 @@ test(
     const admin = createClient(config.url, config.serviceRoleKey);
     const owner = await createTestUser(admin, config, "owner");
     const otherUser = await createTestUser(admin, config, "other");
-    const businessId = await createBusiness(admin, owner.id);
-    await createDiagnostic(admin, businessId);
-    const planId = await createPlan(admin, businessId, 1);
     const expectedActions = validRoleActions();
 
     try {
+      const businessId = await createBusiness(owner.client, owner.id);
+      await createDiagnostic(owner.client, businessId);
+      const planId = await createPlan(owner.client, businessId, 1);
+
       for (const actionCount of [1, 3, 5]) {
-        const { error } = await admin
+        const { error } = await owner.client
           .from("ceo_plans")
           .update({ weekly_plan: validActions(actionCount) })
           .eq("id", planId);
@@ -121,7 +123,7 @@ test(
       }
 
       for (const actionCount of [0, 6, 7]) {
-        const { error } = await admin
+        const { error } = await owner.client
           .from("ceo_plans")
           .update({ weekly_plan: validActions(actionCount) })
           .eq("id", planId);
@@ -134,7 +136,7 @@ test(
         );
       }
 
-      const legacySixPlanId = await createPlan(admin, businessId, 12);
+      const legacySixPlanId = await createPlan(owner.client, businessId, 12);
       const legacySixResult = await owner.client.rpc(
         "complete_ceo_plan",
         {
@@ -144,12 +146,12 @@ test(
       );
       assert.ok(legacySixResult.error);
       assert.equal(
-        (await getPlanStatus(admin, legacySixPlanId)).status,
+        (await getPlanStatus(owner.client, legacySixPlanId)).status,
         "generating",
       );
-      assert.equal(await countActions(admin, legacySixPlanId), 0);
+      assert.equal(await countActions(owner.client, legacySixPlanId), 0);
 
-      const legacySevenPlanId = await createPlan(admin, businessId, 13);
+      const legacySevenPlanId = await createPlan(owner.client, businessId, 13);
       const legacySevenResult = await owner.client.rpc(
         "complete_ceo_plan",
         {
@@ -160,10 +162,10 @@ test(
       );
       assert.ok(legacySevenResult.error);
       assert.equal(
-        (await getPlanStatus(admin, legacySevenPlanId)).status,
+        (await getPlanStatus(owner.client, legacySevenPlanId)).status,
         "generating",
       );
-      assert.equal(await countActions(admin, legacySevenPlanId), 0);
+      assert.equal(await countActions(owner.client, legacySevenPlanId), 0);
 
       const completed = await owner.client.rpc(
         "complete_ceo_plan",
@@ -175,16 +177,16 @@ test(
       );
       assert.ifError(completed.error);
       assert.equal(
-        await countActions(admin, planId),
+        await countActions(owner.client, planId),
         expectedActions.length,
       );
       assert.equal(
-        (await getPlanStatus(admin, planId)).status,
+        (await getPlanStatus(owner.client, planId)).status,
         "ready",
       );
-      assert.deepEqual(await getActionSequences(admin, planId), [1, 2, 3]);
+      assert.deepEqual(await getActionSequences(owner.client, planId), [1, 2, 3]);
 
-      const validV4PlanId = await createPlan(admin, businessId, 6);
+      const validV4PlanId = await createPlan(owner.client, businessId, 6);
       const validV4Result = await owner.client.rpc(
         "complete_ceo_plan",
         {
@@ -194,10 +196,10 @@ test(
       );
       assert.ifError(validV4Result.error);
       assert.equal(
-        (await getPlanStatus(admin, validV4PlanId)).status,
+        (await getPlanStatus(owner.client, validV4PlanId)).status,
         "ready",
       );
-      assert.deepEqual(await getRoleActions(admin, validV4PlanId), [
+      assert.deepEqual(await getRoleActions(owner.client, validV4PlanId), [
         {
           sequence: 1,
           role_recommendation: "execute",
@@ -217,7 +219,7 @@ test(
           estimated_hours: 0,
         },
       ]);
-      assert.deepEqual(await getTimeAllocation(admin, validV4PlanId), {
+      assert.deepEqual(await getTimeAllocation(owner.client, validV4PlanId), {
         available_hours: 6,
         allocated_hours: 3,
         reserved_hours: 3,
@@ -277,7 +279,7 @@ test(
 
       for (const invalidCase of invalidV4Cases) {
         const invalidV4PlanId = await createPlan(
-          admin,
+          owner.client,
           businessId,
           invalidCase.week,
         );
@@ -294,17 +296,17 @@ test(
 
         assert.ok(invalidV4Result.error);
         assert.equal(
-          (await getPlanStatus(admin, invalidV4PlanId)).status,
+          (await getPlanStatus(owner.client, invalidV4PlanId)).status,
           "generating",
         );
-        assert.equal(await countActions(admin, invalidV4PlanId), 0);
+        assert.equal(await countActions(owner.client, invalidV4PlanId), 0);
       }
 
-      await admin
+      await owner.client
         .from("business_diagnostics")
         .update({ owner_hours_per_week: 5 })
         .eq("business_id", businessId);
-      const overCapacityPlanId = await createPlan(admin, businessId, 11);
+      const overCapacityPlanId = await createPlan(owner.client, businessId, 11);
       const overCapacityActions = validRoleActions().map((action) =>
         action.sequence === 2
           ? { ...action, estimated_hours: 4 }
@@ -324,10 +326,10 @@ test(
       );
       assert.ok(overCapacityResult.error);
       assert.equal(
-        (await getPlanStatus(admin, overCapacityPlanId)).status,
+        (await getPlanStatus(owner.client, overCapacityPlanId)).status,
         "generating",
       );
-      assert.equal(await countActions(admin, overCapacityPlanId), 0);
+      assert.equal(await countActions(owner.client, overCapacityPlanId), 0);
 
       const nonOwnerFailure = await otherUser.client.rpc(
         "fail_ceo_plan",
@@ -335,7 +337,7 @@ test(
       );
       assert.ok(nonOwnerFailure.error);
       assert.equal(
-        await countActions(admin, planId),
+        await countActions(owner.client, planId),
         expectedActions.length,
       );
 
@@ -345,16 +347,16 @@ test(
       );
       assert.ok(readyFailure.error);
       assert.equal(
-        await countActions(admin, planId),
+        await countActions(owner.client, planId),
         expectedActions.length,
       );
 
-      await admin
+      await owner.client
         .from("business_diagnostics")
         .update({ owner_hours_per_week: 6 })
         .eq("business_id", businessId);
 
-      const mismatchPlanId = await createPlan(admin, businessId, 2);
+      const mismatchPlanId = await createPlan(owner.client, businessId, 2);
       const sharedFields = [
         "sequence",
         "action",
@@ -449,13 +451,13 @@ test(
             : "CEO_PLAN_PAYLOAD_MISMATCH",
         );
         assert.equal(
-          (await getPlanStatus(admin, mismatchPlanId)).status,
+          (await getPlanStatus(owner.client, mismatchPlanId)).status,
           "generating",
         );
-        assert.equal(await countActions(admin, mismatchPlanId), 0);
+        assert.equal(await countActions(owner.client, mismatchPlanId), 0);
       }
 
-      const invalidPlanId = await createPlan(admin, businessId, 3);
+      const invalidPlanId = await createPlan(owner.client, businessId, 3);
       const invalidActions = validRoleActions();
       invalidActions[0].action_type = "commercial_messages";
       const invalidResult = await owner.client.rpc(
@@ -469,7 +471,7 @@ test(
       );
       assert.ok(invalidResult.error);
 
-      const multipleAssistedPlanId = await createPlan(admin, businessId, 4);
+      const multipleAssistedPlanId = await createPlan(owner.client, businessId, 4);
       const multipleAssisted = validRoleActions().map((action, index) =>
         index < 2
           ? {
@@ -490,7 +492,7 @@ test(
       );
       assert.ok(multipleAssistedResult.error);
 
-      const rollbackPlanId = await createPlan(admin, businessId, 5);
+      const rollbackPlanId = await createPlan(owner.client, businessId, 5);
   const oversizedActions = validRoleActions();
       oversizedActions[0].action = "x".repeat(1001);
       const rollbackResult = await owner.client.rpc(
@@ -503,14 +505,14 @@ test(
         },
       );
       assert.ok(rollbackResult.error);
-      assert.equal(await countActions(admin, rollbackPlanId), 0);
+      assert.equal(await countActions(owner.client, rollbackPlanId), 0);
 
       const failResult = await owner.client.rpc("fail_ceo_plan", {
         p_plan_id: rollbackPlanId,
       });
       assert.ifError(failResult.error);
 
-      const failedPlan = await getPlanStatus(admin, rollbackPlanId);
+      const failedPlan = await getPlanStatus(owner.client, rollbackPlanId);
       assert.equal(failedPlan.status, "failed");
 
       const invalidRetry = await owner.client.rpc(
@@ -523,7 +525,7 @@ test(
       assert.ok(invalidRetry.error);
       assert.equal(invalidRetry.error.code, "P0001");
       assert.equal(
-        (await getPlanStatus(admin, rollbackPlanId)).status,
+        (await getPlanStatus(owner.client, rollbackPlanId)).status,
         "failed",
       );
 
@@ -550,19 +552,18 @@ test(
       assert.ifError(retryResult.error);
 
       const completedRetryPlan = await getPlanStatus(
-        admin,
+        owner.client,
         rollbackPlanId,
       );
       assert.equal(completedRetryPlan.status, "ready");
       assert.equal(
-        await countActions(admin, rollbackPlanId),
+        await countActions(owner.client, rollbackPlanId),
         expectedActions.length,
       );
-      assert.deepEqual(await getActionSequences(admin, rollbackPlanId), [1, 2, 3]);
+      assert.deepEqual(await getActionSequences(owner.client, rollbackPlanId), [1, 2, 3]);
     } finally {
-      await admin.from("businesses").delete().eq("id", businessId);
-      await admin.auth.admin.deleteUser(owner.id);
-      await admin.auth.admin.deleteUser(otherUser.id);
+      await deleteTestUser(admin, owner);
+      await deleteTestUser(admin, otherUser);
     }
   },
 );

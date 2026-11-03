@@ -53,34 +53,57 @@ export function parseEnvFile(filePath: string): Record<string, string> {
   }
 }
 
-export function loadSupabaseCliEnv(): Record<string, string> {
-  try {
-    const command =
-      process.platform === "win32"
-        ? "npx.cmd supabase status -o env"
-        : "npx supabase status -o env";
-    const shell =
-      process.platform === "win32"
-        ? process.env.ComSpec ?? "cmd.exe"
-        : "/bin/sh";
-    const output = execSync(command, {
-      cwd: process.cwd(),
-      encoding: "utf8",
-      shell,
-      stdio: ["ignore", "pipe", "ignore"],
-    });
+const CLI_STATUS_ATTEMPTS = 3;
 
-    return Object.fromEntries(
-      output.split(/\r?\n/).flatMap((line) => {
-        const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
-        return match
-          ? [[match[1], stripEnvQuotes(match[2])]]
-          : [];
-      }),
-    );
-  } catch {
-    return {};
+function sleepSync(milliseconds: number) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+/*
+ * node --test ejecuta cada archivo en su propio proceso y todos consultan
+ * `supabase status` a la vez; una consulta puede fallar de forma transitoria,
+ * así que se reintenta antes de concluir que Supabase local no está disponible.
+ */
+export function loadSupabaseCliEnv(): Record<string, string> {
+  const command =
+    process.platform === "win32"
+      ? "npx.cmd supabase status -o env"
+      : "npx supabase status -o env";
+  const shell =
+    process.platform === "win32"
+      ? process.env.ComSpec ?? "cmd.exe"
+      : "/bin/sh";
+
+  for (let attempt = 1; attempt <= CLI_STATUS_ATTEMPTS; attempt += 1) {
+    try {
+      const output = execSync(command, {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        shell,
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+
+      const env = Object.fromEntries(
+        output.split(/\r?\n/).flatMap((line) => {
+          const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
+          return match
+            ? [[match[1], stripEnvQuotes(match[2])]]
+            : [];
+        }),
+      );
+      if (env.API_URL) {
+        return env;
+      }
+    } catch {
+      // Se reintenta abajo.
+    }
+
+    if (attempt < CLI_STATUS_ATTEMPTS) {
+      sleepSync(1000 * attempt);
+    }
   }
+
+  return {};
 }
 
 export function loadLocalSupabaseConfig(): LocalSupabaseConfig {
@@ -297,6 +320,12 @@ export function createV5PlanPayload(
   };
 }
 
+// businesses.owner_id usa on delete cascade: borra negocio, planes, acciones y revisiones.
+export async function deleteTestUser(admin: SupabaseClient, user: TestUser) {
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  assert.ifError(error);
+}
+
 export async function createTestUser(
   admin: SupabaseClient,
   config: LocalSupabaseConfig,
@@ -329,11 +358,16 @@ export async function createTestUser(
   };
 }
 
+/*
+ * Los fixtures usan el cliente autenticado del propietario, igual que la app:
+ * las migraciones solo conceden privilegios de tabla a authenticated y una base
+ * nueva no otorga DML a service_role. service_role queda para la API admin de Auth.
+ */
 export async function createBusiness(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   ownerId: string,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("businesses")
     .insert({
       owner_id: ownerId,
@@ -350,11 +384,11 @@ export async function createBusiness(
 }
 
 export async function createDiagnostic(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   businessId: string,
   ownerHoursPerWeek = 6,
 ) {
-  const { error } = await admin
+  const { error } = await client
     .from("business_diagnostics")
     .insert({
       business_id: businessId,
@@ -374,11 +408,11 @@ export async function createDiagnostic(
 }
 
 export async function createPlan(
-  admin: SupabaseClient,
+  client: SupabaseClient,
   businessId: string,
   weekNumber: number,
 ) {
-  const { data, error } = await admin
+  const { data, error } = await client
     .from("ceo_plans")
     .insert({
       business_id: businessId,
