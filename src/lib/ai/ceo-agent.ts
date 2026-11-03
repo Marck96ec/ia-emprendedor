@@ -545,7 +545,16 @@ acción. Antes de diseñar los campos:
 3. usa repeatable_group cuando la acción exige múltiples elementos;
 4. configura min_items y max_items cuando el criterio fija una cantidad;
 5. no permitas que una acción pueda marcarse como completada con menos
-   evidencia que la exigida por su success_metric.
+   evidencia que la exigida por su success_metric;
+6. todo repeatable_group que demuestre una cantidad debe ser required: true;
+7. "al menos N" usa min_items: N sin fijar max_items en N; una cantidad
+   exacta usa min_items y max_items iguales;
+8. las unidades de tiempo, dinero o medida ("48 horas", "2 semanas",
+   "100 dólares") no son elementos que se registren uno por uno;
+9. si la cantidad supera 10 elementos, no pidas cada uno: usa un campo number
+   obligatorio con min igual a la cantidad (por ejemplo contacted_count) y un
+   repeatable_group obligatorio con min_items: 3 como muestra representativa
+   de los resultados observados.
 
 Ejemplos de cardinalidad:
 
@@ -561,6 +570,12 @@ cada ajuste puede capturar pattern, decision, expected_effect y confidence.
 
 Action: "Revisar varios clientes recientes."
 Correcto: clients como repeatable_group con min_items >= 2.
+
+Action: "Contactar 20 clientes inactivos."
+Success metric: "20 clientes contactados y respuestas registradas."
+Correcto: contacted_count como number obligatorio con min: 20 y responses
+como repeatable_group obligatorio con min_items: 3 y max_items: 10, donde
+cada elemento captura customer_type, response y next_step.
 
 No inventes cantidades si el success_metric no las especifica. No uses siempre
 3, 5 o 10. Usa un criterio razonable: "observar primeras señales" puede

@@ -6,7 +6,7 @@ import { useFormStatus } from "react-dom";
 
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
-import { DynamicActionCompletionForm } from "@/components/dynamic-action-completion-form";
+import { ActionCompletionDialog } from "@/components/action-completion-dialog";
 import { getActionCaptureSchema } from "@/lib/action-capture";
 import type { DashboardAction, DashboardWeeklyReview } from "@/lib/dashboard-types";
 
@@ -70,6 +70,11 @@ export function ActionDetailPanel({
   nextWeekNumber,
 }: ActionDetailPanelProps) {
   const [completionMode, setCompletionMode] = useState<"capture" | "result" | null>(null);
+
+  // Si la acción dejó de estar pendiente (guardado o semana cerrada), la captura ya no aplica.
+  if (completionMode === "capture" && (action?.status !== "pending" || reviewed)) {
+    setCompletionMode(null);
+  }
 
   if (!action) {
     return (
@@ -189,25 +194,15 @@ export function ActionDetailPanel({
           </Link>
         )}
       </div>
-      {completionMode && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="completion-dialog-title">
-          <div className="max-h-[100dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:max-h-[90vh] sm:max-w-2xl sm:rounded-2xl sm:p-6">
-            <p id="completion-dialog-title" className="eyebrow mb-4">Resultado de la acción</p>
-            <DynamicActionCompletionForm
-              captureSchema={captureSchema}
-              initialData={action.completion_data ?? undefined}
-              readOnly={completionMode === "result"}
-              onCancel={() => setCompletionMode(null)}
-              onSubmit={(data) => {
-                const formData = new FormData();
-                formData.set("action_id", action.id);
-                formData.set("completion_data", JSON.stringify(data));
-                void updateWeeklyActionStatus(formData);
-              }}
-            />
-          </div>
-        </div>
-      )}
+      <ActionCompletionDialog
+        open={completionMode !== null}
+        onClose={() => setCompletionMode(null)}
+        actionId={action.id}
+        captureSchema={captureSchema}
+        action={updateWeeklyActionStatus}
+        initialData={action.completion_data ?? undefined}
+        readOnly={completionMode === "result"}
+      />
     </section>
   );
 }

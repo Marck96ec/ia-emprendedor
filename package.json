@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/action-capture.test.js .test-dist/tests/action-deliverables.test.js .test-dist/tests/ceo-plan-output-schema.test.js .test-dist/tests/dashboard-ux.test.js .test-dist/tests/external-evidence.test.js .test-dist/tests/onboarding-validation.test.js .test-dist/tests/supabase-ceo-plan-rpc.integration.test.js"
+    "test": "node -e \"require('fs').rmSync('.test-dist',{recursive:true,force:true})\" && tsc -p tsconfig.test.json && node --require ./.test-dist/tests/support/module-aliases.js --test \".test-dist/tests/**/*.test.js\""
   },
   "dependencies": {
     "@openai/agents": "^0.16.1",
@@ -23,11 +23,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/jsdom": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "jsdom": "^30.1.3",
     "supabase": "^2.113.0",
     "tailwindcss": "^4",
     "typescript": "^5"

@@ -151,6 +151,7 @@ export function WeeklyActionBoard({
           ← Volver al plan
         </button>
         <ActionDetailPanel
+          key={selectedAction?.id ?? "empty"}
           action={selectedAction}
           recommended={selectedAction?.id === firstPendingAction?.id}
           reviewed={reviewed}

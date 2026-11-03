@@ -13,14 +13,9 @@ export function ActionCompletionForm({
 }) {
   return (
     <DynamicActionCompletionForm
+      actionId={actionId}
       captureSchema={captureSchema}
-      onCancel={() => window.history.back()}
-      onSubmit={(data) => {
-        const formData = new FormData();
-        formData.set("action_id", actionId);
-        formData.set("completion_data", JSON.stringify(data));
-        void updateWeeklyActionStatus(formData);
-      }}
+      action={updateWeeklyActionStatus}
     />
   );
 }

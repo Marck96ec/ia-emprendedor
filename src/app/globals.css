@@ -45,6 +45,8 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   line-height: 1.5;
   min-height: 100vh;
+  /* Los textos de la IA pueden traer URLs o palabras largas: nunca deben forzar scroll horizontal. */
+  overflow-wrap: anywhere;
   text-rendering: optimizeLegibility;
 }
 

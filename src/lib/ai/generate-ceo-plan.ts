@@ -310,6 +310,7 @@ ${retryInstructions}
           "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
           "El output del CEO IA incumple reglas de coherencia del plan.",
           getIssuePaths(businessRules.error),
+          getIssueMessages(businessRules.error),
         );
       }
 

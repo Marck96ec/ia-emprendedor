@@ -38,5 +38,42 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Sin SUPABASE_LOCAL_TESTS las pruebas de integración se omiten.
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
+
+  # Supabase efímero dentro del runner: aplica todas las migraciones a una base
+  # nueva y vacía. No usa secretos ni se enlaza a ningún proyecto remoto, y las
+  # pruebas rechazan cualquier URL que no sea localhost.
+  db-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Setup npm
+        run: npm install -g npm@11.19.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start ephemeral Supabase
+        run: npx supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Test against ephemeral Supabase
+        env:
+          SUPABASE_LOCAL_TESTS: "1"
+        run: npm test
+
+      - name: Stop ephemeral Supabase
+        if: always()
+        run: npx supabase stop --no-backup

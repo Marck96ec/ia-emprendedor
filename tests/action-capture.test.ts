@@ -1,13 +1,154 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
   ActionCaptureSchema,
   GENERIC_ACTION_CAPTURE_SCHEMA,
+  getCountRequirements,
+  normalizeCompletionData,
   parsePersistedActionCaptureSchema,
   validateActionCaptureSemantics,
   validateActionCompletion,
+  type ActionCapture,
 } from "../src/lib/action-capture";
+
+type CompletionFixtures = {
+  schemas: Record<string, unknown>;
+  schema_validity: Array<{ name: string; schema?: string; inline?: unknown; valid: boolean }>;
+  completions: Array<{ name: string; schema: string; data: unknown; valid: boolean; issue_paths: string[] }>;
+};
+
+// Los mismos casos se ejecutan contra PostgreSQL en supabase-action-completion.integration.test.ts.
+const fixtures = JSON.parse(
+  readFileSync(join(process.cwd(), "tests/fixtures/action-completion-cases.json"), "utf8"),
+) as CompletionFixtures;
+
+function fixtureSchema(name: string): unknown {
+  return name === "generic" ? GENERIC_ACTION_CAPTURE_SCHEMA : fixtures.schemas[name];
+}
+
+function validateLikeDatabase(schema: unknown, data: unknown): string[] {
+  const parsed = ActionCaptureSchema.safeParse(schema);
+  if (!parsed.success) return [""];
+  const result = validateActionCompletion(parsed.data, data);
+  return result.success ? [] : result.issues.map((issue) => issue.path).sort();
+}
+
+test("shared fixtures: schema validity matches the database contract", () => {
+  for (const testCase of fixtures.schema_validity) {
+    const schema = testCase.inline ?? fixtureSchema(testCase.schema!);
+    assert.equal(ActionCaptureSchema.safeParse(schema).success, testCase.valid, testCase.name);
+  }
+});
+
+test("shared fixtures: completion issues match the database contract", () => {
+  for (const testCase of fixtures.completions) {
+    const paths = validateLikeDatabase(fixtureSchema(testCase.schema), testCase.data);
+    assert.deepEqual(paths, [...testCase.issue_paths].sort(), testCase.name);
+    assert.equal(paths.length === 0, testCase.valid, testCase.name);
+  }
+});
+
+test("completion payloads above the size limit are rejected", () => {
+  const result = validateActionCompletion(GENERIC_ACTION_CAPTURE_SCHEMA, {
+    result: "x".repeat(300_000),
+    learning: "Aprendizaje",
+  });
+  assert.equal(result.success, false);
+  if (!result.success) assert.deepEqual(result.issues.map((issue) => issue.path), [""]);
+});
+
+test("normalization trims answers, drops empty optional values and keeps unknown keys for rejection", () => {
+  const schema = fixtures.schemas.contacts as ActionCapture;
+  const normalized = normalizeCompletionData(schema, {
+    contacts: [
+      { name: "  Ana  ", outcome: "interested", notes: "   " },
+      { name: "Luis", outcome: "not_interested", notes: "" },
+      { name: "Eva", outcome: "interested" },
+    ],
+    injected: "x",
+  });
+
+  assert.deepEqual(normalized, {
+    contacts: [
+      { name: "Ana", outcome: "interested" },
+      { name: "Luis", outcome: "not_interested" },
+      { name: "Eva", outcome: "interested" },
+    ],
+    injected: "x",
+  });
+  const validation = validateActionCompletion(schema, normalized);
+  assert.equal(validation.success, false);
+  if (!validation.success) assert.deepEqual(validation.issues.map((issue) => issue.path), ["injected"]);
+});
+
+function groupSchema(group: { min_items?: number; max_items?: number; required?: boolean }): ActionCapture {
+  return {
+    version: 1,
+    capture_type: "group_capture",
+    title: "Evidencia",
+    fields: [{
+      id: "items",
+      type: "repeatable_group",
+      label: "Elemento",
+      required: group.required ?? true,
+      min_items: group.min_items,
+      max_items: group.max_items,
+      fields: [{ id: "detail", type: "textarea", label: "Detalle", required: true }],
+    }],
+    completion_rule: { type: "all_required_fields_valid" },
+  };
+}
+
+function semantics(text: string, schema: ActionCapture) {
+  return validateActionCaptureSemantics(
+    { action: text, success_metric: "Resultado registrado", expected_result: "Aprendizaje útil" },
+    schema,
+  ).success;
+}
+
+test("cardinality ignores time, money and measurement units", () => {
+  assert.deepEqual(getCountRequirements("Responder en 48 horas a los leads"), []);
+  assert.deepEqual(getCountRequirements("Medir durante 2 semanas"), []);
+  assert.deepEqual(getCountRequirements("Invertir 100 dólares en anuncios"), []);
+  assert.deepEqual(getCountRequirements("Vender todos los productos"), []);
+  assert.deepEqual(getCountRequirements("Atender hasta 3 clientes"), []);
+  assert.equal(semantics("Responder en 48 horas a los leads", GENERIC_ACTION_CAPTURE_SCHEMA), true);
+  assert.equal(semantics("Probar el anuncio durante 2 semanas con 100 dólares", GENERIC_ACTION_CAPTURE_SCHEMA), true);
+});
+
+test("cardinality keeps real count requirements, including later matches in the text", () => {
+  assert.deepEqual(getCountRequirements("En 48 horas contactar 5 clientes"), [{ minimum: 5, exact: true }]);
+  assert.equal(semantics("En 48 horas contactar 5 clientes", GENERIC_ACTION_CAPTURE_SCHEMA), false);
+  assert.equal(semantics("En 48 horas contactar 5 clientes", groupSchema({ min_items: 5, max_items: 5 })), true);
+  assert.equal(semantics("Definir 3 reglas", groupSchema({ min_items: 3, max_items: 5 })), false, "Una cantidad exacta no admite más elementos");
+});
+
+test("'al menos N' is a minimum, not an exact count", () => {
+  assert.deepEqual(getCountRequirements("Conseguir al menos 5 respuestas"), [{ minimum: 5, exact: false }]);
+  assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 5 })), true);
+  assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 5, max_items: 8 })), true);
+  assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 4, max_items: 8 })), false);
+  assert.deepEqual(getCountRequirements("Hablar con más de 3 proveedores"), [{ minimum: 4, exact: false }]);
+});
+
+test("count evidence must be required so it cannot be skipped", () => {
+  assert.equal(semantics("Definir 3 reglas", groupSchema({ min_items: 3, max_items: 3, required: false })), false);
+});
+
+test("counts above ten require a proportional capture instead of an impossible form", () => {
+  const proportional = fixtures.schemas.proportional as ActionCapture;
+  assert.equal(semantics("Llamar a 20 clientes", proportional), true);
+  assert.equal(semantics("Llamar a 20 clientes", groupSchema({ min_items: 10, max_items: 10 })), false);
+  assert.equal(semantics("Llamar a 25 clientes", proportional), false, "El mínimo del contador debe cubrir la meta");
+  assert.equal(semantics("Llamar a 20 clientes", {
+    ...proportional,
+    fields: [proportional.fields[0]],
+  }), false, "La cantidad sola no demuestra resultados observados");
+  assert.equal(semantics("Llamar a veinte clientes", proportional), true);
+});
 
 const validSchema = {
   version: 1 as const,

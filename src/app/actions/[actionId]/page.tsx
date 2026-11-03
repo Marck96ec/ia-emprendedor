@@ -109,7 +109,7 @@ export default async function ActionWorkspacePage({
   return (
     <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <Link href="/dashboard" className="link-button text-sm">Volver a mi semana</Link>
+        <Link href="/dashboard" className="link-button inline-flex min-h-11 items-center text-sm">Volver a mi semana</Link>
 
         <header className="mt-8 border-b border-slate-200 pb-7">
           <p className="badge-chip">Trabajar con IA · Acción {action.sequence}</p>
@@ -227,13 +227,18 @@ export default async function ActionWorkspacePage({
                 </form>
               </div>
             )}
-            {action.status === "pending" && !isClosed && (
-              <section className="surface-card mt-6 rounded-[2rem] p-6 sm:p-8">
+            {action.status === "pending" && !isClosed && result?.status === "approved" && (
+              <section className="surface-card mt-6 rounded-[2rem] p-4 sm:p-8">
                 <ActionCompletionForm
                   actionId={action.id}
                   captureSchema={getActionCaptureSchema(action.capture_schema)}
                 />
               </section>
+            )}
+            {action.status === "pending" && !isClosed && result?.status === "draft" && (
+              <p className="soft-status mt-6">
+                Aprueba el entregable para registrar el resultado de esta acción.
+              </p>
             )}
           </>
         )}
