@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 import type { DashboardAction } from "@/lib/dashboard-types";
@@ -92,7 +94,7 @@ export function NextActionCard({
             {ctaLabel}
           </Link>
         ) : (
-          <a href="#tablero-semanal" className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto cockpit:min-h-10">
+          <a href={`#tablero-semanal?action=${action.id}`} className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto cockpit:min-h-10">
             {ctaLabel}
           </a>
         )}

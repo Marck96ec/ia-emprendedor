@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { DashboardAction, DashboardWeeklyReview } from "@/lib/dashboard-types";
 import { ActionCard } from "@/components/action-card";
@@ -42,6 +42,24 @@ export function WeeklyActionBoard({
     (action) => action.status === "pending" && action.id !== firstPendingAction?.id,
   );
   const completedActions = actions.filter((action) => action.status === "completed");
+
+  useEffect(() => {
+    function focusActionFromHash() {
+      const actionId = new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("action");
+      if (!actionId || !actions.some((action) => action.id === actionId)) return;
+
+      setSelectedActionId(actionId);
+      setMobileView("detail");
+      document.getElementById("tablero-semanal")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+    focusActionFromHash();
+    window.addEventListener("hashchange", focusActionFromHash);
+    return () => window.removeEventListener("hashchange", focusActionFromHash);
+  }, [actions]);
 
   function selectAction(actionId: string) {
     setSelectedActionId(actionId);

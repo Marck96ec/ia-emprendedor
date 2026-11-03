@@ -139,12 +139,21 @@ test("hero shows the decision, recommendation, human certainty and decision link
 test("next action card is the protagonist and handles last action and weekly celebration", () => {
   const card = source("src/components/next-action-card.tsx");
 
+  assert.match(card, /href=\{`#tablero-semanal\?action=\$\{action\.id\}`\}/);
   assert.match(card, /Siguiente paso/);
   assert.match(card, /Última acción de la semana/);
   assert.match(card, /Tiempo estimado/);
   assert.match(card, /Empezar esta acción/);
   assert.match(card, /Plan ejecutado\./);
   assert.match(card, /Revisar mi semana/);
+});
+
+test("mobile next action CTA focuses the selected action in the weekly board", () => {
+  const board = source("src/components/weekly-action-board.tsx");
+
+  assert.match(board, /URLSearchParams/);
+  assert.match(board, /setSelectedActionId\(actionId\)/);
+  assert.match(board, /setMobileView\("detail"\)/);
 });
 
 test("evidence renders only inside the drawer and keeps its compact summary and counter evidence", () => {
