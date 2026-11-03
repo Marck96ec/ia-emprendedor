@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Cockpit de una sola vista: requiere ancho y alto reales, no solo "desktop". */
+@custom-variant cockpit (@media (min-width: 1100px) and (min-height: 680px));
+@custom-variant short (@media (max-height: 820px));
+@custom-variant compact (@media (max-height: 940px));
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -17,7 +22,7 @@
   --error: #b91c1c;
   --warning-bg: #fff7ed;
   --warning: #9a5b00;
-  --shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
 }
 
 @theme inline {
@@ -40,6 +45,8 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   line-height: 1.5;
   min-height: 100vh;
+  /* Los textos de la IA pueden traer URLs o palabras largas: nunca deben forzar scroll horizontal. */
+  overflow-wrap: anywhere;
   text-rendering: optimizeLegibility;
 }
 
@@ -92,7 +99,7 @@ select {
 .ambient-shell::before {
   content: "";
   position: absolute;
-  inset: -24% -10% auto -10%;
+  inset: -24% 0 auto 0;
   height: 32rem;
   pointer-events: none;
   border-radius: 9999px;
@@ -259,6 +266,131 @@ a:focus-visible {
   border-radius: inherit;
   background: linear-gradient(90deg, #111827 0%, #334155 100%);
   transition: width 200ms ease;
+}
+
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Sistema tipográfico: una familia, pesos 400/500/600. */
+.eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+}
+
+.accent-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.875rem;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+}
+
+.accent-button:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(22, 163, 74, 0);
+  }
+}
+
+.anim-pop {
+  animation: pop-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.anim-rise {
+  animation: rise-in 300ms ease-out both;
+}
+
+.anim-glow {
+  animation: soft-glow 900ms ease-out 1;
+}
+
+dialog[open],
+details[open] > .details-body {
+  animation: rise-in 200ms ease-out both;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+dialog.drawer[open] {
+  animation: slide-in-right 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .anim-pop,
+  .anim-rise,
+  .anim-glow,
+  dialog[open],
+  dialog.drawer[open],
+  details[open] > .details-body {
+    animation: none;
+  }
+
+  .progress-fill,
+  .accent-button,
+  .accent-button:hover,
+  .primary-button,
+  .primary-button:hover,
+  .secondary-button,
+  .secondary-button:hover,
+  .ghost-button,
+  .ghost-button:hover {
+    transition: none;
+    transform: none;
+  }
 }
 
 .landing-reveal {

@@ -38,5 +38,67 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Sin SUPABASE_LOCAL_TESTS las pruebas de integración se omiten.
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
+
+  # Supabase efímero dentro del runner: aplica todas las migraciones a una base
+  # nueva y vacía. No usa secretos ni se enlaza a ningún proyecto remoto, y las
+  # pruebas rechazan cualquier URL que no sea localhost.
+  db-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Setup npm
+        run: npm install -g npm@11.19.0
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start ephemeral Supabase
+        run: npx supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      # La base debe ser nueva: todas las migraciones aplicadas y sin datos previos.
+      - name: Verify migrations on a clean database
+        shell: bash
+        run: |
+          expected=$(ls supabase/migrations/*.sql | wc -l)
+          applied=$(docker exec supabase_db_ia-emprendedor psql -U postgres -d postgres -At -c "select count(*) from supabase_migrations.schema_migrations")
+          users=$(docker exec supabase_db_ia-emprendedor psql -U postgres -d postgres -At -c "select count(*) from auth.users")
+          echo "migraciones esperadas=$expected aplicadas=$applied usuarios=$users"
+          test "$applied" -eq "$expected"
+          test "$users" -eq 0
+
+      # Los fixtures se crean dentro de las pruebas con usuarios autenticados.
+      # Falla si alguna prueba falla o se omite.
+      - name: Test against ephemeral Supabase
+        shell: bash
+        env:
+          SUPABASE_LOCAL_TESTS: "1"
+        run: |
+          npm test 2>&1 | tee integration-tests.log
+          grep -Eq "^(ℹ|#) fail 0$" integration-tests.log
+          grep -Eq "^(ℹ|#) skipped 0$" integration-tests.log || { echo "::error::Hay pruebas omitidas en db-integration"; exit 1; }
+
+      - name: Upload integration test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-tests-log
+          path: integration-tests.log
+          retention-days: 7
+
+      - name: Stop ephemeral Supabase
+        if: always()
+        run: npx supabase stop --no-backup

@@ -7,6 +7,7 @@ import { ModelBehaviorError } from "@openai/agents";
 
 import {
   CEOPlanSchema,
+  CEOPlanModelSchema,
   validateCEOPlanBusinessRules,
   type CEOPlan,
 } from "../src/lib/ai/ceo-agent";
@@ -24,6 +25,11 @@ import {
   buildDecisionLearning,
   DecisionLearningSchema,
 } from "../src/lib/decision-learning";
+import {
+  ActionCaptureModelSchema,
+  ActionCaptureSchema,
+  GENERIC_ACTION_CAPTURE_SCHEMA,
+} from "../src/lib/action-capture";
 
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
@@ -115,6 +121,7 @@ const validPlan: CEOPlan = {
     estimated_hours: 1,
     execution_mode: "manual" as const,
     action_type: "generic" as const,
+    capture_schema: GENERIC_ACTION_CAPTURE_SCHEMA,
   })),
 };
 
@@ -140,11 +147,141 @@ const input: GenerateCEOPlanInput = {
   businessKnowledge: { valueProposition: null },
 };
 
+test("usa un model capture schema no recursivo con todos los tipos v1", () => {
+  const base = {
+    id: "field",
+    label: "Campo",
+    description: null,
+    required: true,
+  };
+  const fields = [
+    { ...base, type: "text", placeholder: null, max_length: null },
+    { ...base, id: "long_text", type: "textarea", placeholder: null, max_length: null },
+    { ...base, id: "amount", type: "number", min: null, max: null },
+    { ...base, id: "choice", type: "single_select", options: [] },
+    { ...base, id: "choices", type: "multi_select", min_items: null, max_items: null, options: [] },
+    {
+      ...base,
+      id: "group",
+      type: "repeatable_group",
+      min_items: null,
+      max_items: null,
+      fields: [
+        { ...base, id: "child", type: "text", placeholder: null, max_length: null },
+      ],
+    },
+  ];
+  const capture = {
+    version: 1,
+    capture_type: "evidence",
+    title: "Evidencia",
+    description: null,
+    fields,
+    completion_rule: { type: "all_required_fields_valid" },
+  };
+
+  assert.equal(ActionCaptureModelSchema.safeParse(capture).success, true);
+  assert.equal(ActionCaptureSchema.safeParse(capture).success, false);
+  assert.equal(
+    ActionCaptureModelSchema.safeParse({
+      ...capture,
+      fields: [{
+        ...fields[5],
+        fields: [fields[5]],
+      }],
+    }).success,
+    false,
+  );
+  assert.equal(CEOPlanModelSchema.shape.weekly_plan.element.safeParse({
+    sequence: 1,
+    action: "Acción",
+    objective: "Objetivo",
+    reason: "Razón",
+    success_metric: "Métrica",
+    expected_result: "Resultado",
+    role_recommendation: "execute",
+    role_reason: "Validación directa.",
+    estimated_hours: 1,
+    execution_mode: "manual",
+    action_type: "generic",
+    capture_schema: capture,
+  }).success, true);
+});
+
 test("acepta un plan estructuralmente válido de tres acciones", () => {
   const parsed = CEOPlanSchema.safeParse(validPlan);
 
   assert.equal(parsed.success, true);
   assert.equal(parsed.success && parsed.data.weekly_plan.length, 3);
+});
+
+test("exige capture_schema en acciones nuevas y reintenta un schema inválido", async () => {
+  const missingSchema = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((action) => {
+      const { capture_schema, ...withoutCaptureSchema } = action;
+      void capture_schema;
+      return withoutCaptureSchema;
+    }),
+  };
+  assert.equal(CEOPlanSchema.safeParse(missingSchema).success, false);
+
+  process.env.OPENAI_API_KEY = "test-key";
+  let attempts = 0;
+  const result = await generateCEOPlan(input, async () => {
+    attempts += 1;
+    return {
+      finalOutput: attempts === 1
+        ? missingSchema
+        : validPlan,
+    };
+  });
+
+  assert.equal(attempts, 2);
+  assert.ok(result.weekly_plan.every((action) => action.capture_schema));
+});
+
+test("reintenta un child field inválido con paths y mensajes estructurales", async () => {
+  const invalidChildPlan = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((action, index) => index === 1
+      ? {
+        ...action,
+        capture_schema: {
+          ...action.capture_schema,
+          fields: [
+            ...action.capture_schema.fields,
+            {
+              id: "items",
+              type: "repeatable_group" as const,
+              label: "Items",
+              required: true,
+              fields: [{ id: "Product Name", type: "text" as const, label: "Product", required: true }],
+            },
+          ],
+        },
+      }
+      : action),
+  };
+  const invalidSchema = CEOPlanSchema.safeParse(invalidChildPlan);
+  assert.equal(invalidSchema.success, false);
+  if (!invalidSchema.success) {
+    assert.ok(invalidSchema.error.issues.some((issue) => issue.path.join(".").includes("fields.2.fields.0.id")));
+  }
+
+  process.env.OPENAI_API_KEY = "test-key";
+  let attempts = 0;
+  let retryPrompt = "";
+  const result = await generateCEOPlan(input, async (_agent, prompt) => {
+    attempts += 1;
+    retryPrompt = prompt;
+    return { finalOutput: attempts === 1 ? invalidChildPlan : validPlan };
+  });
+
+  assert.equal(attempts, 2);
+  assert.match(retryPrompt, /id must match \^\[a-z\]\[a-z0-9_\]\*\$/);
+  assert.match(retryPrompt, /Product Name|pattern/);
+  assert.ok(result.weekly_plan.every((action) => action.capture_schema));
 });
 
 test("acepta entre una y cinco acciones y rechaza cantidades fuera del rango", () => {
@@ -381,6 +518,73 @@ test("rechaza confidence high cuando hay múltiples unknowns", () => {
   );
 });
 
+test("valida la coherencia entre confidence y cantidad de unknowns", () => {
+  const withDiagnosis = (
+    confidence: "low" | "medium" | "high",
+    unknowns: string[],
+  ) => ({
+    ...validPlan,
+    strategic_diagnosis: {
+      ...validPlan.strategic_diagnosis,
+      confidence,
+      unknowns,
+    },
+  });
+
+  const cases: Array<[
+    "low" | "medium" | "high",
+    string[],
+    boolean,
+  ]> = [
+    ["high", [], true],
+    ["high", ["A"], true],
+    ["high", ["A", "B"], false],
+    ["medium", ["A", "B", "C"], true],
+    ["low", ["A", "B", "C"], true],
+  ];
+
+  for (const [confidence, unknowns, expected] of cases) {
+    assert.equal(
+      validateCEOPlanBusinessRules(withDiagnosis(confidence, unknowns)).success,
+      expected,
+      `${confidence} con ${unknowns.length} unknowns`,
+    );
+  }
+});
+
+test("reintenta high con múltiples unknowns y acepta medium conservándolos", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const unknowns = ["A", "B"];
+  const prompts: string[] = [];
+  let attempts = 0;
+
+  const result = await generateCEOPlan(input, async (_agent, prompt) => {
+    attempts += 1;
+    prompts.push(prompt);
+
+    return {
+      finalOutput: {
+        ...validPlan,
+        strategic_diagnosis: {
+          ...validPlan.strategic_diagnosis,
+          confidence: attempts === 1 ? "high" : "medium",
+          unknowns,
+        },
+      },
+    };
+  });
+
+  assert.equal(attempts, 2);
+  assert.equal(result.strategic_diagnosis.confidence, "medium");
+  assert.deepEqual(result.strategic_diagnosis.unknowns, unknowns);
+  assert.equal(prompts[0].includes("Campos que fallaron validación"), false);
+  assert.match(
+    prompts[1],
+    /Campos que fallaron validación:\s+strategic_diagnosis\.unknowns/,
+  );
+  assert.match(prompts[1], /reduce confidence a medium o low/);
+});
+
 test("documenta que la validez semántica de una decisión requiere evaluación del modelo", () => {
   const taskLikeDecision = {
     ...validPlan,
@@ -435,6 +639,7 @@ test("mantiene los tres tipos y detecta más de una acción asistida", () => {
         estimated_hours: 1,
         execution_mode: "ai_assisted",
         action_type: "value_proposition",
+        capture_schema: GENERIC_ACTION_CAPTURE_SCHEMA,
       },
       {
         sequence: 5,
@@ -448,6 +653,7 @@ test("mantiene los tres tipos y detecta más de una acción asistida", () => {
         estimated_hours: 1,
         execution_mode: "ai_assisted",
         action_type: "commercial_messages",
+        capture_schema: GENERIC_ACTION_CAPTURE_SCHEMA,
       },
     ],
   };
@@ -806,6 +1012,10 @@ test("transporta el aprendizaje de la semana anterior al siguiente prompt", asyn
           roleReason: action.role_reason,
           estimatedHours: action.estimated_hours,
           status: "completed",
+          completionData: {
+            participants_count: 3,
+            team_consensus: "medium",
+          },
         })),
         review: {
           whatWorked: "Las conversaciones fueron claras.",
@@ -838,6 +1048,7 @@ test("transporta el aprendizaje de la semana anterior al siguiente prompt", asyn
 
   assert.match(prompt, /La reactivación no es el canal con mejor señal/);
   assert.match(prompt, /hypothesisStatus/);
+  assert.match(prompt, /participants_count/);
 });
 
 test("decision_learning solo acepta estados de hipótesis válidos", () => {

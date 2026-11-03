@@ -95,6 +95,11 @@ estrategias y negocios comparables, no una búsqueda literal de la oración. Bus
 señales que apoyen la dirección y señales que la cuestionen. Devuelve entre cero y
 tres fuentes de calidad, sin rellenar una cuota. La síntesis debe explicar si la
 evidencia es favorable, mixta, contradictoria o insuficiente.
+
+Además de buscar evidencia a favor, realiza al menos una búsqueda o línea de
+investigación que intente encontrar evidencia que contradiga, limite o cuestione la
+decisión. No inventes evidencia contraria. Si no encuentras evidencia suficientemente
+comparable, indícalo explícitamente en counter_evidence.
 `;
 }
 
@@ -113,5 +118,10 @@ function insufficientEvidence(reason: string): ExternalEvidence {
     items: [],
     synthesis: reason,
     confidence: "low",
+    counter_evidence: {
+      searched: false,
+      found: false,
+      summary: "No se investigó evidencia contraria porque la búsqueda web no se completó.",
+    },
   };
 }

@@ -1,0 +1,255 @@
+{
+  "description": "Casos compartidos entre validateActionCompletion (TypeScript) y validate_action_completion_data (PostgreSQL). Cada caso debe producir el mismo resultado y las mismas rutas de error en ambos validadores.",
+  "schemas": {
+    "pricing": {
+      "version": 1,
+      "capture_type": "pricing_experiment",
+      "title": "Resultado del experimento de precio",
+      "fields": [
+        { "id": "price", "type": "number", "label": "Precio probado", "required": true, "min": 1, "max": 100 },
+        {
+          "id": "signals",
+          "type": "multi_select",
+          "label": "Señales observadas",
+          "required": true,
+          "min_items": 1,
+          "max_items": 2,
+          "options": [
+            { "value": "interest", "label": "Interés" },
+            { "value": "purchase", "label": "Compra" },
+            { "value": "refusal", "label": "Rechazo" }
+          ]
+        },
+        { "id": "comment", "type": "text", "label": "Comentario", "required": false, "max_length": 20 }
+      ],
+      "completion_rule": { "type": "all_required_fields_valid" }
+    },
+    "contacts": {
+      "version": 1,
+      "capture_type": "customer_contacts",
+      "title": "Clientes contactados",
+      "fields": [
+        {
+          "id": "contacts",
+          "type": "repeatable_group",
+          "label": "Contacto",
+          "required": true,
+          "min_items": 3,
+          "max_items": 3,
+          "fields": [
+            { "id": "name", "type": "text", "label": "Nombre del cliente", "required": true },
+            {
+              "id": "outcome",
+              "type": "single_select",
+              "label": "Resultado",
+              "required": true,
+              "options": [
+                { "value": "interested", "label": "Interesado" },
+                { "value": "not_interested", "label": "No interesado" }
+              ]
+            },
+            { "id": "notes", "type": "textarea", "label": "Notas", "required": false }
+          ]
+        }
+      ],
+      "completion_rule": { "type": "all_required_fields_valid" }
+    },
+    "proportional": {
+      "version": 1,
+      "capture_type": "outreach_volume",
+      "title": "Contactos realizados",
+      "fields": [
+        { "id": "contacted_count", "type": "number", "label": "Clientes contactados", "required": true, "min": 20 },
+        {
+          "id": "sample",
+          "type": "repeatable_group",
+          "label": "Respuesta representativa",
+          "required": true,
+          "min_items": 3,
+          "max_items": 10,
+          "fields": [
+            { "id": "observation", "type": "textarea", "label": "Qué respondió", "required": true }
+          ]
+        }
+      ],
+      "completion_rule": { "type": "all_required_fields_valid" }
+    },
+    "invalid_empty_fields": {
+      "version": 1,
+      "capture_type": "broken",
+      "title": "Esquema roto",
+      "fields": [],
+      "completion_rule": { "type": "all_required_fields_valid" }
+    }
+  },
+  "schema_validity": [
+    { "name": "pricing es válido", "schema": "pricing", "valid": true },
+    { "name": "contacts es válido", "schema": "contacts", "valid": true },
+    { "name": "proportional es válido", "schema": "proportional", "valid": true },
+    { "name": "sin fields", "schema": "invalid_empty_fields", "valid": false },
+    {
+      "name": "IDs duplicados",
+      "inline": {
+        "version": 1, "capture_type": "dup", "title": "Duplicados",
+        "fields": [
+          { "id": "a", "type": "text", "label": "A", "required": true },
+          { "id": "a", "type": "text", "label": "B", "required": true }
+        ],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "ID con guiones",
+      "inline": {
+        "version": 1, "capture_type": "bad_id", "title": "ID inválido",
+        "fields": [{ "id": "bad-id", "type": "text", "label": "A", "required": true }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "repeatable_group anidado",
+      "inline": {
+        "version": 1, "capture_type": "nested", "title": "Anidado",
+        "fields": [{
+          "id": "outer", "type": "repeatable_group", "label": "Outer", "required": true,
+          "fields": [{
+            "id": "inner", "type": "repeatable_group", "label": "Inner", "required": true,
+            "fields": [{ "id": "name", "type": "text", "label": "Nombre", "required": true }]
+          }]
+        }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "min mayor que max",
+      "inline": {
+        "version": 1, "capture_type": "range", "title": "Rango",
+        "fields": [{ "id": "value", "type": "number", "label": "Valor", "required": true, "min": 10, "max": 1 }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "opciones duplicadas",
+      "inline": {
+        "version": 1, "capture_type": "options", "title": "Opciones",
+        "fields": [{
+          "id": "choice", "type": "single_select", "label": "Opción", "required": true,
+          "options": [{ "value": "a", "label": "A" }, { "value": "a", "label": "A otra vez" }]
+        }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "select sin opciones",
+      "inline": {
+        "version": 1, "capture_type": "options", "title": "Opciones",
+        "fields": [{ "id": "choice", "type": "single_select", "label": "Opción", "required": true, "options": [] }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "versión no soportada",
+      "inline": {
+        "version": 2, "capture_type": "future", "title": "Futuro",
+        "fields": [{ "id": "a", "type": "text", "label": "A", "required": true }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "capture_type con espacios",
+      "inline": {
+        "version": 1, "capture_type": "Bad Type", "title": "Tipo",
+        "fields": [{ "id": "a", "type": "text", "label": "A", "required": true }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "required ausente",
+      "inline": {
+        "version": 1, "capture_type": "missing_required", "title": "Sin required",
+        "fields": [{ "id": "a", "type": "text", "label": "A" }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "label en blanco",
+      "inline": {
+        "version": 1, "capture_type": "blank_label", "title": "Etiqueta",
+        "fields": [{ "id": "a", "type": "text", "label": "   ", "required": true }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "grupo sin campos hijos",
+      "inline": {
+        "version": 1, "capture_type": "empty_group", "title": "Grupo vacío",
+        "fields": [{ "id": "items", "type": "repeatable_group", "label": "Items", "required": true, "fields": [] }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "max_items fuera de límite",
+      "inline": {
+        "version": 1, "capture_type": "too_many", "title": "Demasiados",
+        "fields": [{
+          "id": "items", "type": "repeatable_group", "label": "Items", "required": true, "max_items": 11,
+          "fields": [{ "id": "name", "type": "text", "label": "Nombre", "required": true }]
+        }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    },
+    {
+      "name": "tipo de campo desconocido",
+      "inline": {
+        "version": 1, "capture_type": "unknown_type", "title": "Tipo desconocido",
+        "fields": [{ "id": "file", "type": "file_upload", "label": "Archivo", "required": true }],
+        "completion_rule": { "type": "all_required_fields_valid" }
+      },
+      "valid": false
+    }
+  ],
+  "completions": [
+    { "name": "objeto vacío con campos obligatorios", "schema": "pricing", "data": {}, "valid": false, "issue_paths": ["price", "signals"] },
+    { "name": "evidencia válida", "schema": "pricing", "data": { "price": 20, "signals": ["interest"] }, "valid": true, "issue_paths": [] },
+    { "name": "decimales permitidos", "schema": "pricing", "data": { "price": 12.5, "signals": ["purchase"] }, "valid": true, "issue_paths": [] },
+    { "name": "número como texto", "schema": "pricing", "data": { "price": "20", "signals": ["interest"] }, "valid": false, "issue_paths": ["price"] },
+    { "name": "número bajo el mínimo", "schema": "pricing", "data": { "price": 0, "signals": ["interest"] }, "valid": false, "issue_paths": ["price"] },
+    { "name": "número sobre el máximo", "schema": "pricing", "data": { "price": 100.5, "signals": ["interest"] }, "valid": false, "issue_paths": ["price"] },
+    { "name": "obligatorio nulo", "schema": "pricing", "data": { "price": null, "signals": ["interest"] }, "valid": false, "issue_paths": ["price"] },
+    { "name": "opción no permitida", "schema": "pricing", "data": { "price": 20, "signals": ["unknown"] }, "valid": false, "issue_paths": ["signals"] },
+    { "name": "opciones repetidas", "schema": "pricing", "data": { "price": 20, "signals": ["interest", "interest"] }, "valid": false, "issue_paths": ["signals"] },
+    { "name": "demasiadas opciones", "schema": "pricing", "data": { "price": 20, "signals": ["interest", "purchase", "refusal"] }, "valid": false, "issue_paths": ["signals"] },
+    { "name": "multi_select como texto", "schema": "pricing", "data": { "price": 20, "signals": "interest" }, "valid": false, "issue_paths": ["signals"] },
+    { "name": "clave desconocida", "schema": "pricing", "data": { "price": 20, "signals": ["interest"], "hacked": true }, "valid": false, "issue_paths": ["hacked"] },
+    { "name": "texto opcional demasiado largo", "schema": "pricing", "data": { "price": 20, "signals": ["interest"], "comment": "123456789012345678901" }, "valid": false, "issue_paths": ["comment"] },
+    { "name": "texto opcional vacío", "schema": "pricing", "data": { "price": 20, "signals": ["interest"], "comment": "" }, "valid": true, "issue_paths": [] },
+    { "name": "texto con tildes dentro del límite", "schema": "pricing", "data": { "price": 20, "signals": ["interest"], "comment": "Señal clara, ñandú á" }, "valid": true, "issue_paths": [] },
+    { "name": "grupo con menos elementos de los exigidos", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested" }] }, "valid": false, "issue_paths": ["contacts"] },
+    { "name": "grupo con más elementos de los permitidos", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested" }, { "name": "Luis", "outcome": "interested" }, { "name": "Eva", "outcome": "interested" }, { "name": "Leo", "outcome": "interested" }] }, "valid": false, "issue_paths": ["contacts"] },
+    { "name": "grupo completo y válido", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested", "notes": "Quiere precio" }, { "name": "Luis", "outcome": "not_interested" }, { "name": "Eva", "outcome": "interested" }] }, "valid": true, "issue_paths": [] },
+    { "name": "hijo obligatorio vacío", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested" }, { "name": "  ", "outcome": "interested" }, { "name": "Eva", "outcome": "interested" }] }, "valid": false, "issue_paths": ["contacts.1.name"] },
+    { "name": "hijo con opción no permitida", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "maybe" }, { "name": "Luis", "outcome": "interested" }, { "name": "Eva", "outcome": "interested" }] }, "valid": false, "issue_paths": ["contacts.0.outcome"] },
+    { "name": "elemento que no es objeto", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested" }, { "name": "Luis", "outcome": "interested" }, "Eva"] }, "valid": false, "issue_paths": ["contacts.2"] },
+    { "name": "clave desconocida dentro del grupo", "schema": "contacts", "data": { "contacts": [{ "name": "Ana", "outcome": "interested", "extra": 1 }, { "name": "Luis", "outcome": "interested" }, { "name": "Eva", "outcome": "interested" }] }, "valid": false, "issue_paths": ["contacts.0.extra"] },
+    { "name": "grupo como objeto", "schema": "contacts", "data": { "contacts": { "name": "Ana" } }, "valid": false, "issue_paths": ["contacts"] },
+    { "name": "esquema genérico vacío", "schema": "generic", "data": {}, "valid": false, "issue_paths": ["learning", "result"] },
+    { "name": "esquema genérico solo con espacios", "schema": "generic", "data": { "result": "   ", "learning": "Aprendí algo concreto" }, "valid": false, "issue_paths": ["result"] },
+    { "name": "esquema genérico válido", "schema": "generic", "data": { "result": "Dos clientes pidieron precio", "learning": "El precio importa" }, "valid": true, "issue_paths": [] },
+    { "name": "captura proporcional por debajo de la cantidad", "schema": "proportional", "data": { "contacted_count": 12, "sample": [{ "observation": "A" }, { "observation": "B" }, { "observation": "C" }] }, "valid": false, "issue_paths": ["contacted_count"] },
+    { "name": "captura proporcional válida", "schema": "proportional", "data": { "contacted_count": 23, "sample": [{ "observation": "Pidió precio" }, { "observation": "No respondió" }, { "observation": "Quiere demo" }] }, "valid": true, "issue_paths": [] },
+    { "name": "datos que no son objeto", "schema": "pricing", "data": ["price", 20], "valid": false, "issue_paths": [""] },
+    { "name": "esquema inválido persistido", "schema": "invalid_empty_fields", "data": { "anything": "x" }, "valid": false, "issue_paths": [""] }
+  ]
+}

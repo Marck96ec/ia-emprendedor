@@ -8,7 +8,10 @@ import {
   generateExternalEvidence,
   type GenerateExternalEvidenceInput,
 } from "../src/lib/ai/generate-external-evidence";
-import { ExternalEvidenceSchema } from "../src/lib/ai/external-evidence";
+import {
+  ExternalEvidenceModelSchema,
+  ExternalEvidenceSchema,
+} from "../src/lib/ai/external-evidence";
 
 const validItem = {
   title: "Retention report",
@@ -28,6 +31,11 @@ const validEvidence = {
   items: [validItem],
   synthesis: "The evidence supports testing retention, with important context limits.",
   confidence: "medium" as const,
+  counter_evidence: {
+    searched: true,
+    found: false,
+    summary: "Searched for cases where retention did not outperform acquisition; none were comparable.",
+  },
 };
 
 test("accepts all external evidence support levels", () => {
@@ -80,6 +88,16 @@ test("rejects invalid URLs, empty claims, limitations, and more than three items
   );
 });
 
+test("keeps model output schema compatible with OpenAI while validating URLs before persistence", () => {
+  const modelOutput = {
+    ...validEvidence,
+    items: [{ ...validItem, source_url: "not-a-url" }],
+  };
+
+  assert.equal(ExternalEvidenceModelSchema.safeParse(modelOutput).success, true);
+  assert.equal(ExternalEvidenceSchema.safeParse(modelOutput).success, false);
+});
+
 test("allows insufficient evidence without inventing a source", () => {
   assert.equal(
     ExternalEvidenceSchema.safeParse({
@@ -88,9 +106,83 @@ test("allows insufficient evidence without inventing a source", () => {
       items: [],
       synthesis: "No comparable evidence was found.",
       confidence: "low",
+      counter_evidence: {
+        searched: true,
+        found: false,
+        summary: "No comparable contradicting evidence was found.",
+      },
     }).success,
     true,
   );
+});
+
+test("accepts counter evidence that was searched and not found", () => {
+  const evidence = {
+    ...validEvidence,
+    counter_evidence: {
+      searched: true,
+      found: false,
+      summary: "No se encontró evidencia suficientemente comparable.",
+    },
+  };
+
+  assert.equal(ExternalEvidenceSchema.safeParse(evidence).success, true);
+  assert.equal(ExternalEvidenceModelSchema.safeParse(evidence).success, true);
+});
+
+test("accepts counter evidence that was searched and found", () => {
+  const evidence = {
+    ...validEvidence,
+    counter_evidence: {
+      searched: true,
+      found: true,
+      summary: "El análisis pierde utilidad cuando hay muy pocos datos.",
+    },
+  };
+
+  assert.equal(ExternalEvidenceSchema.safeParse(evidence).success, true);
+  assert.equal(ExternalEvidenceModelSchema.safeParse(evidence).success, true);
+});
+
+test("rejects found evidence that did not search for counter evidence", () => {
+  const evidence = {
+    ...validEvidence,
+    counter_evidence: { searched: false, found: false, summary: "No se buscó." },
+  };
+
+  assert.equal(ExternalEvidenceSchema.safeParse(evidence).success, false);
+  assert.equal(ExternalEvidenceModelSchema.safeParse(evidence).success, false);
+});
+
+test("rejects missing or empty counter evidence", () => {
+  const withoutCounterEvidence: Record<string, unknown> = { ...validEvidence };
+  delete withoutCounterEvidence.counter_evidence;
+
+  assert.equal(ExternalEvidenceSchema.safeParse(withoutCounterEvidence).success, false);
+  assert.equal(
+    ExternalEvidenceSchema.safeParse({
+      ...validEvidence,
+      counter_evidence: { searched: true, found: false, summary: "  " },
+    }).success,
+    false,
+  );
+});
+
+test("counter evidence does not require a challenges item", () => {
+  const evidence = {
+    ...validEvidence,
+    items: [validItem, validItem, validItem],
+    counter_evidence: {
+      searched: true,
+      found: true,
+      summary: "Se encontró una limitación de alcance.",
+    },
+  };
+
+  const supportLevels: string[] = evidence.items.map((item) => item.support_level);
+
+  assert.equal(supportLevels.includes("challenges"), false);
+  assert.equal(ExternalEvidenceSchema.safeParse(evidence).success, true);
 });
 
 test("requires a demonstrated Web Search call and sends only decision context", async () => {
@@ -163,6 +255,9 @@ test("requires a demonstrated Web Search call and sends only decision context", 
   }));
   assert.equal(withoutSearch.status, "insufficient");
   assert.deepEqual(withoutSearch.items, []);
+  assert.equal(withoutSearch.counter_evidence.searched, false);
+  assert.equal(result.counter_evidence.searched, true);
+  assert.match(prompt, /contradiga, limite o cuestione/);
 
   const providerDataOnly = await generateExternalEvidence(input, async () => ({
     finalOutput: validEvidence,
@@ -205,9 +300,30 @@ test("keeps evidence failure separate from the ready CEO plan", () => {
   assert.match(migration, /'pending', 'ready', 'insufficient', 'failed'/);
   assert.match(actionSource, /generateExternalEvidence/);
   assert.match(evidenceFailureBlock, /evidence_status: "failed"/);
+  assert.match(evidenceFailureBlock, /error_name/);
+  assert.match(evidenceFailureBlock, /error_message/);
+  assert.match(evidenceFailureBlock, /error_category/);
+  assert.match(evidenceFailureBlock, /prompt_version: EVIDENCE_PROMPT_VERSION/);
+  assert.match(evidenceFailureBlock, /model: EVIDENCE_MODEL/);
   assert.doesNotMatch(evidenceFailureBlock, /fail_ceo_plan/);
   assert.doesNotMatch(
     readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8"),
     /generateExternalEvidence/,
+  );
+});
+
+test("dashboard passes persisted time allocation and retains the legacy fallback", () => {
+  const dashboardSource = readFileSync(
+    join(process.cwd(), "src/app/dashboard/page.tsx"),
+    "utf8",
+  );
+
+  assert.match(
+    dashboardSource,
+    /time_allocation:\s*ceoPlan\.time_allocation/,
+  );
+  assert.match(
+    dashboardSource,
+    /Asignación histórica calculada a partir de las acciones persistidas\./,
   );
 });

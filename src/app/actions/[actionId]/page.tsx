@@ -6,10 +6,12 @@ import {
   workOnActionWithAI,
 } from "@/actions/action-ai";
 import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
+import { ActionCompletionForm } from "@/components/action-completion-form";
 import { CopyMessageButton } from "@/components/copy-message-button";
 import { parseActionDeliverable } from "@/lib/ai/action-deliverables";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
+import { getActionCaptureSchema } from "@/lib/action-capture";
 
 type ActionPageProps = {
   params: Promise<{ actionId: string }>;
@@ -42,7 +44,7 @@ export default async function ActionWorkspacePage({
 
   const { data: action, error: actionError } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type, capture_schema")
     .eq("id", actionId)
     .maybeSingle();
 
@@ -107,7 +109,7 @@ export default async function ActionWorkspacePage({
   return (
     <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <Link href="/dashboard" className="link-button text-sm">Volver a mi semana</Link>
+        <Link href="/dashboard" className="link-button inline-flex min-h-11 items-center text-sm">Volver a mi semana</Link>
 
         <header className="mt-8 border-b border-slate-200 pb-7">
           <p className="badge-chip">Trabajar con IA · Acción {action.sequence}</p>
@@ -224,6 +226,19 @@ export default async function ActionWorkspacePage({
                   <ActionWorkspaceSubmit label="Aprobar resultado" pendingLabel="Aprobando..." />
                 </form>
               </div>
+            )}
+            {action.status === "pending" && !isClosed && result?.status === "approved" && (
+              <section className="surface-card mt-6 rounded-[2rem] p-4 sm:p-8">
+                <ActionCompletionForm
+                  actionId={action.id}
+                  captureSchema={getActionCaptureSchema(action.capture_schema)}
+                />
+              </section>
+            )}
+            {action.status === "pending" && !isClosed && result?.status === "draft" && (
+              <p className="soft-status mt-6">
+                Aprueba el entregable para registrar el resultado de esta acción.
+              </p>
             )}
           </>
         )}

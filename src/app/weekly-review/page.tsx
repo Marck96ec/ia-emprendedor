@@ -87,7 +87,7 @@ export default async function WeeklyReviewPage({
   const { data: actions, error: actionsError } =
     await supabase
       .from("weekly_actions")
-      .select("status")
+      .select("status, action, completion_data")
       .eq("ceo_plan_id", ceoPlan.id);
 
   if (actionsError) {
@@ -98,6 +98,8 @@ export default async function WeeklyReviewPage({
   const totalActions = actions?.length ?? 0;
   const completedActions =
     actions?.filter((action) => action.status === "completed").length ?? 0;
+  const recordedResults =
+    actions?.filter((action) => action.status === "completed" && action.completion_data !== null) ?? [];
 
   if (totalActions === 0) {
     redirect("/dashboard");
@@ -114,44 +116,55 @@ export default async function WeeklyReviewPage({
             </Link>
           </div>
 
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
-            Revisión de la semana {ceoPlan.week_number}
+          <p className="eyebrow !text-amber-800">Descubramos qué funcionó</p>
+
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+            Tu semana {ceoPlan.week_number} terminó.
           </h1>
 
-          <p className="mt-3 text-slate-600">
-            Antes de preparar la siguiente semana, revisemos qué ocurrió realmente en {business.name}.
+          <p className="mt-3 text-lg leading-7 text-slate-700">
+            Ahora conviértela en aprendizaje para {business.name}.
           </p>
 
-          <p className="mt-3 text-sm text-slate-500">
+          {recordedResults.length > 0 && (
+            <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+              <p className="text-sm font-semibold text-blue-950">Ya registraste resultados en {recordedResults.length} acción{recordedResults.length === 1 ? "" : "es"}.</p>
+              <p className="mt-1 text-sm leading-5 text-blue-900/80">
+                Úsalos como evidencia disponible y enfoca esta revisión en qué significan para tu siguiente decisión.
+              </p>
+            </div>
+          )}
+
+          <p className="mt-3 text-sm text-slate-600">
             Puedes regresar a tu semana sin guardar esta revisión. Solo se cierra cuando pulses “Guardar aprendizajes de la semana”.
           </p>
 
           <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-            <p className="text-sm text-slate-500">Ejecución de la semana</p>
+            <p className="text-sm text-slate-600">Ejecución de la semana</p>
             <p className="mt-2 text-2xl font-semibold text-slate-900">
               {completedActions}/{totalActions} acciones completadas
             </p>
           </div>
 
-          <section className="mt-6 rounded-[1.5rem] border border-slate-200 p-5" aria-labelledby="decision-learning-title">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Aprendizaje de la decisión</p>
+          <section className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50/50 p-5" aria-labelledby="decision-learning-title">
+            <p className="eyebrow !text-amber-800">Lo que probamos</p>
             <h2 id="decision-learning-title" className="mt-2 text-lg font-semibold text-slate-950">Qué estamos tratando de aprender</h2>
             <dl className="mt-4 space-y-4 text-sm">
               <div>
-                <dt className="font-semibold text-slate-700">Decisión evaluada</dt>
-                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.question}</dd>
+                <dt className="font-semibold text-slate-800">Decisión que probamos</dt>
+                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.question}</dd>
               </div>
               <div>
-                <dt className="font-semibold text-slate-700">Hipótesis</dt>
-                <dd className="mt-1 leading-5 text-slate-600">{decisionHypothesis.data.statement}</dd>
+                <dt className="font-semibold text-slate-800">Hipótesis</dt>
+                <dd className="mt-1 leading-5 text-slate-700">{decisionHypothesis.data.statement}</dd>
               </div>
               <div>
-                <dt className="font-semibold text-slate-700">Métrica objetivo</dt>
-                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.target_metric}</dd>
+                <dt className="font-semibold text-slate-800">Métrica que observaremos</dt>
+                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.target_metric}</dd>
               </div>
               <div>
-                <dt className="font-semibold text-slate-700">Resultado esperado</dt>
-                <dd className="mt-1 leading-5 text-slate-600">{strategicDiagnosis.data.critical_decision.expected_outcome}</dd>
+                <dt className="font-semibold text-slate-800">Resultado que buscamos</dt>
+                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.expected_outcome}</dd>
               </div>
             </dl>
           </section>

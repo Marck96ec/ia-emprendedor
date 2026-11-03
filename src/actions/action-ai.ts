@@ -287,5 +287,5 @@ export async function approveActionResult(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath(`/actions/${data[0].weekly_action_id}`);
-  redirect("/dashboard?message=Resultado aprobado y acción completada.");
+  redirect("/dashboard?message=Entregable aprobado. Registra el resultado para completar la acción.");
 }

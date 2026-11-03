@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
-import { generateExternalEvidence } from "@/lib/ai/generate-external-evidence";
+import {
+  EVIDENCE_PROMPT_VERSION,
+  generateExternalEvidence,
+} from "@/lib/ai/generate-external-evidence";
 import type { CEOPlan } from "@/lib/ai/ceo-agent";
 import { DecisionLearningSchema } from "@/lib/decision-learning";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
@@ -18,6 +21,8 @@ const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
 const PROMPT_VERSION = "v5-strategic-learning";
+
+const EVIDENCE_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
 const GENERATING_STALE_AFTER_MS =
   15 * 60 * 1000;
@@ -489,7 +494,8 @@ if (latestPlan?.status === "generating") {
           role_recommendation,
           role_reason,
           estimated_hours,
-          status
+          status,
+          completion_data
         `,
       )
       .eq("ceo_plan_id", contextPlan.id)
@@ -609,6 +615,9 @@ if (latestPlan?.status === "generating") {
             estimatedHours:
               Number(action.estimated_hours),
             status: action.status,
+            completionData: action.status === "completed"
+              ? action.completion_data
+              : null,
           }),
         ),
 
@@ -736,10 +745,15 @@ if (latestPlan?.status === "generating") {
       );
     }
   } catch (error) {
-    console.error(
-      "CEO_PLAN_GENERATION_ERROR",
-      safeCEOPlanLog(error),
-    );
+    const safeError = safeCEOPlanLog(error);
+    console.error("CEO_PLAN_GENERATION_ERROR", safeError);
+    if (safeError.code === "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID") {
+      console.error("CEO_PLAN_STRUCTURAL_OUTPUT_INVALID", {
+        issue_paths: safeError.issuePaths,
+        issue_messages: safeError.issueMessages,
+        prompt_version: PROMPT_VERSION,
+      });
+    }
 
     const { error: failedUpdateError } = await supabase.rpc(
       "fail_ceo_plan",
@@ -810,8 +824,15 @@ if (latestPlan?.status === "generating") {
     console.error("CEO_EVIDENCE_GENERATION_ERROR", {
       planId,
       evidence_status: "failed",
-      item_count: 0,
-      error: error instanceof Error ? error.message : "unknown",
+      error_name: error instanceof Error ? error.name : "UnknownError",
+      error_message:
+        error instanceof Error ? error.message.slice(0, 500) : "unknown",
+      error_category:
+        error instanceof Error && error.message.includes("invalid_json_schema")
+          ? "provider_request"
+          : "runtime",
+      prompt_version: EVIDENCE_PROMPT_VERSION,
+      model: EVIDENCE_MODEL,
     });
 
     const { error: evidenceFailureUpdateError } = await supabase

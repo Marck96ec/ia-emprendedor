@@ -20,7 +20,7 @@ export function PlanGenerationSubmit({
         className={`${className} disabled:cursor-not-allowed disabled:opacity-70`}
         disabled={pending}
       >
-        {pending ? "Generando..." : label}
+        {pending ? "Construyendo tu plan..." : label}
       </button>
 
       {pending && (
@@ -29,7 +29,7 @@ export function PlanGenerationSubmit({
           role="status"
           aria-live="polite"
         >
-          Estamos iniciando la generación de tu plan...
+          Tu información está guardada. El CEO IA está preparando una respuesta adaptada a tu negocio.
         </p>
       )}
     </div>
