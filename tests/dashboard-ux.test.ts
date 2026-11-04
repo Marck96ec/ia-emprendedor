@@ -289,9 +289,11 @@ test("dashboard components avoid text below 12px", () => {
 });
 
 test("weekly review frames the review as learning", () => {
-  const review = source("src/app/weekly-review/page.tsx");
+  const review = source("src/components/conversational-weekly-review.tsx");
 
-  assert.match(review, /Descubramos qué funcionó/);
-  assert.match(review, /Ahora conviértela en aprendizaje/);
-  assert.match(review, /Decisión que probamos/);
+  assert.match(review, /TUCEO IA/);
+  assert.match(review, /Resumen editable de tu semana/);
+  assert.match(review, /¿Cómo le fue a tu negocio/);
+  assert.match(review, /¿Qué nos dicen los resultados/);
+  assert.match(review, /prefers-reduced-motion/);
 });

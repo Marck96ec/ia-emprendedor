@@ -10,6 +10,10 @@ import {
 } from "@/lib/decision-learning";
 import { StrategicDiagnosisSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
+import {
+  WeeklyReviewDraftSchema,
+  type WeeklyReviewDraft,
+} from "@/lib/weekly-review-types";
 
 const WeeklyReviewSchema = z.object({
   outcome_status: z.enum([
@@ -48,6 +52,113 @@ function reviewError(message: string) {
     "/weekly-review?error=" +
     encodeURIComponent(message)
   );
+}
+
+export type WeeklyReviewDraftSaveResult = {
+  success: boolean;
+  message?: string;
+};
+
+export async function saveWeeklyReviewDraft(
+  draft: WeeklyReviewDraft,
+): Promise<WeeklyReviewDraftSaveResult> {
+  const parsedDraft = WeeklyReviewDraftSchema.safeParse(draft);
+  if (!parsedDraft.success) {
+    return {
+      success: false,
+      message: "No pudimos guardar este borrador. Revisa la respuesta.",
+    };
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims();
+
+  if (claimsError || !claimsData?.claims?.sub) {
+    redirect("/login");
+  }
+
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("id")
+    .eq("owner_id", claimsData.claims.sub)
+    .maybeSingle();
+
+  if (businessError) {
+    console.error("WEEKLY_REVIEW_DRAFT_BUSINESS_ERROR", businessError);
+    return {
+      success: false,
+      message: "No pudimos guardar el borrador.",
+    };
+  }
+
+  if (!business) {
+    redirect("/onboarding/business");
+  }
+
+  const { data: plan, error: planError } = await supabase
+    .from("ceo_plans")
+    .select("id, status")
+    .eq("business_id", business.id)
+    .order("week_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (planError) {
+    console.error("WEEKLY_REVIEW_DRAFT_PLAN_ERROR", planError);
+    return {
+      success: false,
+      message: "No pudimos verificar tu semana.",
+    };
+  }
+
+  if (!plan || plan.status !== "ready") {
+    return {
+      success: false,
+      message: "Esta semana ya no está disponible para guardar borradores.",
+    };
+  }
+
+  const { data: existingReview, error: reviewError } = await supabase
+    .from("weekly_reviews")
+    .select("id")
+    .eq("ceo_plan_id", plan.id)
+    .maybeSingle();
+
+  if (reviewError) {
+    console.error("WEEKLY_REVIEW_DRAFT_REVIEW_LOOKUP_ERROR", reviewError);
+    return {
+      success: false,
+      message: "No pudimos verificar el estado de la revisión.",
+    };
+  }
+
+  if (existingReview) {
+    return {
+      success: false,
+      message: "Esta semana ya fue revisada.",
+    };
+  }
+
+  const { error: saveError } = await supabase
+    .from("weekly_review_drafts")
+    .upsert(
+      {
+        ceo_plan_id: plan.id,
+        answers: parsedDraft.data,
+      },
+      { onConflict: "ceo_plan_id" },
+    );
+
+  if (saveError) {
+    console.error("WEEKLY_REVIEW_DRAFT_SAVE_ERROR", saveError);
+    return {
+      success: false,
+      message: "No pudimos guardar el borrador. Tus respuestas siguen en pantalla.",
+    };
+  }
+
+  return { success: true };
 }
 
 export async function createWeeklyReview(
@@ -318,6 +429,15 @@ export async function createWeeklyReview(
         "No pudimos guardar tu revisión.",
       ),
     );
+  }
+
+  const { error: draftDeleteError } = await supabase
+    .from("weekly_review_drafts")
+    .delete()
+    .eq("ceo_plan_id", ceoPlan.id);
+
+  if (draftDeleteError) {
+    console.error("WEEKLY_REVIEW_DRAFT_DELETE_ERROR", draftDeleteError);
   }
 
   revalidatePath("/dashboard");

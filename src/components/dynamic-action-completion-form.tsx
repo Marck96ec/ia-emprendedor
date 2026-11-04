@@ -63,7 +63,12 @@ function fieldHint(field: ActionCaptureField): string | undefined {
   }
   if (field.type === "multi_select") return countHint("Selecciona", field.min_items, field.max_items);
   if (field.type === "single_select") return undefined;
-  return countHint("Agrega", field.min_items, field.max_items);
+  if (field.type === "repeatable_group") {
+    return field.max_items !== undefined
+      ? `Agrega los elementos que realmente ocurrieron (máximo ${field.max_items}). Puedes registrar cero.`
+      : "Agrega los elementos que realmente ocurrieron. Puedes registrar cero.";
+  }
+  return undefined;
 }
 
 function RequirementMark({ required }: { required: boolean }) {
@@ -141,10 +146,7 @@ function CaptureField({ field, path, formId, value, issues, onValueChange, clear
 
   if (field.type === "repeatable_group") {
     const items = Array.isArray(value) ? value as Record<string, unknown>[] : [];
-    const exactCount = field.min_items !== undefined && field.max_items === field.min_items
-      ? field.min_items
-      : undefined;
-    const canRemove = field.min_items === undefined || items.length > field.min_items;
+    const canRemove = items.length > 0;
     const canAdd = field.max_items === undefined || items.length < field.max_items;
 
     return (
@@ -159,7 +161,7 @@ function CaptureField({ field, path, formId, value, issues, onValueChange, clear
             <li key={index}>
               <fieldset className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <legend className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-600">
-                  {field.label} {index + 1}{exactCount ? ` de ${exactCount}` : ""}
+                  {field.label} {index + 1}
                 </legend>
                 <div className="space-y-4">
                   {field.fields.map((child) => (
@@ -282,10 +284,9 @@ function initializeCaptureData(
     const current = initialData[field.id];
     if (field.type !== "repeatable_group") return [field.id, current];
     const items = Array.isArray(current) ? current as Record<string, unknown>[] : [];
-    const minimum = field.min_items ?? 0;
     return [
       field.id,
-      Array.from({ length: Math.max(items.length, minimum) }, (_, index) =>
+      Array.from({ length: items.length }, (_, index) =>
         initializeCaptureData(field.fields, items[index] ?? {}),
       ),
     ];

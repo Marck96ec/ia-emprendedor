@@ -7,6 +7,10 @@ import {
   ActionCaptureSchema,
   validateActionCaptureSemantics,
 } from "../action-capture";
+import {
+  StrategicContinuitySchema,
+  validateStrategicContinuity,
+} from "../strategic-continuity";
 
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
@@ -220,6 +224,8 @@ export const CEOPlanSchema = z.object({
 
   decision_hypothesis: DecisionHypothesisSchema,
 
+  strategic_continuity: StrategicContinuitySchema.optional(),
+
   priorities: z
     .array(PrioritySchema)
     .length(3)
@@ -352,6 +358,11 @@ export const CEOPlanBusinessRulesSchema = CEOPlanSchema.superRefine(
 export function validateCEOPlanBusinessRules(
   plan: CEOPlan,
   availableHours?: number,
+  previousActions?: Array<{
+    action: string;
+    objective: string;
+    successMetric: string;
+  }>,
 ) {
   const result = CEOPlanBusinessRulesSchema.safeParse(plan);
 
@@ -375,6 +386,31 @@ export function validateCEOPlanBusinessRules(
         },
       ]),
     };
+  }
+
+  if (previousActions) {
+    const continuity = validateStrategicContinuity({
+      previousActions,
+      nextActions: plan.weekly_plan.map((item) => ({
+        action: item.action,
+        objective: item.objective,
+        successMetric: item.success_metric,
+      })),
+      continuity: plan.strategic_continuity,
+    });
+
+    if (!continuity.success) {
+      return {
+        success: false as const,
+        error: new z.ZodError([
+          {
+            code: "custom",
+            message: continuity.message,
+            path: ["strategic_continuity"],
+          },
+        ]),
+      };
+    }
   }
 
   return result;
