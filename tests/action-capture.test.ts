@@ -121,16 +121,16 @@ test("cardinality ignores time, money and measurement units", () => {
 
 test("cardinality keeps real count requirements, including later matches in the text", () => {
   assert.deepEqual(getCountRequirements("En 48 horas contactar 5 clientes"), [{ minimum: 5, exact: true }]);
-  assert.equal(semantics("En 48 horas contactar 5 clientes", GENERIC_ACTION_CAPTURE_SCHEMA), false);
+  assert.equal(semantics("En 48 horas contactar 5 clientes", GENERIC_ACTION_CAPTURE_SCHEMA), true, "La meta no obliga a registrar cinco resultados");
   assert.equal(semantics("En 48 horas contactar 5 clientes", groupSchema({ min_items: 5, max_items: 5 })), true);
-  assert.equal(semantics("Definir 3 reglas", groupSchema({ min_items: 3, max_items: 5 })), false, "Una cantidad exacta no admite más elementos");
+  assert.equal(semantics("Definir 3 reglas", groupSchema({ min_items: 3, max_items: 5 })), true, "La cantidad planificada no limita el resultado real");
 });
 
 test("'al menos N' is a minimum, not an exact count", () => {
   assert.deepEqual(getCountRequirements("Conseguir al menos 5 respuestas"), [{ minimum: 5, exact: false }]);
   assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 5 })), true);
   assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 5, max_items: 8 })), true);
-  assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 4, max_items: 8 })), false);
+  assert.equal(semantics("Conseguir al menos 5 respuestas", groupSchema({ min_items: 4, max_items: 8 })), true);
   assert.deepEqual(getCountRequirements("Hablar con más de 3 proveedores"), [{ minimum: 4, exact: false }]);
 });
 
@@ -138,15 +138,23 @@ test("count evidence must be required so it cannot be skipped", () => {
   assert.equal(semantics("Definir 3 reglas", groupSchema({ min_items: 3, max_items: 3, required: false })), false);
 });
 
+test("repeatable evidence can be empty when no result occurred", () => {
+  const result = validateActionCompletion(groupSchema({ min_items: 3, max_items: 10 }), {
+    items: [],
+  });
+
+  assert.equal(result.success, true);
+});
+
 test("counts above ten require a proportional capture instead of an impossible form", () => {
   const proportional = fixtures.schemas.proportional as ActionCapture;
   assert.equal(semantics("Llamar a 20 clientes", proportional), true);
-  assert.equal(semantics("Llamar a 20 clientes", groupSchema({ min_items: 10, max_items: 10 })), false);
-  assert.equal(semantics("Llamar a 25 clientes", proportional), false, "El mínimo del contador debe cubrir la meta");
+  assert.equal(semantics("Llamar a 20 clientes", groupSchema({ min_items: 10, max_items: 10 })), true);
+  assert.equal(semantics("Llamar a 25 clientes", proportional), true);
   assert.equal(semantics("Llamar a 20 clientes", {
     ...proportional,
     fields: [proportional.fields[0]],
-  }), false, "La cantidad sola no demuestra resultados observados");
+  }), true);
   assert.equal(semantics("Llamar a veinte clientes", proportional), true);
 });
 
@@ -226,7 +234,7 @@ test("validates completion data against required, type, range and options", () =
   assert.equal(missing.success, false);
 });
 
-test("rejects completion with fewer repeatable items than the success metric requires", () => {
+test("accepts completion with fewer repeatable items than the success metric requires", () => {
   const schema = {
     ...validSchema,
     fields: [{
@@ -240,7 +248,7 @@ test("rejects completion with fewer repeatable items than the success metric req
     }],
   };
 
-  assert.equal(validateActionCompletion(schema, { rules: [{ rule: "Una regla" }] }).success, false);
+  assert.equal(validateActionCompletion(schema, { rules: [{ rule: "Una regla" }] }).success, true);
   assert.deepEqual(validateActionCompletion(schema, {
     rules: [{ rule: "Una" }, { rule: "Dos" }, { rule: "Tres" }],
   }), { success: true });
@@ -253,7 +261,7 @@ test("rejects completion with fewer repeatable items than the success metric req
     action: "Definir 3 reglas de operación",
     success_metric: "Tres reglas escritas y compartidas",
     expected_result: "Criterios claros",
-  }, validSchema).success, false);
+  }, validSchema).success, true);
   assert.equal(validateActionCaptureSemantics({
     action: "Revisar varios clientes recientes",
     success_metric: "Comparación de varios clientes",

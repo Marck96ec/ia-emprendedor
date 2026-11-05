@@ -128,6 +128,7 @@ export default async function DashboardPage({
         diagnosis,
         strategic_diagnosis,
         decision_hypothesis,
+        strategic_continuity,
         priorities,
         weekly_plan,
           time_allocation,
@@ -174,6 +175,9 @@ export default async function DashboardPage({
 
           decision_hypothesis:
             ceoPlan.decision_hypothesis,
+
+          strategic_continuity:
+            ceoPlan.strategic_continuity,
 
           priorities:
             ceoPlan.priorities,

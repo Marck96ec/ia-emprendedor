@@ -4,6 +4,7 @@ import type {
   ActionType,
 } from "@/lib/weekly-action-types";
 import type { ActionCapture } from "@/lib/action-capture";
+import type { StrategicContinuity } from "@/lib/strategic-continuity";
 
 export type DashboardActionResult = {
   id: string;
@@ -66,6 +67,7 @@ export type DashboardStrategicDiagnosis = {
     owner_involvement: string;
     current_context: string;
   };
+
   diagnosis: {
     summary: string;
     affected_area:
@@ -107,3 +109,5 @@ export type DashboardStrategicDiagnosis = {
     target_metric: string;
   };
 };
+
+export type DashboardStrategicContinuity = StrategicContinuity;

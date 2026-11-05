@@ -46,6 +46,10 @@ function submitButton() {
 }
 
 function fillContacts() {
+  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  while (screen.queryAllByLabelText(/Nombre del cliente/).length < 3) {
+    fireEvent.click(addContact);
+  }
   screen.getAllByLabelText(/Nombre del cliente/).forEach((input, index) => {
     fireEvent.change(input, { target: { value: `Cliente ${index + 1}` } });
   });
@@ -56,11 +60,12 @@ function fillContacts() {
 
 test("every field inside a repeatable group has its own visible, associated label", () => {
   render(<DynamicActionCompletionForm captureSchema={contactsSchema} actionId="a1" action={deferredAction().action} />);
+  fillContacts();
 
   const names = screen.getAllByLabelText(/Nombre del cliente/);
   const outcomes = screen.getAllByLabelText(/^Resultado/);
   const notes = screen.getAllByLabelText(/^Notas/);
-  assert.equal(names.length, 3, "min_items 3 crea tres elementos con su propia etiqueta");
+  assert.equal(names.length, 3, "El usuario puede agregar solo los elementos que realmente ocurrieron");
   assert.equal(outcomes.length, 3);
   assert.equal(notes.length, 3);
 
@@ -74,8 +79,8 @@ test("every field inside a repeatable group has its own visible, associated labe
   const group = screen.getByRole("group", { name: /Contacto\s*\(obligatorio\)/ });
   assert.match(group.getAttribute("aria-describedby") ?? "", /\S/);
   const hintId = group.getAttribute("aria-describedby")!.split(" ")[0];
-  assert.equal(document.getElementById(hintId)?.textContent, "Agrega exactamente 3.");
-  assert.ok(screen.getByRole("group", { name: "Contacto 2 de 3" }));
+  assert.equal(document.getElementById(hintId)?.textContent, "Agrega los elementos que realmente ocurrieron (máximo 3). Puedes registrar cero.");
+  assert.ok(screen.getByRole("group", { name: "Contacto 2" }));
   assert.equal(names[0].getAttribute("aria-required"), "true");
   assert.equal(notes[0].getAttribute("aria-required"), null);
   assert.match(document.querySelector(`label[for="${names[0].id}"]`)?.textContent ?? "", /\(obligatorio\)/);
@@ -96,6 +101,9 @@ test("multi_select options are grouped under a legend and numbers accept decimal
 test("client validation blocks the submit, explains each error and keeps what was typed", async () => {
   const server = deferredAction();
   render(<DynamicActionCompletionForm captureSchema={contactsSchema} actionId="a1" action={server.action} />);
+  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  fireEvent.click(addContact);
+  fireEvent.click(addContact);
 
   const [firstName] = screen.getAllByLabelText(/Nombre del cliente/);
   fireEvent.change(firstName, { target: { value: "Ana" } });
@@ -170,7 +178,9 @@ test("the completion dialog opens as a modal, closes with Escape and stays open 
   const dialog = document.querySelector("dialog")!;
   assert.equal(dialog.open, true);
   assert.ok(screen.getByRole("dialog", { name: contactsSchema.title }));
-  assert.equal(document.activeElement, screen.getAllByLabelText(/Nombre del cliente/)[0], "El foco inicial va al primer campo");
+  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  fireEvent.click(addContact);
+  await waitFor(() => assert.equal(document.activeElement, screen.getAllByLabelText(/Nombre del cliente/)[0], "El foco inicial va al primer campo"));
 
   fireEvent(dialog, new window.Event("cancel", { cancelable: true }));
   assert.equal(closed, 1, "Escape cierra el diálogo");

@@ -16,6 +16,7 @@ import {
   toSafeCEOPlanError,
 } from "./ceo-plan-errors";
 import { parseActionCaptureModel } from "../action-capture";
+import type { StrategicContinuity } from "../strategic-continuity";
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -98,6 +99,16 @@ export type GenerateCEOPlanInput = {
         hypothesisStatus: "validated" | "rejected" | "inconclusive";
       } | null;
     };
+    strategicContinuity?: StrategicContinuity;
+    historicalLearning?: Array<{
+      weekNumber: number;
+      outcomeStatus: "positive" | "mixed" | "no_change" | "negative";
+      learning: string | null;
+      hypothesisStatus: "validated" | "rejected" | "inconclusive" | null;
+      decisionQuestion: string | null;
+      targetMetric: string | null;
+      actions: string[];
+    }>;
   } | null;
   businessKnowledge: BusinessKnowledge;
 };
@@ -157,6 +168,10 @@ semana y debes utilizar el resultado real y los aprendizajes de la
 semana anterior para adaptar tus decisiones. Distingue siempre la
 ejecución del resultado: completar acciones no equivale a éxito.
 
+Si existe previousWeek.historicalLearning, úsalo para reconocer patrones
+acumulados entre semanas. No repitas una prueba solo porque el texto parezca
+útil: explica qué cambió y qué evidencia sigue faltando.
+
 Los resultados de acciones de la semana anterior son evidencia declarada por
 el empresario. Úsalos para confirmar o cuestionar hipótesis, detectar patrones
 e identificar datos faltantes. No necesitas el capture_schema en ese contexto:
@@ -184,6 +199,10 @@ revisarlo solo si el contexto actual indica que quedó obsoleto.
 Genera:
 
 - diagnóstico ejecutivo actualizado
+- strategic_continuity con mode continuation, deepening, adjustment, change o
+  repetition cuando exista previousWeek. Incluye siempre una justificación,
+  una incertidumbre pendiente, una señal nueva verificable y la brecha de
+  evidencia anterior.
 - razonamiento estratégico explícito, en este orden:
   business_understanding, diagnosis, bottleneck, evidence, confidence,
   unknowns, alternative_hypothesis, critical_decision y decision_hypothesis
@@ -234,6 +253,11 @@ siguiendo estas reglas:
   el aprendizaje o cambio empresarial esperado, no repetir la tarea.
 - Cada acción debe incluir un capture_schema específico, con preguntas sobre
   evidencia concreta para una decisión futura y no solo sobre ejecución.
+  Cuando exista una meta cuantitativa, captura por separado la meta
+  planificada y la cantidad realmente observada. Nunca uses min_items para
+  exigir que el empresario alcance la meta: cero o un resultado inferior a la
+  meta es válido si se registra con honestidad. Usa max_items solo para
+  proteger el tamaño del formulario.
 ${retryInstructions}
 `,
       );
@@ -302,6 +326,11 @@ ${retryInstructions}
       const businessRules = validateCEOPlanBusinessRules(
         structuralOutput.data,
         input.diagnostic.ownerHoursPerWeek,
+        input.previousWeek?.actions.map((action) => ({
+          action: action.action,
+          objective: action.objective,
+          successMetric: action.successMetric,
+        })),
       );
 
       if (!businessRules.success) {

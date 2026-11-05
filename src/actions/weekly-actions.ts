@@ -13,6 +13,7 @@ import {
   type ActionCompletionFormState,
   type CompletionIssue,
 } from "@/lib/action-capture";
+import { extractBusinessEvidence } from "@/lib/business-evidence";
 import { createClient } from "@/lib/supabase/server";
 
 const UpdateWeeklyActionSchema = z.object({
@@ -93,7 +94,7 @@ export async function updateWeeklyActionStatus(
 
   const { data: action, error: actionError } = await supabase
     .from("weekly_actions")
-    .select("id, capture_schema, status")
+    .select("id, ceo_plan_id, capture_schema, status")
     .eq("id", actionId)
     .maybeSingle();
 
@@ -143,6 +144,92 @@ export async function updateWeeklyActionStatus(
       console.error("WEEKLY_ACTION_UPDATE_ERROR", error);
     }
     return errorState(knownMessage ?? "No pudimos guardar el resultado. Tus respuestas siguen aquí; inténtalo de nuevo.");
+  }
+
+  const { data: planContext, error: planContextError } = await supabase
+    .from("ceo_plans")
+    .select("business_id")
+    .eq("id", action.ceo_plan_id)
+    .maybeSingle();
+
+  if (planContextError || !planContext) {
+    console.error(
+      "WEEKLY_ACTION_EVIDENCE_CONTEXT_ERROR",
+      planContextError ?? new Error("Missing CEO plan context"),
+    );
+  } else {
+    const evidence = extractBusinessEvidence({
+      businessId: planContext.business_id,
+      actionId: action.id,
+      captureSchema,
+      completionData: completionData as Record<string, unknown>,
+    });
+    const evidenceRows = evidence.map((row) => {
+      const persisted = { ...row };
+      delete persisted.relatedCanonicalKey;
+      return persisted;
+    });
+    const { error: evidenceError } = await supabase
+      .from("business_evidence")
+      .upsert(evidenceRows, {
+        onConflict: "source_weekly_action_id,canonical_key",
+        ignoreDuplicates: true,
+      });
+
+    if (evidenceError) {
+      console.error("WEEKLY_ACTION_EVIDENCE_SAVE_ERROR", evidenceError);
+    } else {
+      const { data: savedEvidence, error: savedEvidenceError } = await supabase
+        .from("business_evidence")
+        .select("id, canonical_key, evidence_type")
+        .eq("source_weekly_action_id", action.id);
+
+      if (savedEvidenceError) {
+        console.error("WEEKLY_ACTION_EVIDENCE_LOOKUP_ERROR", savedEvidenceError);
+      } else {
+        for (const candidate of evidence) {
+          if (!candidate.relatedCanonicalKey) continue;
+          const source = savedEvidence?.find((item) => item.canonical_key === candidate.canonical_key);
+          let target = savedEvidence?.find(
+            (item) =>
+              item.evidence_type === "opportunity" &&
+              item.canonical_key === candidate.relatedCanonicalKey,
+          );
+          if (!target) {
+            const { data: previousTarget, error: targetError } = await supabase
+              .from("business_evidence")
+              .select("id, canonical_key, evidence_type")
+              .eq("business_id", planContext.business_id)
+              .eq("evidence_type", "opportunity")
+              .eq("canonical_key", candidate.relatedCanonicalKey)
+              .order("observed_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (targetError) {
+              console.error("WEEKLY_ACTION_EVIDENCE_TARGET_ERROR", targetError);
+            }
+            target = previousTarget ?? undefined;
+          }
+          if (!source || !target) continue;
+
+          const { error: linkError } = await supabase
+            .from("business_evidence_links")
+            .upsert({
+              business_id: planContext.business_id,
+              source_evidence_id: source.id,
+              target_evidence_id: target.id,
+              relation_type: "follow_up_for",
+            }, {
+              onConflict: "source_evidence_id,target_evidence_id,relation_type",
+              ignoreDuplicates: true,
+            });
+
+          if (linkError) {
+            console.error("WEEKLY_ACTION_EVIDENCE_LINK_ERROR", linkError);
+          }
+        }
+      }
+    }
   }
 
   revalidatePath("/dashboard");

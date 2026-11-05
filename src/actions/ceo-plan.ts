@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { generateCEOPlan } from "@/lib/ai/generate-ceo-plan";
+import type { GenerateCEOPlanInput } from "@/lib/ai/generate-ceo-plan";
 import {
   EVIDENCE_PROMPT_VERSION,
   generateExternalEvidence,
@@ -442,7 +443,7 @@ if (latestPlan?.status === "generating") {
 
   try {
 
-    let previousWeek = null;
+    let previousWeek: GenerateCEOPlanInput["previousWeek"] = null;
 
   if (contextPlanId) {
     const {
@@ -459,7 +460,8 @@ if (latestPlan?.status === "generating") {
           strategic_diagnosis,
           priorities,
           weekly_plan,
-          decision_hypothesis
+          decision_hypothesis,
+          strategic_continuity
         `,
       )
       .eq("id", contextPlanId)
@@ -574,6 +576,69 @@ if (latestPlan?.status === "generating") {
       );
     }
 
+    const { data: olderPlans, error: olderPlansError } = await supabase
+      .from("ceo_plans")
+      .select("id, week_number")
+      .eq("business_id", business.id)
+      .lt("week_number", contextPlan.week_number)
+      .order("week_number", { ascending: false })
+      .limit(3);
+
+    if (olderPlansError) {
+      console.error("CEO_PLAN_HISTORICAL_PLANS_ERROR", olderPlansError);
+      throw new Error("No pudimos cargar el aprendizaje acumulado.");
+    }
+
+    const olderPlanIds = (olderPlans ?? []).map((plan) => plan.id);
+    const historicalLearning: NonNullable<
+      NonNullable<GenerateCEOPlanInput["previousWeek"]>["historicalLearning"]
+    > = [];
+
+    if (olderPlanIds.length > 0) {
+      const [
+        { data: olderReviews, error: olderReviewsError },
+        { data: olderActions, error: olderActionsError },
+      ] = await Promise.all([
+        supabase
+          .from("weekly_reviews")
+          .select("ceo_plan_id, outcome_status, decision_learning")
+          .in("ceo_plan_id", olderPlanIds),
+        supabase
+          .from("weekly_actions")
+          .select("ceo_plan_id, action")
+          .in("ceo_plan_id", olderPlanIds)
+          .order("sequence", { ascending: true }),
+      ]);
+
+      if (olderReviewsError || olderActionsError) {
+        console.error(
+          "CEO_PLAN_HISTORICAL_LEARNING_ERROR",
+          olderReviewsError ?? olderActionsError,
+        );
+        throw new Error("No pudimos cargar el aprendizaje acumulado.");
+      }
+
+      for (const plan of olderPlans ?? []) {
+        const review = olderReviews?.find((item) => item.ceo_plan_id === plan.id);
+        const parsedLearning = review?.decision_learning === null || review?.decision_learning === undefined
+          ? null
+          : DecisionLearningSchema.safeParse(review.decision_learning);
+        const learning = parsedLearning?.success ? parsedLearning.data : null;
+
+        historicalLearning.push({
+          weekNumber: plan.week_number,
+          outcomeStatus: review?.outcome_status ?? "no_change",
+          learning: learning?.learning ?? null,
+          hypothesisStatus: learning?.hypothesis_status ?? null,
+          decisionQuestion: learning?.decision_question ?? null,
+          targetMetric: learning?.target_metric ?? null,
+          actions: (olderActions ?? [])
+            .filter((action) => action.ceo_plan_id === plan.id)
+            .map((action) => action.action),
+        });
+      }
+    }
+
     previousWeek = {
       weekNumber:
         contextPlan.week_number,
@@ -670,6 +735,9 @@ if (latestPlan?.status === "generating") {
               }
             : null,
       },
+      strategicContinuity:
+        contextPlan.strategic_continuity,
+      historicalLearning,
     };
   }
 
@@ -735,6 +803,7 @@ if (latestPlan?.status === "generating") {
         p_weekly_plan: output.weekly_plan,
         p_actions: output.weekly_plan,
         p_time_allocation: output.time_allocation,
+        p_strategic_continuity: output.strategic_continuity ?? null,
       });
 
     if (completePlanError) {

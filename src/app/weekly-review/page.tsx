@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { createWeeklyReview } from "@/actions/weekly-review";
+import { ConversationalWeeklyReview } from "@/components/conversational-weekly-review";
 import { StrategicDiagnosisSchema } from "@/lib/ai/ceo-agent";
+import { buildWeeklyReviewContext } from "@/lib/weekly-review-context";
 import { createClient } from "@/lib/supabase/server";
+import { parseWeeklyReviewDraft } from "@/lib/weekly-review-types";
 import { DecisionHypothesisSchema } from "@/lib/decision-learning";
 
 type WeeklyReviewPageProps = {
@@ -16,7 +17,6 @@ export default async function WeeklyReviewPage({
   searchParams,
 }: WeeklyReviewPageProps) {
   const { error: pageError } = await searchParams;
-
   const supabase = await createClient();
 
   const { data: claimsData, error: claimsError } =
@@ -27,13 +27,11 @@ export default async function WeeklyReviewPage({
   }
 
   const userId = claimsData.claims.sub;
-
-  const { data: business, error: businessError } =
-    await supabase
-      .from("businesses")
-      .select("id, name")
-      .eq("owner_id", userId)
-      .maybeSingle();
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("id, name")
+    .eq("owner_id", userId)
+    .maybeSingle();
 
   if (businessError) {
     console.error("WEEKLY_REVIEW_PAGE_BUSINESS_ERROR", businessError);
@@ -44,14 +42,13 @@ export default async function WeeklyReviewPage({
     redirect("/onboarding/business");
   }
 
-  const { data: ceoPlan, error: planError } =
-    await supabase
-      .from("ceo_plans")
-      .select("id, week_number, status, strategic_diagnosis, decision_hypothesis")
-      .eq("business_id", business.id)
-      .order("week_number", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const { data: ceoPlan, error: planError } = await supabase
+    .from("ceo_plans")
+    .select("id, week_number, status, strategic_diagnosis, decision_hypothesis")
+    .eq("business_id", business.id)
+    .order("week_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   if (planError) {
     console.error("WEEKLY_REVIEW_PAGE_PLAN_ERROR", planError);
@@ -84,11 +81,10 @@ export default async function WeeklyReviewPage({
     redirect("/dashboard");
   }
 
-  const { data: actions, error: actionsError } =
-    await supabase
-      .from("weekly_actions")
-      .select("status, action, completion_data")
-      .eq("ceo_plan_id", ceoPlan.id);
+  const { data: actions, error: actionsError } = await supabase
+    .from("weekly_actions")
+    .select("status, completion_data")
+    .eq("ceo_plan_id", ceoPlan.id);
 
   if (actionsError) {
     console.error("WEEKLY_REVIEW_PAGE_ACTIONS_ERROR", actionsError);
@@ -99,180 +95,61 @@ export default async function WeeklyReviewPage({
   const completedActions =
     actions?.filter((action) => action.status === "completed").length ?? 0;
   const recordedResults =
-    actions?.filter((action) => action.status === "completed" && action.completion_data !== null) ?? [];
+    actions?.filter((action) => action.status === "completed" && action.completion_data !== null).length ?? 0;
 
   if (totalActions === 0) {
     redirect("/dashboard");
   }
 
+  const { data: draft, error: draftError } = await supabase
+    .from("weekly_review_drafts")
+    .select("answers")
+    .eq("ceo_plan_id", ceoPlan.id)
+    .maybeSingle();
+
+  if (draftError) {
+    console.error("WEEKLY_REVIEW_PAGE_DRAFT_ERROR", draftError);
+    throw new Error("No pudimos cargar el borrador de la revisión");
+  }
+
+  const { data: evidence, error: evidenceError } = await supabase
+    .from("business_evidence")
+    .select("evidence_type")
+    .eq("business_id", business.id)
+    .order("observed_at", { ascending: false })
+    .limit(100);
+
+  if (evidenceError) {
+    console.error("WEEKLY_REVIEW_PAGE_EVIDENCE_ERROR", evidenceError);
+    throw new Error("No pudimos cargar la evidencia de tu negocio");
+  }
+
+  const reviewContext = buildWeeklyReviewContext({
+    businessName: business.name,
+    weekNumber: ceoPlan.week_number,
+    completedActions,
+    totalActions,
+    recordedResults,
+    evidence: evidence ?? [],
+  });
+
   return (
-    <main className="ambient-shell min-h-screen px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="surface-card rounded-[2rem] p-5 sm:p-8">
-          <div className="flex items-center justify-between gap-4">
-            <p className="badge-chip">IA Emprendedor</p>
-            <Link href="/dashboard" className="secondary-button min-h-9 rounded-lg px-3 py-1.5 text-xs">
-              Seguir con mi semana
-            </Link>
-          </div>
-
-          <p className="eyebrow !text-amber-800">Descubramos qué funcionó</p>
-
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-            Tu semana {ceoPlan.week_number} terminó.
-          </h1>
-
-          <p className="mt-3 text-lg leading-7 text-slate-700">
-            Ahora conviértela en aprendizaje para {business.name}.
-          </p>
-
-          {recordedResults.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
-              <p className="text-sm font-semibold text-blue-950">Ya registraste resultados en {recordedResults.length} acción{recordedResults.length === 1 ? "" : "es"}.</p>
-              <p className="mt-1 text-sm leading-5 text-blue-900/80">
-                Úsalos como evidencia disponible y enfoca esta revisión en qué significan para tu siguiente decisión.
-              </p>
-            </div>
-          )}
-
-          <p className="mt-3 text-sm text-slate-600">
-            Puedes regresar a tu semana sin guardar esta revisión. Solo se cierra cuando pulses “Guardar aprendizajes de la semana”.
-          </p>
-
-          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-            <p className="text-sm text-slate-600">Ejecución de la semana</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
-              {completedActions}/{totalActions} acciones completadas
-            </p>
-          </div>
-
-          <section className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50/50 p-5" aria-labelledby="decision-learning-title">
-            <p className="eyebrow !text-amber-800">Lo que probamos</p>
-            <h2 id="decision-learning-title" className="mt-2 text-lg font-semibold text-slate-950">Qué estamos tratando de aprender</h2>
-            <dl className="mt-4 space-y-4 text-sm">
-              <div>
-                <dt className="font-semibold text-slate-800">Decisión que probamos</dt>
-                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.question}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-800">Hipótesis</dt>
-                <dd className="mt-1 leading-5 text-slate-700">{decisionHypothesis.data.statement}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-800">Métrica que observaremos</dt>
-                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.target_metric}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-800">Resultado que buscamos</dt>
-                <dd className="mt-1 leading-5 text-slate-700">{strategicDiagnosis.data.critical_decision.expected_outcome}</dd>
-              </div>
-            </dl>
-          </section>
-
-          {pageError && <div className="alert-box mt-6">{pageError}</div>}
-
-          <form action={createWeeklyReview} className="mt-8 space-y-7">
-            <fieldset>
-              <legend className="field-label">
-                ¿Qué resultado produjo esta semana?
-              </legend>
-
-              <div className="mt-3 space-y-3">
-                {[
-                  ["positive", "Hubo avance"],
-                  ["mixed", "Avance parcial"],
-                  ["no_change", "Sin cambio claro"],
-                  ["negative", "Hubo retroceso"],
-                ].map(([value, label]) => (
-                  <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input
-                      type="radio"
-                      name="outcome_status"
-                      value={value}
-                      required
-                      className="h-4 w-4"
-                    />
-                    <span className="font-medium text-slate-800">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <div>
-              <label htmlFor="observed_result" className="field-label">
-                ¿Qué ocurrió realmente después de ejecutar este plan?
-              </label>
-              <textarea id="observed_result" name="observed_result" required minLength={5} maxLength={2000} rows={4} placeholder="Describe el resultado observado, sin interpretar más de lo que muestran los hechos." className="form-field resize-y" />
-            </div>
-
-            <div>
-              <label htmlFor="evidence" className="field-label">
-                ¿Qué evidencia concreta apareció?
-              </label>
-              <textarea id="evidence" name="evidence" required minLength={5} maxLength={2000} rows={3} placeholder="Ej. Se contactaron 12 clientes y solo uno pidió información." className="form-field resize-y" />
-            </div>
-
-            <div>
-              <label htmlFor="learning" className="field-label">
-                ¿Qué aprendiste que debería cambiar la próxima decisión?
-              </label>
-              <textarea id="learning" name="learning" required minLength={5} maxLength={2000} rows={4} placeholder="Escribe el aprendizaje estratégico, incluso si la evidencia todavía es inconclusa." className="form-field resize-y" />
-            </div>
-
-            <fieldset>
-              <legend className="field-label">¿Cómo queda la hipótesis?</legend>
-              <div className="mt-3 space-y-3">
-                {[
-                  ["validated", "Validada"],
-                  ["rejected", "Rechazada"],
-                  ["inconclusive", "Todavía no sabemos"],
-                ].map(([value, label]) => (
-                  <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-4">
-                    <input type="radio" name="hypothesis_status" value={value} required className="h-4 w-4" />
-                    <span className="font-medium text-slate-800">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="metric_before" className="field-label">Métrica antes <span className="ml-1 text-slate-400">(opcional)</span></label>
-                <input id="metric_before" name="metric_before" maxLength={500} placeholder="Ej. 0 respuestas" className="form-field mt-2" />
-              </div>
-              <div>
-                <label htmlFor="metric_after" className="field-label">Métrica después <span className="ml-1 text-slate-400">(opcional)</span></label>
-                <input id="metric_after" name="metric_after" maxLength={500} placeholder="Ej. 1 respuesta" className="form-field mt-2" />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="next_week_focus" className="field-label">
-                ¿Hay algo en lo que quieras enfocarte la próxima semana?
-                <span className="ml-1 text-slate-400">(opcional)</span>
-              </label>
-
-              <textarea
-                id="next_week_focus"
-                name="next_week_focus"
-                rows={4}
-                minLength={5}
-                maxLength={1000}
-                placeholder="Ej. Esta semana quiero enfocarme en conseguir más clientes recurrentes."
-                className="form-field resize-y"
-              />
-            </div>
-
-            <button type="submit" className="primary-button w-full">
-              Guardar aprendizajes de la semana
-            </button>
-
-            <Link href="/dashboard" className="secondary-button w-full">
-              Salir sin guardar
-            </Link>
-          </form>
+    <>
+      {pageError && (
+        <div className="mx-auto max-w-2xl px-4 pt-6">
+          <div className="alert-box" role="alert">{pageError}</div>
         </div>
-      </div>
-    </main>
+      )}
+      <ConversationalWeeklyReview
+        businessName={business.name}
+        weekNumber={ceoPlan.week_number}
+        decisionQuestion={strategicDiagnosis.data.critical_decision.question}
+        hypothesis={decisionHypothesis.data.statement}
+        introMessage={reviewContext.introMessage}
+        evidenceMessage={reviewContext.evidenceMessage}
+        metricMessage={reviewContext.metricMessage}
+        initialDraft={parseWeeklyReviewDraft(draft?.answers)}
+      />
+    </>
   );
 }

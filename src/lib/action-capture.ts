@@ -321,58 +321,22 @@ export function getCountRequirements(text: string): CountRequirement[] {
   return requirements.filter((requirement) => requirement.minimum >= 2);
 }
 
-function hasSufficientRepeatableGroup(fields: ActionCaptureField[], requirement: CountRequirement): boolean {
-  return fields.some((field) =>
-    field.type === "repeatable_group" &&
-    field.required &&
-    (field.min_items ?? 0) >= requirement.minimum &&
-    (requirement.exact ? field.max_items === requirement.minimum : field.max_items === undefined || field.max_items >= requirement.minimum),
-  );
-}
-
-/*
- * Más de MAX_REPEATABLE_ITEMS registros no caben en un formulario razonable:
- * la cantidad se demuestra con un número obligatorio cuyo mínimo es la meta,
- * y los resultados con una muestra representativa de elementos.
- */
-function hasProportionalCapture(fields: ActionCaptureField[], requirement: CountRequirement): boolean {
-  const hasCount = fields.some((field) =>
-    field.type === "number" && field.required && field.min !== undefined && field.min >= requirement.minimum,
-  );
-  const hasSample = fields.some((field) =>
-    field.type === "repeatable_group" && field.required && (field.min_items ?? 0) >= PROPORTIONAL_SAMPLE_MIN_ITEMS,
-  );
-  return hasCount && hasSample;
-}
-
 export function validateActionCaptureSemantics(
   action: Pick<{ action: string; success_metric: string; expected_result: string }, "action" | "success_metric" | "expected_result">,
   captureSchema: ActionCapture,
 ): { success: true } | { success: false; message: string } {
-  const requirements = getCountRequirements(
-    `${action.action}\n${action.success_metric}\n${action.expected_result}`,
-  );
+  void action;
 
-  for (const requirement of requirements) {
-    if (requirement.minimum > MAX_REPEATABLE_ITEMS) {
-      if (!hasProportionalCapture(captureSchema.fields, requirement)) {
-        return {
-          success: false,
-          message: `La evidencia debe incluir un campo number obligatorio con min >= ${requirement.minimum} para la cantidad y un repeatable_group obligatorio con min_items >= ${PROPORTIONAL_SAMPLE_MIN_ITEMS} para la muestra de resultados.`,
-        };
-      }
-      continue;
-    }
+  const hasRequiredEvidenceField = captureSchema.fields.some((field) => {
+    return field.required;
+  });
 
-    if (!hasSufficientRepeatableGroup(captureSchema.fields, requirement)) {
-      return {
+  return hasRequiredEvidenceField
+    ? { success: true }
+    : {
         success: false,
-        message: `La evidencia debe permitir registrar ${requirement.exact ? "exactamente " : "al menos "}${requirement.minimum} elementos mediante un repeatable_group obligatorio.`,
+        message: "La evidencia debe incluir al menos un campo obligatorio.",
       };
-    }
-  }
-
-  return { success: true };
 }
 
 function isBlankCompletionValue(value: unknown): boolean {
@@ -407,7 +371,11 @@ export function normalizeCompletionData(
       if (field?.type === "repeatable_group" && Array.isArray(value)) {
         value = value.map((item) => isRecord(item) ? normalizeRecord(field.fields, item) : item);
       }
-      if (field && isBlankCompletionValue(value)) continue;
+      if (
+        field &&
+        isBlankCompletionValue(value) &&
+        !(field.type === "repeatable_group" && Array.isArray(value))
+      ) continue;
       normalized[key] = value;
     }
     return normalized;
@@ -433,7 +401,8 @@ export function validateActionCompletion(
     for (const field of fields) {
       const path = join(field.id);
       const value = record[field.id];
-      if (isBlankCompletionValue(value)) {
+      const isBlankGroup = field.type === "repeatable_group" && Array.isArray(value);
+      if (isBlankCompletionValue(value) && !isBlankGroup) {
         if (field.required) issues.push({ path, message: COMPLETION_MESSAGES.required });
         continue;
       }
@@ -462,7 +431,6 @@ export function validateActionCompletion(
         }
       } else if (
         !Array.isArray(value) ||
-        (field.min_items !== undefined && value.length < field.min_items) ||
         (field.max_items !== undefined && value.length > field.max_items)
       ) {
         issues.push({ path, message: COMPLETION_MESSAGES.group });

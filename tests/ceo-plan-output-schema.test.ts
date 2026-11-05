@@ -83,6 +83,13 @@ const validPlan: CEOPlan = {
     statement: "Un segmento prioritario mostrará interés suficiente para justificar profundizar.",
     validation_signal: "Aparecen conversaciones cualificadas con ese segmento.",
   },
+  strategic_continuity: {
+    mode: "deepening",
+    justification: "La evidencia anterior fue prometedora, pero todavía no distingue el segmento con mejor señal.",
+    unresolved_uncertainty: "Qué segmento responde mejor.",
+    new_verifiable_signal: "Comparar respuestas cualificadas por segmento.",
+    prior_evidence_gap: "La prueba anterior mezcló segmentos y no permitió compararlos.",
+  },
   priorities: [
     {
       rank: 1,
