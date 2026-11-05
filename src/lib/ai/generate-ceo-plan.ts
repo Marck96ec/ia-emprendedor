@@ -239,10 +239,11 @@ siguiendo estas reglas:
 - Como máximo una acción puede ser ai_assisted.
 - Usa value_proposition solo cuando sea relevante para el diagnóstico
   y las prioridades del negocio.
-- Usa commercial_messages cuando la acción solicite varios mensajes,
-  variantes, versiones o copies comerciales.
+- Usa commercial_messages cuando la acción necesite un entregable comercial
+  asistido, especialmente dos ofertas distinguibles para revisión.
 - Si no es relevante, todas deben ser manual/generic.
-- value_proposition y commercial_messages siempre implican ai_assisted.
+- value_proposition y commercial_messages siempre implican ai_assisted y
+  tienen un camino de ejecución soportado por el workspace.
 - generic siempre implica manual.
 - Todas las acciones deben derivarse explícitamente de strategic_diagnosis.critical_decision
   y del bottleneck; deben ejecutar la dirección recomendada, validar una hipótesis,

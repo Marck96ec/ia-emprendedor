@@ -4,11 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { generateCommercialOffers } from "@/lib/ai/generate-commercial-offers";
 import { generateCommercialMessages } from "@/lib/ai/generate-commercial-messages";
 import { generateValueProposition } from "@/lib/ai/generate-value-proposition";
 import {
   AIActionDefinitionSchema,
+  CommercialOffersSchema,
   CommercialMessagesSchema,
+  getAIAssistedActionCapability,
   parseActionDeliverable,
   validateActionResultForApproval,
 } from "@/lib/ai/action-deliverables";
@@ -21,17 +24,39 @@ import { createClient } from "@/lib/supabase/server";
 const ActionWorkSchema = z.object({
   action_id: z.string().uuid(),
   feedback: z.string().trim().max(500).optional(),
+  return_to: z.string().regex(/^\/(dashboard|actions\/[0-9a-f-]+)(?:[?#].*)?$/i).optional(),
 });
 
 const ApproveActionSchema = z.object({
   action_result_id: z.string().uuid(),
+  return_to: z.string().regex(/^\/dashboard(?:[?#].*)?$/i).optional(),
 });
 
 const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 const PROMPT_VERSION = "value-proposition-v1";
 
-function actionError(actionId: string, message: string) {
-  return `/actions/${actionId}?error=${encodeURIComponent(message)}`;
+function actionPath(actionId: string, returnTo?: string) {
+  return returnTo?.startsWith("/dashboard")
+    ? returnTo
+    : `/actions/${actionId}`;
+}
+
+function actionError(actionId: string, message: string, returnTo?: string) {
+  const target = actionPath(actionId, returnTo);
+  const [pathAndQuery, hash] = target.split("#", 2);
+  const separator = pathAndQuery.includes("?") ? "&" : "?";
+  return `${pathAndQuery}${separator}error=${encodeURIComponent(message)}${hash ? `#${hash}` : ""}`;
+}
+
+function dashboardNotice(
+  message: string,
+  returnTo: string | undefined,
+  key: "message" | "error",
+) {
+  const target = returnTo?.startsWith("/dashboard") ? returnTo : "/dashboard";
+  const [pathAndQuery, hash] = target.split("#", 2);
+  const separator = pathAndQuery.includes("?") ? "&" : "?";
+  return `${pathAndQuery}${separator}${key}=${encodeURIComponent(message)}${hash ? `#${hash}` : ""}`;
 }
 
 async function getAuthenticatedUser() {
@@ -50,6 +75,7 @@ export async function workOnActionWithAI(formData: FormData) {
   const parsed = ActionWorkSchema.safeParse({
     action_id: actionId,
     feedback: String(formData.get("feedback") ?? "").trim() || undefined,
+    return_to: String(formData.get("return_to") ?? "").trim() || undefined,
   });
 
   if (!parsed.success) {
@@ -64,7 +90,7 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
 
   if (actionErrorResult || !action) {
-    redirect(actionError(parsed.data.action_id, "No encontramos esa acción."));
+    redirect(actionError(parsed.data.action_id, "No encontramos esa acción.", parsed.data.return_to));
   }
 
   const { data: plan, error: planError } = await supabase
@@ -79,23 +105,24 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
 
   if (planError || businessError || !plan || !business || business.owner_id !== userId) {
-    redirect(actionError(parsed.data.action_id, "No encontramos esa acción."));
+    redirect(actionError(parsed.data.action_id, "No encontramos esa acción.", parsed.data.return_to));
   }
 
   const actionDefinition = AIActionDefinitionSchema.safeParse(action);
 
   if (!actionDefinition.success || actionDefinition.data.execution_mode !== "ai_assisted") {
-    redirect(actionError(action.id, "Esta acción no tiene un espacio de trabajo con IA."));
+    redirect(actionError(action.id, "Esta acción no tiene un espacio de trabajo con IA.", parsed.data.return_to));
   }
 
   const actionType = actionDefinition.data.action_type;
+  const capability = getAIAssistedActionCapability(actionType);
 
-  if (actionType === "generic") {
-    redirect(actionError(action.id, "Esta acción no tiene un entregable definido."));
+  if (!capability) {
+    redirect(actionError(action.id, "Esta acción no tiene un entregable definido.", parsed.data.return_to));
   }
 
   if (action.status !== "pending" || plan.status !== "ready") {
-    redirect(actionError(action.id, "Esta acción ya no está disponible para editar."));
+    redirect(actionError(action.id, "Esta acción ya no está disponible para editar.", parsed.data.return_to));
   }
 
   const { data: review, error: reviewError } = await supabase
@@ -105,7 +132,7 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
 
   if (reviewError || review) {
-    redirect(actionError(action.id, "La semana ya está cerrada."));
+    redirect(actionError(action.id, "La semana ya está cerrada.", parsed.data.return_to));
   }
 
   const { data: diagnostic, error: diagnosticError } = await supabase
@@ -115,7 +142,7 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
 
   if (diagnosticError || !diagnostic) {
-    redirect(actionError(action.id, "No pudimos cargar el contexto del negocio."));
+    redirect(actionError(action.id, "No pudimos cargar el contexto del negocio.", parsed.data.return_to));
   }
 
   const { data: existingResult, error: resultError } = await supabase
@@ -125,7 +152,7 @@ export async function workOnActionWithAI(formData: FormData) {
     .maybeSingle();
 
   if (resultError || existingResult?.status === "approved") {
-    redirect(actionError(action.id, "Este resultado ya no puede modificarse."));
+    redirect(actionError(action.id, "Este resultado ya no puede modificarse.", parsed.data.return_to));
   }
 
   const draft = existingResult?.draft_content
@@ -136,34 +163,65 @@ export async function workOnActionWithAI(formData: FormData) {
 
   try {
     const content = actionType === "commercial_messages"
-      ? CommercialMessagesSchema.parse(
-          await generateCommercialMessages({
-            business: {
-              name: business.name,
-              revenue_model: business.revenue_model,
-              description: business.description,
-            },
-            diagnostic,
-            action: {
-              action: action.action,
-              objective: action.objective,
-              success_metric: action.success_metric,
-              sequence: action.sequence,
-              action_type: "commercial_messages",
-            },
-            plan: {
-              executive_summary: plan.executive_summary,
-              diagnosis: plan.diagnosis,
-              priorities: plan.priorities,
-            },
-            currentDraft:
-              currentDraft && "deliverable_type" in currentDraft
-                ? currentDraft
-                : null,
-            currentKnowledge: businessKnowledge.valueProposition,
-            feedback: parsed.data.feedback ?? null,
-          }),
-        )
+      ? await (async () => {
+          const legacyDraft = currentDraft && "messages" in currentDraft
+            ? CommercialMessagesSchema.parse(currentDraft)
+            : null;
+          return legacyDraft
+            ? CommercialMessagesSchema.parse(
+                await generateCommercialMessages({
+                  business: {
+                    name: business.name,
+                    revenue_model: business.revenue_model,
+                    description: business.description,
+                  },
+                  diagnostic,
+                  action: {
+                    action: action.action,
+                    objective: action.objective,
+                    success_metric: action.success_metric,
+                    sequence: action.sequence,
+                    action_type: "commercial_messages",
+                  },
+                  plan: {
+                    executive_summary: plan.executive_summary,
+                    diagnosis: plan.diagnosis,
+                    priorities: plan.priorities,
+                  },
+                  currentDraft: legacyDraft,
+                  currentKnowledge: businessKnowledge.valueProposition,
+                  feedback: parsed.data.feedback ?? null,
+                }),
+              )
+            : CommercialOffersSchema.parse(
+                await generateCommercialOffers({
+                  business: {
+                    name: business.name,
+                    revenue_model: business.revenue_model,
+                    description: business.description,
+                  },
+                  diagnostic,
+                  action: {
+                    action: action.action,
+                    objective: action.objective,
+                    success_metric: action.success_metric,
+                    sequence: action.sequence,
+                    action_type: "commercial_messages",
+                  },
+                  plan: {
+                    executive_summary: plan.executive_summary,
+                    diagnosis: plan.diagnosis,
+                    priorities: plan.priorities,
+                  },
+                  currentDraft:
+                    currentDraft && "offers" in currentDraft
+                      ? currentDraft
+                      : null,
+                  currentKnowledge: businessKnowledge.valueProposition,
+                  feedback: parsed.data.feedback ?? null,
+                }),
+              );
+        })()
       : ValuePropositionSchema.parse(
           await generateValueProposition({
             business: {
@@ -193,7 +251,9 @@ export async function workOnActionWithAI(formData: FormData) {
           }),
         );
     const promptVersion = actionType === "commercial_messages"
-      ? "commercial-messages-v1"
+      ? currentDraft && "messages" in currentDraft
+        ? "commercial-messages-v1"
+        : "commercial-offers-v1"
       : PROMPT_VERSION;
     const { data: savedResult, error: saveError } = existingResult
       ? await supabase
@@ -220,21 +280,26 @@ export async function workOnActionWithAI(formData: FormData) {
 
     if (saveError || !savedResult) {
       console.error("ACTION_RESULT_SAVE_ERROR", saveError);
-      redirect(actionError(action.id, "No pudimos guardar el entregable."));
+      redirect(actionError(action.id, "No pudimos guardar el entregable.", parsed.data.return_to));
     }
   } catch (error) {
     console.error("ACTION_DELIVERABLE_GENERATION_ERROR", error);
-    redirect(actionError(action.id, "No pudimos generar el entregable. Puedes reintentarlo."));
+    redirect(actionError(action.id, "No pudimos generar el entregable. Puedes reintentarlo.", parsed.data.return_to));
   }
 
   revalidatePath(`/actions/${action.id}`);
   revalidatePath("/dashboard");
-  redirect(`/actions/${action.id}`);
+  redirect(
+    parsed.data.return_to?.startsWith("/dashboard")
+      ? `${parsed.data.return_to}`
+      : `/actions/${action.id}`,
+  );
 }
 
 export async function approveActionResult(formData: FormData) {
   const parsed = ApproveActionSchema.safeParse({
     action_result_id: String(formData.get("action_result_id") ?? ""),
+    return_to: String(formData.get("return_to") ?? "").trim() || undefined,
   });
 
   if (!parsed.success) {
@@ -272,7 +337,13 @@ export async function approveActionResult(formData: FormData) {
         actionErrorResult,
         approvalValidation,
       });
-      redirect("/dashboard?error=El entregable no es válido para aprobarlo.");
+      redirect(
+        dashboardNotice(
+          "El entregable no es válido para aprobarlo.",
+          parsed.data.return_to,
+          "error",
+        ),
+      );
     }
   }
 
@@ -282,10 +353,22 @@ export async function approveActionResult(formData: FormData) {
 
   if (error || !data?.[0]) {
     console.error("ACTION_RESULT_APPROVAL_ERROR", error);
-    redirect("/dashboard?error=No pudimos aprobar el resultado.");
+    redirect(
+      dashboardNotice(
+        "No pudimos aprobar el resultado.",
+        parsed.data.return_to,
+        "error",
+      ),
+    );
   }
 
   revalidatePath("/dashboard");
   revalidatePath(`/actions/${data[0].weekly_action_id}`);
-  redirect("/dashboard?message=Entregable aprobado. Registra el resultado para completar la acción.");
+  redirect(
+    dashboardNotice(
+      "Entregable aprobado. Registra el resultado para completar la acción.",
+      parsed.data.return_to,
+      "message",
+    ),
+  );
 }

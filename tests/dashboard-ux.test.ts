@@ -124,6 +124,17 @@ test("primary action CTA stays pinned in the detail panel", () => {
   assert.match(panel, /Ver resultado/);
 });
 
+test("AI actions keep generation, review, approval and evidence inside the dashboard panel", () => {
+  const panel = source("src/components/action-detail-panel.tsx");
+
+  assert.match(panel, /id="ai-action-workspace"/);
+  assert.match(panel, /workOnActionWithAI/);
+  assert.match(panel, /approveActionResult/);
+  assert.match(panel, /return_to/);
+  assert.match(panel, /Registrar evidencia y completar/);
+  assert.match(panel, /Abrir ruta directa de esta acción/);
+});
+
 test("hero shows the decision, recommendation, human certainty and decision links", () => {
   const hero = source("src/components/decision-hero.tsx");
 

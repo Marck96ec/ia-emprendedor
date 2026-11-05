@@ -4,11 +4,14 @@ import type {
   ActionType,
 } from "@/lib/weekly-action-types";
 import type { ActionCapture } from "@/lib/action-capture";
+import type { ActionDeliverable } from "@/lib/ai/action-deliverables";
 import type { StrategicContinuity } from "@/lib/strategic-continuity";
 
 export type DashboardActionResult = {
   id: string;
   status: "draft" | "approved";
+  revision: number;
+  content: ActionDeliverable | null;
 };
 
 export type DashboardAction = {

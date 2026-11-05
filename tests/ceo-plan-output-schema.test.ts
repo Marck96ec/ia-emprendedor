@@ -790,6 +790,43 @@ test("rechaza incoherencia de modo y tipo sin depender de la redacción", () => 
   );
 });
 
+test("permite una capacidad comercial explícita aunque el texto no use keywords", () => {
+  const plan = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            action: "Comparar dos alternativas",
+            objective: "Observar qué propuesta es más clara",
+            success_metric: "Registrar lo observado",
+            execution_mode: "ai_assisted" as const,
+            action_type: "commercial_messages" as const,
+          }
+        : item,
+    ),
+  };
+
+  assert.equal(validateCEOPlanBusinessRules(plan).success, true);
+});
+
+test("toda acción asistida debe tener una capacidad ejecutable", () => {
+  const invalidPlan = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            execution_mode: "ai_assisted" as const,
+            action_type: "generic" as const,
+          }
+        : item,
+    ),
+  };
+
+  assert.equal(validateCEOPlanBusinessRules(invalidPlan).success, false);
+});
+
 test("reintenta una salida inválida una sola vez y acepta la corregida", async () => {
   process.env.OPENAI_API_KEY = "test-key";
   let attempts = 0;

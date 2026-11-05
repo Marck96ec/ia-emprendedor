@@ -11,6 +11,10 @@ import {
   StrategicContinuitySchema,
   validateStrategicContinuity,
 } from "../strategic-continuity";
+import {
+  AIActionDefinitionSchema,
+  getAIAssistedActionCapability,
+} from "./action-deliverables";
 
 const PrioritySchema = z.object({
   rank: z.number().int().min(1).max(3),
@@ -305,6 +309,26 @@ export const CEOPlanBusinessRulesSchema = CEOPlanSchema.superRefine(
         });
       }
 
+      const actionDefinition = AIActionDefinitionSchema.safeParse(item);
+      if (!actionDefinition.success) {
+        for (const issue of actionDefinition.error.issues) {
+          context.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: ["weekly_plan", index, ...issue.path],
+          });
+        }
+      } else if (
+        actionDefinition.data.execution_mode === "ai_assisted" &&
+        !getAIAssistedActionCapability(actionDefinition.data.action_type)
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "La acción asistida no tiene una capacidad ejecutable",
+          path: ["weekly_plan", index, "action_type"],
+        });
+      }
+
       if (
         item.role_recommendation === "defer" &&
         item.estimated_hours !== 0
@@ -562,7 +586,9 @@ Para cada acción debes expresar explícitamente:
 - role_reason: por qué ese rol maximiza el impacto por hora del empresario
 - estimated_hours: horas personales del empresario, no horas totales de otra persona
 - execution_mode: "manual" o "ai_assisted"
-- action_type: "generic", "value_proposition" o "commercial_messages"
+- action_type: "generic", "value_proposition" o "commercial_messages".
+  commercial_messages tiene una capacidad explícita para generar dos ofertas
+  comerciales; las salidas históricas de tres mensajes siguen siendo legibles.
 - capture_schema: un esquema de evidencia específico para la acción. Debe
   incluir entre 1 y 10 campos con IDs snake_case y solo usar text, textarea,
   number, single_select, multi_select o repeatable_group. Pregunta por señales
@@ -648,14 +674,14 @@ Reglas obligatorias para esos campos:
 - Como máximo una de las acciones puede ser ai_assisted.
 - Usa value_proposition solo si definir o mejorar la propuesta de valor
   es realmente relevante para el diagnóstico y las prioridades.
-- Usa commercial_messages cuando la acción solicite varios mensajes,
-  variantes, versiones o copies comerciales.
+- Usa commercial_messages cuando la acción necesite un entregable comercial
+  asistido, especialmente dos ofertas distinguibles para revisión.
 - Si no es relevante, las acciones deben ser manual/generic.
 - Toda acción value_proposition o commercial_messages debe ser ai_assisted.
 - Toda acción generic debe ser manual.
 
-No clasifiques por palabras concretas del texto de una acción. Decide a
-partir del diagnóstico, las prioridades y el contexto completo del negocio.
+La clasificación de la capacidad es un campo explícito del contrato. No
+dependas de palabras concretas del título, objetivo o métrica.
 
 Evita respuestas genéricas y predecibles. Sal de la caja: cuestiona lo obvio, 
 explora ángulos no convencionales y propón ideas concretas, creativas y de alto impacto.

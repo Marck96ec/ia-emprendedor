@@ -13,6 +13,7 @@ import {
   type DashboardJourney,
 } from "@/lib/dashboard-progress";
 import { parseStoredCEOPlanForDashboard } from "@/lib/ai/ceo-agent";
+import { parseStoredActionResult } from "@/lib/ai/action-deliverables";
 import { StoredExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
   DashboardAction,
@@ -242,7 +243,10 @@ export default async function DashboardPage({
           action_type,
           action_results (
             id,
-            status
+            status,
+            draft_content,
+            approved_content,
+            revision
           )
         `,
       )
@@ -265,7 +269,21 @@ export default async function DashboardPage({
     weeklyActions = (actions ?? []).map((action) => ({
       ...action,
       action_results: Array.isArray(action.action_results)
-        ? action.action_results
+        ? action.action_results.map((result) => {
+            const parsedResult = parseStoredActionResult(
+              action.action_type,
+              result.status,
+              result.draft_content,
+              result.approved_content,
+            );
+
+            return {
+              id: result.id,
+              status: result.status,
+              revision: result.revision,
+              content: parsedResult.success ? parsedResult.data : null,
+            };
+          })
         : [],
     })) as DashboardAction[];
   }
