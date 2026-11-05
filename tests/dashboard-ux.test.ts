@@ -308,3 +308,12 @@ test("weekly review frames the review as learning", () => {
   assert.match(review, /¿Qué nos dicen los resultados/);
   assert.match(review, /prefers-reduced-motion/);
 });
+
+test("weekly review typing uses natural character and punctuation pacing", () => {
+  const review = source("src/components/conversational-weekly-review.tsx");
+
+  assert.match(review, /TYPING_BASE_DELAY_MS = 34/);
+  assert.match(review, /TYPING_SENTENCE_DELAY_MS = 220/);
+  assert.match(review, /window\.setTimeout\(typeNextCharacter/);
+  assert.doesNotMatch(review, /setInterval/);
+});

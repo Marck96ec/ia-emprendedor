@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { createWeeklyReview, saveWeeklyReviewDraft } from "@/actions/weekly-review";
 import {
@@ -37,6 +37,17 @@ type ConversationalWeeklyReviewProps = {
 };
 
 const INITIAL_DRAFT: WeeklyReviewDraft = {};
+const TYPING_BASE_DELAY_MS = 34;
+const TYPING_SPACE_DELAY_MS = 18;
+const TYPING_COMMA_DELAY_MS = 120;
+const TYPING_SENTENCE_DELAY_MS = 220;
+
+function getTypingDelay(character: string): number {
+  if (character === " ") return TYPING_SPACE_DELAY_MS;
+  if (/[.!?]/.test(character)) return TYPING_SENTENCE_DELAY_MS;
+  if (/[,;:]/.test(character)) return TYPING_COMMA_DELAY_MS;
+  return TYPING_BASE_DELAY_MS;
+}
 
 function isAnswered(question: ReviewQuestion, value: unknown): boolean {
   if (typeof value !== "string") return false;
@@ -49,7 +60,15 @@ function getAnswerLabel(question: ReviewQuestion, value: unknown): string {
   return question.choices?.find((choice) => choice.value === value)?.label ?? value;
 }
 
-function TypedMessage({ text, immediate }: { text: string; immediate?: boolean }) {
+function TypedMessage({
+  text,
+  immediate,
+  onComplete,
+}: {
+  text: string;
+  immediate?: boolean;
+  onComplete?: () => void;
+}) {
   const [content, setContent] = useState(immediate ? text : "");
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -62,16 +81,34 @@ function TypedMessage({ text, immediate }: { text: string; immediate?: boolean }
   }, []);
 
   useEffect(() => {
-    if (immediate || reducedMotion) return;
+    if (immediate || reducedMotion) {
+      onComplete?.();
+      return;
+    }
+
     let index = 0;
-    const timer = window.setInterval(() => {
+
+    let timer: number | null = null;
+    const typeNextCharacter = () => {
       index += 1;
       setContent(text.slice(0, index));
-      if (index >= text.length) window.clearInterval(timer);
-    }, 16);
+      if (index >= text.length) {
+        onComplete?.();
+        return;
+      }
 
-    return () => window.clearInterval(timer);
-  }, [immediate, reducedMotion, text]);
+      timer = window.setTimeout(
+        typeNextCharacter,
+        getTypingDelay(text[index - 1] ?? ""),
+      );
+    };
+
+    timer = window.setTimeout(typeNextCharacter, TYPING_BASE_DELAY_MS);
+
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, [immediate, onComplete, reducedMotion, text]);
 
   const visibleContent = immediate || reducedMotion ? text : content;
 
@@ -163,6 +200,7 @@ export function ConversationalWeeklyReview({
     return firstIncomplete === -1 ? questions.length : Math.max(firstIncomplete, 0);
   });
   const [questionVisible, setQuestionVisible] = useState(true);
+  const [questionComplete, setQuestionComplete] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved" | "error">(
@@ -216,6 +254,7 @@ export function ConversationalWeeklyReview({
   function beginThinking(nextIndex: number) {
     setThinking(true);
     setQuestionVisible(false);
+    setQuestionComplete(false);
     const delay = reducedMotion ? 0 : 240;
     thinkingTimerRef.current = window.setTimeout(() => {
       setThinking(false);
@@ -238,16 +277,21 @@ export function ConversationalWeeklyReview({
     if (thinkingTimerRef.current !== null) window.clearTimeout(thinkingTimerRef.current);
     setThinking(false);
     setQuestionVisible(true);
+    setQuestionComplete(false);
     setActiveIndex((current) => Math.max(0, current - 1));
   }
 
   function editQuestion(index: number) {
     setQuestionVisible(true);
     setThinking(false);
+    setQuestionComplete(false);
     setActiveIndex(index);
   }
 
   const currentQuestion = questions[activeIndex];
+  const handleQuestionComplete = useCallback(() => {
+    setQuestionComplete(true);
+  }, []);
   const isSummary = activeIndex >= questions.length;
   const progress = isSummary ? 100 : Math.round(((activeIndex + 1) / questions.length) * 100);
   const currentValue = currentQuestion ? answers[currentQuestion.id] : undefined;
@@ -328,13 +372,17 @@ export function ConversationalWeeklyReview({
               <div ref={scrollAnchorRef} className="flex items-start gap-3" aria-live="polite">
                 <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white" aria-hidden="true">T</div>
                 <div className="min-w-0 max-w-[90%] rounded-2xl rounded-tl-md bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-800">
-                  <TypedMessage text={currentQuestion.message} />
-                  {currentQuestion.help && <p className="mt-2 border-t border-slate-200 pt-2 text-xs leading-5 text-slate-600">{currentQuestion.help}</p>}
+                  <TypedMessage
+                    key={currentQuestion.id}
+                    text={currentQuestion.message}
+                    onComplete={handleQuestionComplete}
+                  />
+                  {currentQuestion.help && questionComplete && <p className="mt-2 border-t border-slate-200 pt-2 text-xs leading-5 text-slate-600">{currentQuestion.help}</p>}
                 </div>
               </div>
             )}
 
-            {!thinking && questionVisible && currentQuestion && (
+            {!thinking && questionVisible && questionComplete && currentQuestion && (
               <div className="ml-12 space-y-3">
                 {currentQuestion.kind === "choice" && (
                   <fieldset className="space-y-2">

@@ -24,7 +24,7 @@ export function buildWeeklyReviewContext(input: {
       : `Completaste ${input.completedActions} de ${input.totalActions} acciones.`;
   const resultMessage =
     input.recordedResults > 0
-      ? ` Registraste resultados en ${input.recordedResults} acción${input.recordedResults === 1 ? "" : "es"}.`
+      ? ` Registraste resultados en ${input.recordedResults} ${input.recordedResults === 1 ? "acción" : "acciones"}.`
       : " Todavía no hay resultados estructurados registrados.";
   const evidenceSummary = summarizeEvidence(input.evidence);
 
