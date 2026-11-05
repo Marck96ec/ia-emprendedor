@@ -12,7 +12,7 @@ import {
   getDecisionLoopStage,
   type DashboardJourney,
 } from "@/lib/dashboard-progress";
-import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
+import { parseStoredCEOPlanForDashboard } from "@/lib/ai/ceo-agent";
 import { StoredExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
   DashboardAction,
@@ -163,7 +163,7 @@ export default async function DashboardPage({
    */
   const parsedCEOPlan =
     ceoPlan?.status === "ready"
-      ? StoredCEOPlanSchema.safeParse({
+      ? parseStoredCEOPlanForDashboard({
           executive_summary:
             ceoPlan.executive_summary,
 
@@ -187,7 +187,7 @@ export default async function DashboardPage({
 
           time_allocation:
             ceoPlan.time_allocation,
-        })
+        }, ceoPlan.week_number)
       : null;
 
   const readyPlan =

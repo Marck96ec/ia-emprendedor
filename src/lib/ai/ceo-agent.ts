@@ -688,3 +688,31 @@ export const StoredCEOPlanSchema = CEOPlanSchema.extend({
       },
     ),
 });
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function parseStoredCEOPlanForDashboard(
+  value: unknown,
+  weekNumber: number,
+) {
+  const normalizedValue =
+    weekNumber === 1 &&
+    isRecord(value) &&
+    value.strategic_continuity === null
+      ? {
+          ...value,
+          strategic_continuity: undefined,
+        }
+      : value;
+
+  const schema =
+    weekNumber >= 2
+      ? StoredCEOPlanSchema.extend({
+          strategic_continuity: StrategicContinuitySchema,
+        })
+      : StoredCEOPlanSchema;
+
+  return schema.safeParse(normalizedValue);
+}

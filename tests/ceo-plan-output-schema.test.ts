@@ -8,6 +8,8 @@ import { ModelBehaviorError } from "@openai/agents";
 import {
   CEOPlanSchema,
   CEOPlanModelSchema,
+  parseStoredCEOPlanForDashboard,
+  StoredCEOPlanSchema,
   validateCEOPlanBusinessRules,
   type CEOPlan,
 } from "../src/lib/ai/ceo-agent";
@@ -265,6 +267,52 @@ test("representa la ausencia de continuidad como null en el contrato del modelo"
 
   assert.equal(result.strategic_continuity, undefined);
   assert.equal(result.weekly_plan[0].capture_schema.description, undefined);
+});
+
+test("normaliza la continuidad null de la primera semana antes de validar el plan persistido", () => {
+  const parsed = parseStoredCEOPlanForDashboard(
+    {
+      ...validPlan,
+      strategic_continuity: null,
+    },
+    1,
+  );
+
+  assert.equal(parsed.success, true);
+  assert.equal(
+    parsed.success ? parsed.data.strategic_continuity : null,
+    undefined,
+  );
+  assert.equal(
+    parseStoredCEOPlanForDashboard(
+      {
+        ...validPlan,
+        strategic_continuity: null,
+        executive_summary: 123,
+      },
+      1,
+    ).success,
+    false,
+  );
+});
+
+test("rechaza la continuidad null en planes persistidos desde la segunda semana", () => {
+  const parsed = parseStoredCEOPlanForDashboard(
+    {
+      ...validPlan,
+      strategic_continuity: null,
+    },
+    2,
+  );
+
+  assert.equal(parsed.success, false);
+  assert.equal(
+    StoredCEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_continuity: null,
+    }).success,
+    false,
+  );
 });
 
 test("acepta un plan estructuralmente válido de tres acciones", () => {
