@@ -259,6 +259,9 @@ export const CEOPlanSchema = z.object({
 });
 
 export const CEOPlanModelSchema = CEOPlanSchema.extend({
+  // OpenAI Structured Outputs requires every property to be present. The SDK
+  // represents the domain-level optional value as a required nullable field.
+  strategic_continuity: StrategicContinuitySchema.nullable(),
   weekly_plan: z.array(WeeklyPlanItemModelSchema).min(1).max(5),
 });
 

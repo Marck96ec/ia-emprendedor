@@ -100,6 +100,19 @@ test("la continuidad rechaza repetición sin una señal nueva", () => {
   assert.equal(result.success, false);
 });
 
+test("la primera semana no requiere continuidad estratégica", () => {
+  const result = validateStrategicContinuity({
+    previousActions: [],
+    nextActions: [{
+      action: "Registrar consultas",
+      objective: "Conocer la demanda",
+      successMetric: "Consultas recibidas",
+    }],
+  });
+
+  assert.deepEqual(result, { success: true, repeatedActions: 0 });
+});
+
 test("la continuidad acepta profundizar con señal verificable nueva", () => {
   const result = validateStrategicContinuity({
     previousActions: [{
