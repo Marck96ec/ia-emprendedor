@@ -9,8 +9,6 @@ import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
 import { ActionCompletionForm } from "@/components/action-completion-form";
 import {
   ActionDeliverablePreview,
-  getActionDeliverableExplanation,
-  getActionDeliverableTitle,
 } from "@/components/action-deliverable-preview";
 import {
   AIActionDefinitionSchema,
@@ -20,6 +18,10 @@ import {
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
 import { getActionCaptureSchema } from "@/lib/action-capture";
+import {
+  getActionDeliverableExplanation,
+  getActionDeliverableTitle,
+} from "@/lib/action-deliverable-presentation";
 
 type ActionPageProps = {
   params: Promise<{ actionId: string }>;

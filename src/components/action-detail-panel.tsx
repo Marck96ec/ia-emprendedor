@@ -8,13 +8,13 @@ import { approveActionResult, workOnActionWithAI } from "@/actions/action-ai";
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { updateWeeklyActionStatus } from "@/actions/weekly-actions";
 import { ActionCompletionDialog } from "@/components/action-completion-dialog";
-import {
-  ActionDeliverablePreview,
-  getActionDeliverableExplanation,
-  getActionDeliverableTitle,
-} from "@/components/action-deliverable-preview";
+import { ActionDeliverablePreview } from "@/components/action-deliverable-preview";
 import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
 import { getActionCaptureSchema } from "@/lib/action-capture";
+import {
+  getActionDeliverableExplanation,
+  getActionDeliverableTitle,
+} from "@/lib/action-deliverable-presentation";
 import type { DashboardAction, DashboardWeeklyReview } from "@/lib/dashboard-types";
 
 type ActionDetailPanelProps = {

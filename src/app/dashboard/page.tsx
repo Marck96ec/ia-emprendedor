@@ -268,8 +268,12 @@ export default async function DashboardPage({
 
     weeklyActions = (actions ?? []).map((action) => ({
       ...action,
-      action_results: Array.isArray(action.action_results)
-        ? action.action_results.map((result) => {
+      action_results: (Array.isArray(action.action_results)
+        ? action.action_results
+        : action.action_results
+        ? [action.action_results]
+        : []
+      ).map((result) => {
             const parsedResult = parseStoredActionResult(
               action.action_type,
               result.status,
@@ -283,8 +287,7 @@ export default async function DashboardPage({
               revision: result.revision,
               content: parsedResult.success ? parsedResult.data : null,
             };
-          })
-        : [],
+          }),
     })) as DashboardAction[];
   }
 

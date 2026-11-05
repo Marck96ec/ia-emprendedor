@@ -86,13 +86,3 @@ export function ActionDeliverablePreview({
     </div>
   );
 }
-
-export function getActionDeliverableTitle(content: ActionDeliverable): string {
-  if (isCommercialOffers(content)) return "Ofertas comerciales";
-  if (isCommercialMessages(content)) return "Mensajes comerciales";
-  return "Propuesta de valor";
-}
-
-export function getActionDeliverableExplanation(content: ActionDeliverable): string {
-  return "explanation" in content ? content.explanation : content.rationale;
-}
