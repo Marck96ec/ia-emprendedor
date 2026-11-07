@@ -23,7 +23,7 @@ function ResultSection({ label, children }: { label: string; children: React.Rea
   return (
     <div className="border-b border-slate-200 pb-5 last:border-0 last:pb-0">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <div className="mt-2 text-lg leading-8 text-slate-900">{children}</div>
+      <div className="mt-2 text-sm leading-6 text-slate-800">{children}</div>
     </div>
   );
 }
@@ -35,11 +35,11 @@ export function ActionDeliverablePreview({
 }) {
   if (isCommercialOffers(content)) {
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-4 font-sans text-slate-900">
         {content.offers.map((offer, index) => (
           <article key={offer.offer_name} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Oferta {index + 1}</p>
-            <h3 className="mt-2 text-lg font-semibold text-slate-950">{offer.offer_name}</h3>
+            <h3 className="mt-2 text-base font-semibold leading-6 text-slate-950 sm:text-lg">{offer.offer_name}</h3>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <ResultSection label="Cliente objetivo">{offer.target_customer}</ResultSection>
               <ResultSection label="Promesa">{offer.promise}</ResultSection>
@@ -54,7 +54,7 @@ export function ActionDeliverablePreview({
 
   if (isCommercialMessages(content)) {
     return (
-      <div className="grid gap-4">
+      <div className="grid gap-4 font-sans text-slate-900">
         {content.messages.map((message, index) => (
           <article key={`${message.changing_factor}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -65,7 +65,7 @@ export function ActionDeliverablePreview({
               <CopyMessageButton message={message.message} />
             </div>
             <p className="mt-4 text-sm font-semibold text-slate-600">Factor que cambia: {message.changing_factor}</p>
-            <p className="mt-3 text-lg leading-8 text-slate-900">{message.message}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-800 sm:text-base">{message.message}</p>
           </article>
         ))}
       </div>
@@ -73,7 +73,7 @@ export function ActionDeliverablePreview({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans text-slate-900">
       <ResultSection label="Propuesta de valor">{content.value_proposition}</ResultSection>
       <ResultSection label="Cliente objetivo">{content.target_customer}</ResultSection>
       <ResultSection label="Problema que resuelve">{content.problem_solved}</ResultSection>

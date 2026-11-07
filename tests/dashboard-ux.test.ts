@@ -135,6 +135,14 @@ test("AI actions keep generation, review, approval and evidence inside the dashb
   assert.match(panel, /Abrir ruta directa de esta acción/);
 });
 
+test("AI deliverable previews use the dashboard typography contract", () => {
+  const preview = source("src/components/action-deliverable-preview.tsx");
+
+  assert.match(preview, /font-sans/);
+  assert.match(preview, /text-sm leading-6/);
+  assert.doesNotMatch(preview, /text-lg leading-8/);
+});
+
 test("hero shows the decision, recommendation, human certainty and decision links", () => {
   const hero = source("src/components/decision-hero.tsx");
 

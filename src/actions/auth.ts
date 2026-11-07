@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSignupStatus } from "@/lib/auth-feedback";
 
 function getSiteUrl() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -41,7 +42,7 @@ export async function signup(formData: FormData) {
 
   const redirectTo = getSiteUrl();
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -49,7 +50,22 @@ export async function signup(formData: FormData) {
     },
   });
 
-  if (error) {
+  const signupStatus = getSignupStatus({
+    error,
+    user: data.user,
+  });
+
+  if (signupStatus === "account_exists") {
+    redirect(
+      "/signup?message=" +
+        encodeURIComponent(
+          "Este correo ya está registrado.",
+        ) +
+        "&status=account_exists",
+    );
+  }
+
+  if (signupStatus === "error") {
     redirect(
       "/signup?error=" +
         encodeURIComponent("No pudimos crear la cuenta. Intenta nuevamente."),
@@ -58,7 +74,49 @@ export async function signup(formData: FormData) {
 
   redirect(
     "/signup?message=" +
-      encodeURIComponent("Revisa tu correo para confirmar tu cuenta."),
+      encodeURIComponent(
+        "Cuenta creada. Revisa tu correo para confirmar tu cuenta.",
+      ) +
+      "&status=account_created",
+  );
+}
+
+export async function resendSignupConfirmation(formData: FormData) {
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    redirect(
+      "/signup?error=" +
+        encodeURIComponent("Ingresa tu correo para reenviar la verificación.") +
+        "&status=account_exists",
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+  });
+
+  if (error) {
+    console.error("SIGNUP_CONFIRMATION_RESEND_ERROR", error);
+    redirect(
+      "/signup?error=" +
+        encodeURIComponent(
+          "No pudimos reenviar el correo. Espera unos minutos e inténtalo nuevamente.",
+        ) +
+        "&status=account_exists",
+    );
+  }
+
+  redirect(
+    "/signup?message=" +
+      encodeURIComponent(
+        "Si la cuenta necesita verificación, enviamos un nuevo correo. Revisa tu bandeja de entrada y spam.",
+      ) +
+      "&status=verification_sent",
   );
 }
 
