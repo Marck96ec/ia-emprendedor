@@ -8,11 +8,13 @@ export async function GET(request: NextRequest) {
 
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
+  const nextPath = searchParams.get("next");
 
   const redirectTo = request.nextUrl.clone();
 
   redirectTo.searchParams.delete("token_hash");
   redirectTo.searchParams.delete("type");
+  redirectTo.searchParams.delete("next");
 
   if (tokenHash && type) {
     const supabase = await createClient();
@@ -23,7 +25,10 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      redirectTo.pathname = "/dashboard";
+      redirectTo.pathname =
+        type === "recovery" && nextPath === "/reset-password"
+          ? "/reset-password"
+          : "/dashboard";
 
       return NextResponse.redirect(redirectTo);
     }

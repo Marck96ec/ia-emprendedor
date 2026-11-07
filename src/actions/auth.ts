@@ -6,6 +6,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSignupStatus } from "@/lib/auth-feedback";
 
+export type LoginFormState = {
+  error?: string;
+};
+
 function getSiteUrl() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -120,7 +124,10 @@ export async function resendSignupConfirmation(formData: FormData) {
   );
 }
 
-export async function login(formData: FormData) {
+export async function login(
+  _previousState: LoginFormState,
+  formData: FormData,
+): Promise<LoginFormState> {
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
@@ -128,10 +135,7 @@ export async function login(formData: FormData) {
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    redirect(
-      "/login?error=" +
-        encodeURIComponent("Ingresa tu correo y contraseña."),
-    );
+    return { error: "Ingresa tu correo y contraseña." };
   }
 
   const supabase = await createClient();
@@ -142,14 +146,83 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(
-      "/login?error=" +
-        encodeURIComponent("Correo o contraseña incorrectos."),
-    );
+    return { error: "Correo o contraseña incorrectos." };
   }
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    redirect(
+      "/forgot-password?error=" +
+        encodeURIComponent("Ingresa un correo válido."),
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${getSiteUrl()}/auth/confirm?next=/reset-password`,
+  });
+
+  if (error) {
+    console.error("PASSWORD_RESET_REQUEST_ERROR", error);
+    redirect(
+      "/forgot-password?error=" +
+        encodeURIComponent(
+          "No pudimos enviar el enlace. Inténtalo nuevamente en unos minutos.",
+        ),
+    );
+  }
+
+  redirect(
+    "/forgot-password?message=" +
+      encodeURIComponent(
+        "Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.",
+      ),
+  );
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const confirmation = String(formData.get("confirmation") ?? "");
+
+  if (password.length < 8) {
+    redirect(
+      "/reset-password?error=" +
+        encodeURIComponent("La contraseña debe tener al menos 8 caracteres."),
+    );
+  }
+
+  if (password !== confirmation) {
+    redirect(
+      "/reset-password?error=" +
+        encodeURIComponent("Las contraseñas no coinciden."),
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    console.error("PASSWORD_UPDATE_ERROR", error);
+    redirect(
+      "/reset-password?error=" +
+        encodeURIComponent(
+          "No pudimos actualizar la contraseña. Solicita un nuevo enlace.",
+        ),
+    );
+  }
+
+  redirect(
+    "/login?message=" +
+      encodeURIComponent("Contraseña actualizada. Ya puedes iniciar sesión."),
+  );
 }
 
 export async function logout() {
