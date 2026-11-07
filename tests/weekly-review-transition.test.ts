@@ -84,6 +84,9 @@ test("the same experience starts the first week and carries weekly review contex
   assert.match(reviewComponent, /context="next-week"/);
   assert.match(reviewComponent, /weekNumber=\{weekNumber \+ 1\}/);
   assert.match(generationExperience, /requestStartedRef/);
-  assert.match(generationExperience, /La animación indica actividad, no un porcentaje de avance/);
+  assert.match(
+    generationExperience,
+    /Todo lo que tu mente puede imaginar y creer, puede alcanzar/,
+  );
   assert.match(generationExperience, /motion-reduce:animate-none/);
 });

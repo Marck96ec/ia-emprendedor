@@ -252,7 +252,10 @@ export function PlanGenerationExperience({
             ))}
           </div>
           <p className="mt-7 text-sm leading-6 text-slate-600">
-            La animación indica actividad, no un porcentaje de avance.
+            «Todo lo que tu mente puede imaginar y creer, puede alcanzar».
+            <span className="mt-1 block text-xs text-slate-500">
+              Inspirado en Napoleon Hill
+            </span>
           </p>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             Adaptado al contexto de {businessName}.
