@@ -157,6 +157,7 @@ test("hero shows the decision, recommendation, human certainty and decision link
 
 test("next action card is the protagonist and handles last action and weekly celebration", () => {
   const card = source("src/components/next-action-card.tsx");
+  const panel = source("src/components/action-detail-panel.tsx");
 
   assert.match(card, /href=\{`#tablero-semanal\?action=\$\{action\.id\}`\}/);
   assert.match(card, /Siguiente paso/);
@@ -164,7 +165,8 @@ test("next action card is the protagonist and handles last action and weekly cel
   assert.match(card, /Tiempo estimado/);
   assert.match(card, /Empezar esta acción/);
   assert.match(card, /Plan ejecutado\./);
-  assert.match(card, /Revisar mi semana/);
+  assert.match(card, /accent-button anim-rise anim-glow[^>]*>\s*Revisar mi semana/);
+  assert.doesNotMatch(panel, /Revisar mi semana/);
 });
 
 test("mobile next action CTA focuses the selected action in the weekly board", () => {

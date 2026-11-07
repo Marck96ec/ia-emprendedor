@@ -1,0 +1,158 @@
+
+> ia-emprendedor@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.5 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.23.112.1:3000
+- Environments: .env.local
+✓ Ready in 1166ms
+✓ Running next.config.ts took 70ms
+
+⚠ Blocked cross-origin request to Next.js dev resource /_next/hmr from "127.0.0.1".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['127.0.0.1'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password?message=Si%20el%20correo%20est%C3%A1%20registrado%2C%20recibir%C3%A1s%20un%20enlace%20para%20crear%20una%20nueva%20contrase%C3%B1a. 200 in 3.1s (next.js: 1420ms, proxy.ts: 227ms, application-code: 1439ms)
+ GET /forgot-password 200 in 1918ms (next.js: 166ms, proxy.ts: 809ms, application-code: 943ms)
+ GET /dashboard 200 in 10.5s (next.js: 2.1s, proxy.ts: 246ms, application-code: 8.2s)
+ GET /dashboard 200 in 9.9s (next.js: 1888ms, proxy.ts: 12ms, application-code: 8.0s)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /weekly-review 200 in 2.3s (next.js: 2.1s, proxy.ts: 8ms, application-code: 256ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /dashboard 200 in 391ms (next.js: 70ms, proxy.ts: 11ms, application-code: 310ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /weekly-review 200 in 190ms (next.js: 33ms, proxy.ts: 11ms, application-code: 146ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 167ms (next.js: 11ms, proxy.ts: 9ms, application-code: 147ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"rejected","learning":"asdasdas","...":"3 items not stringified"}) in 114ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 99ms (next.js: 12ms, proxy.ts: 8ms, application-code: 79ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"rejected","learning":"asdasdas","...":"3 items not stringified"}) in 66ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 90ms (next.js: 21ms, proxy.ts: 7ms, application-code: 62ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 113ms (next.js: 15ms, proxy.ts: 6ms, application-code: 92ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"rejected","learning":"asdasdas","...":"3 items not stringified"}) in 77ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 61ms (next.js: 11ms, proxy.ts: 9ms, application-code: 41ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 242ms (next.js: 17ms, proxy.ts: 14ms, application-code: 212ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"rejected","learning":"asdasdas","...":"3 items not stringified"}) in 192ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 180ms (next.js: 68ms, proxy.ts: 13ms, application-code: 99ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"rejected","learning":"asdasdas","...":"3 items not stringified"}) in 81ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 80ms (next.js: 22ms, proxy.ts: 6ms, application-code: 52ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 150ms (next.js: 18ms, proxy.ts: 11ms, application-code: 121ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"ya tenemos","hypothesis_status":"inconclusive","learning":"asdasdas","...":"3 items not stringified"}) in 96ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 207ms (next.js: 10ms, proxy.ts: 8ms, application-code: 188ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Se creó un registro para organizar consultas, cotizaciones y ventas. Se prepararon dos ofertas de productos personalizados y se documentó el seguimiento comercial. En una de las consultas, el cliente manifestó que el precio del globo personalizado de $18 superaba su presupuesto. Esta evidencia señala una posible barrera de precio, pero todavía no demuestra cuál producto tiene mayor demanda ni confirma un aumento de ventas.","hypothesis_status":"inconclusive","learning":"asdasdas","...":"3 items not stringified"}) in 163ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 159ms (next.js: 13ms, proxy.ts: 9ms, application-code: 137ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Se creó un registro para organizar consultas, cotizaciones y ventas. Se prepararon dos ofertas de productos personalizados y se documentó el seguimiento comercial. En una de las consultas, el cliente manifestó que el precio del globo personalizado de $18 superaba su presupuesto. Esta evidencia señala una posible barrera de precio, pero todavía no demuestra cuál producto tiene mayor demanda ni confirma un aumento de ventas.","hypothesis_status":"inconclusive","learning":"La próxima semana me enfocaría en validar cuál de los dos productos genera mayor interés y por qué algunas consultas no terminan en compras. Daría seguimiento a las cotizaciones pendientes, preguntaría a los clientes qué influye en su decisión y compararía los costos y beneficios de cada producto. También probaría una alternativa de personalización más sencilla para los clientes con presupuesto limitado, sin reducir precios antes de conocer los costos reales. Registraría las respuestas y ventas confirmadas para decidir qué oferta priorizar.","...":"3 items not stringified"}) in 119ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 71ms (next.js: 13ms, proxy.ts: 6ms, application-code: 51ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ POST /weekly-review 200 in 229ms (next.js: 15ms, proxy.ts: 9ms, application-code: 205ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Se creó un registro para organizar consultas, cotizaciones y ventas. Se prepararon dos ofertas de productos personalizados y se documentó el seguimiento comercial. En una de las consultas, el cliente manifestó que el precio del globo personalizado de $18 superaba su presupuesto. Esta evidencia señala una posible barrera de precio, pero todavía no demuestra cuál producto tiene mayor demanda ni confirma un aumento de ventas.","hypothesis_status":"inconclusive","learning":"La próxima semana me enfocaría en validar cuál de los dos productos genera mayor interés y por qué algunas consultas no terminan en compras. Daría seguimiento a las cotizaciones pendientes, preguntaría a los clientes qué influye en su decisión y compararía los costos y beneficios de cada producto. También probaría una alternativa de personalización más sencilla para los clientes con presupuesto limitado, sin reducir precios antes de conocer los costos reales. Registraría las respuestas y ventas confirmadas para decidir qué oferta priorizar.","...":"3 items not stringified"}) in 179ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /dashboard 200 in 292ms (next.js: 55ms, proxy.ts: 5ms, application-code: 232ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 116ms (next.js: 24ms, proxy.ts: 9ms, application-code: 83ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /weekly-review 200 in 198ms (next.js: 31ms, proxy.ts: 8ms, application-code: 159ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /dashboard?message=Revisi%C3%B3n+semanal+guardada. 200 in 316ms (next.js: 8ms, proxy.ts: 5ms, application-code: 303ms)
+ POST /weekly-review 200 in 468ms (next.js: 11ms, proxy.ts: 6ms, application-code: 450ms)
+  └─ ƒ createWeeklyReview({}) in 109ms src/actions/weekly-review.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 200ms (next.js: 34ms, proxy.ts: 75ms, application-code: 91ms)
+CEO_EVIDENCE_GENERATED {
+  planId: '8b6ec552-61ab-42c2-8386-be21d6e02729',
+  evidence_status: 'ready',
+  item_count: 3
+}
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 234ms (next.js: 12ms, proxy.ts: 7ms, application-code: 215ms)
+ POST /dashboard?message=Revisi%C3%B3n%20semanal%20guardada. 200 in 38.8s (next.js: 7ms, proxy.ts: 9ms, application-code: 38.8s)
+  └─ ƒ generateCEOPlanAction() in 38512ms src/actions/ceo-plan.ts
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 83ms (next.js: 12ms, proxy.ts: 7ms, application-code: 64ms)
+[Server HMR] Update failed, re-evaluating modules: [Error: conflicting effects for the same key (key length: 132 bytes)] {
+  code: 'GenericFailure'
+}
+ GET /forgot-password 200 in 61ms (next.js: 8ms, proxy.ts: 13ms, application-code: 40ms)

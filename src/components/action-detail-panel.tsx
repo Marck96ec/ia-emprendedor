@@ -321,11 +321,6 @@ export function ActionDetailPanel({
           </form>
         )}
 
-        {canReview && weekComplete && (
-          <Link href="/weekly-review" className="ghost-button min-h-10 w-full px-4 py-2 text-sm">
-            Revisar mi semana
-          </Link>
-        )}
       </div>
       <ActionCompletionDialog
         open={completionMode !== null}
