@@ -10,6 +10,9 @@ function source(path: string): string {
 const reviewAction = source("src/actions/weekly-review.ts");
 const reviewComponent = source("src/components/conversational-weekly-review.tsx");
 const generationStatus = source("src/components/plan-generating-status.tsx");
+const generationExperience = source(
+  "src/components/plan-generation-experience.tsx",
+);
 const dashboard = source("src/app/dashboard/page.tsx");
 const ceoPlansMigration = source(
   "supabase/migrations/20260826035144_add_weekly_cycles_and_reviews.sql",
@@ -49,19 +52,17 @@ test("generation failures keep the saved review recoverable", () => {
     reviewComponent,
     /Tus aprendizajes se guardaron, pero no pudimos iniciar la preparación/,
   );
-  assert.match(reviewComponent, /Reintentar preparación/);
-  assert.match(dashboard, /Reintentar preparación/);
+  assert.match(generationExperience, /Reintentar preparación/);
 });
 
 test("generation feedback is indeterminate and refreshes persisted server state", () => {
-  assert.doesNotMatch(generationStatus, /25%|50%|75%|90%/);
-  assert.doesNotMatch(generationStatus, /progressMessages|Entendiendo tu contexto/);
+  assert.doesNotMatch(generationExperience, /25%|50%|75%|90%/);
+  assert.doesNotMatch(generationExperience, /progressMessages|Entendiendo tu contexto/);
   assert.match(generationStatus, /router\.refresh\(\)/);
   assert.match(generationStatus, /window\.clearInterval\(interval\)/);
-  assert.match(generationStatus, /15 \* 60 \* 1000/);
-  assert.match(generationStatus, /generateCEOPlanAction/);
-  assert.match(generationStatus, /aria-busy="true"/);
-  assert.match(generationStatus, /motion-reduce:animate-none/);
+  assert.match(generationExperience, /generateCEOPlanAction/);
+  assert.match(generationExperience, /aria-busy=\{active \|\| requestPending\}/);
+  assert.match(generationExperience, /motion-reduce:animate-none/);
 });
 
 test("the database constraints prevent duplicate reviews and next-week plans", () => {
@@ -74,4 +75,15 @@ test("the dashboard uses the persisted week while displaying preparation", () =>
   assert.match(dashboard, /businessName=\{business\.name\}/);
   assert.match(dashboard, /weekNumber=\{ceoPlan\.week_number\}/);
   assert.match(dashboard, /updatedAt=\{ceoPlan\.updated_at\}/);
+});
+
+test("the same experience starts the first week and carries weekly review context forward", () => {
+  assert.match(dashboard, /context="first-week"/);
+  assert.match(dashboard, /state="starting"/);
+  assert.match(dashboard, /autoStart/);
+  assert.match(reviewComponent, /context="next-week"/);
+  assert.match(reviewComponent, /weekNumber=\{weekNumber \+ 1\}/);
+  assert.match(generationExperience, /requestStartedRef/);
+  assert.match(generationExperience, /La animación indica actividad, no un porcentaje de avance/);
+  assert.match(generationExperience, /motion-reduce:animate-none/);
 });

@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { generateCEOPlanAction } from "@/actions/ceo-plan";
+import { PlanGenerationExperience } from "@/components/plan-generation-experience";
 import {
   createWeeklyReview,
   saveWeeklyReviewDraft,
@@ -36,54 +37,6 @@ type ReviewQuestion = {
   choices?: Choice[];
   placeholder?: string;
   help?: string;
-}
-
-function PreparationActivity() {
-  return (
-    <div
-      className="inline-flex items-center gap-1.5"
-      aria-label="TUCEO IA está preparando tu siguiente semana"
-    >
-      {[0, 1, 2].map((index) => (
-        <span
-          key={index}
-          className="h-2 w-2 animate-pulse rounded-full bg-blue-600 motion-reduce:animate-none"
-          style={{ animationDelay: `${index * 160}ms` }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function PreparationTransition({
-  businessName,
-  weekNumber,
-}: {
-  businessName: string;
-  weekNumber: number;
-}) {
-  return (
-    <section
-      className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5"
-      aria-live="polite"
-      aria-busy="true"
-    >
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
-        TUCEO IA
-      </p>
-      <h2 className="mt-2 text-xl font-semibold text-slate-950">
-        Estamos preparando tu semana {weekNumber + 1}
-      </h2>
-      <p className="mt-2 text-sm leading-6 text-slate-700">
-        Usaremos los resultados y aprendizajes de tu última semana para
-        recomendar el siguiente paso de tu negocio, {businessName}.
-      </p>
-      <div className="mt-5 flex items-center gap-3 text-sm font-medium text-slate-700">
-        <PreparationActivity />
-        <span>Aprendizajes guardados. Estamos preparando tu próxima semana.</span>
-      </div>
-    </section>
-  );
 }
 
 type ConversationalWeeklyReviewProps = {
@@ -588,9 +541,11 @@ export function ConversationalWeeklyReview({
                   ))}
                 </div>
                 {submissionState === "preparing" ? (
-                  <PreparationTransition
+                  <PlanGenerationExperience
                     businessName={businessName}
-                    weekNumber={weekNumber}
+                    context="next-week"
+                    state="generating"
+                    weekNumber={weekNumber + 1}
                   />
                 ) : (
                   <form onSubmit={handleReviewSubmit} className="space-y-3">
