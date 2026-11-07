@@ -12,6 +12,7 @@ import {
 import type { BusinessKnowledge } from "../business-knowledge-types";
 import {
   CEOPlanError,
+  isInvalidCEOPlanOutputError,
   isRetryableCEOPlanError,
   toSafeCEOPlanError,
 } from "./ceo-plan-errors";
@@ -162,6 +163,8 @@ DATOS DISPONIBLES:
 ${JSON.stringify(input, null, 2)}
 
 Si previousWeek es null, estás preparando la primera semana.
+En la primera semana no existe continuidad estratégica previa: devuelve
+strategic_continuity como null. No inventes una continuidad.
 
 Si previousWeek contiene información, estás preparando una nueva
 semana y debes utilizar el resultado real y los aprendizajes de la
@@ -200,7 +203,8 @@ Genera:
 
 - diagnóstico ejecutivo actualizado
 - strategic_continuity con mode continuation, deepening, adjustment, change o
-  repetition cuando exista previousWeek. Incluye siempre una justificación,
+  repetition cuando exista previousWeek; en caso contrario debe ser null.
+  Cuando exista, incluye siempre una justificación,
   una incertidumbre pendiente, una señal nueva verificable y la brecha de
   evidencia anterior.
 - razonamiento estratégico explícito, en este orden:
@@ -235,10 +239,11 @@ siguiendo estas reglas:
 - Como máximo una acción puede ser ai_assisted.
 - Usa value_proposition solo cuando sea relevante para el diagnóstico
   y las prioridades del negocio.
-- Usa commercial_messages cuando la acción solicite varios mensajes,
-  variantes, versiones o copies comerciales.
+- Usa commercial_messages cuando la acción necesite un entregable comercial
+  asistido, especialmente dos ofertas distinguibles para revisión.
 - Si no es relevante, todas deben ser manual/generic.
-- value_proposition y commercial_messages siempre implican ai_assisted.
+- value_proposition y commercial_messages siempre implican ai_assisted y
+  tienen un camino de ejecución soportado por el workspace.
 - generic siempre implica manual.
 - Todas las acciones deben derivarse explícitamente de strategic_diagnosis.critical_decision
   y del bottleneck; deben ejecutar la dirección recomendada, validar una hipótesis,
@@ -270,46 +275,29 @@ ${retryInstructions}
         );
       }
 
-      const modelOutput = CEOPlanModelSchema.safeParse(result.finalOutput);
       const appOutput = CEOPlanSchema.safeParse(result.finalOutput);
-
-      if (!modelOutput.success && !appOutput.success) {
-        throw new CEOPlanError(
-          "structural",
-          "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
-          "El output del CEO IA no coincide con el contrato estructural.",
-          getIssuePaths(appOutput.error),
-          getIssueMessages(appOutput.error),
-        );
-      }
 
       let normalizedOutput: CEOPlan;
       if (appOutput.success) {
         normalizedOutput = appOutput.data;
       } else {
+        const modelOutput = normalizeCEOPlanModelOutput(result.finalOutput);
         if (!modelOutput.success) {
+          const validationError = appOutput.success
+            ? modelOutput.error
+            : new ZodError([
+                ...modelOutput.error.issues,
+                ...appOutput.error.issues,
+              ]);
           throw new CEOPlanError(
             "structural",
             "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
             "El output del CEO IA no coincide con el contrato estructural.",
+            getIssuePaths(validationError),
+            getIssueMessages(validationError),
           );
         }
-        normalizedOutput = {
-          ...modelOutput.data,
-          weekly_plan: modelOutput.data.weekly_plan.map((item) => {
-            const captureSchema = parseActionCaptureModel(item.capture_schema);
-            if (!captureSchema.success) {
-              throw new CEOPlanError(
-                "structural",
-                "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
-                "El capture_schema del CEO IA no coincide con el contrato estructural.",
-                getIssuePaths(captureSchema.error),
-                getIssueMessages(captureSchema.error),
-              );
-            }
-            return { ...item, capture_schema: captureSchema.data };
-          }),
-        };
+        normalizedOutput = modelOutput.data;
       }
 
       const structuralOutput = CEOPlanSchema.safeParse(normalizedOutput);
@@ -380,23 +368,26 @@ ${retryInstructions}
 
         const providerError = error as {
           name?: unknown;
-          message?: unknown;
           code?: unknown;
           type?: unknown;
           status?: unknown;
           statusCode?: unknown;
         };
+        const safeProviderError = isInvalidCEOPlanOutputError(error)
+          ? toSafeCEOPlanError(error)
+          : undefined;
 
         console.error("CEO_PLAN_PROVIDER_ERROR", {
           error_name: typeof providerError.name === "string" ? providerError.name : undefined,
-          error_message: typeof providerError.message === "string"
-            ? providerError.message.slice(0, 1000)
-            : undefined,
           error_code: typeof providerError.code === "string" ? providerError.code : undefined,
           error_type: typeof providerError.type === "string" ? providerError.type : undefined,
           status: typeof providerError.status === "number" || typeof providerError.status === "string"
             ? providerError.status
             : providerError.statusCode,
+          safe_code: safeProviderError?.code,
+          safe_kind: safeProviderError?.kind,
+          issue_paths: safeProviderError?.issuePaths,
+          issue_messages: safeProviderError?.issueMessages,
           prompt_version: "v5-strategic-learning",
           model: process.env.OPENAI_MODEL ?? "gpt-5.4-mini",
         });
@@ -421,4 +412,57 @@ function getIssuePaths(error: ZodError): string[] {
 
 function getIssueMessages(error: ZodError): string[] {
   return error.issues.map((issue) => issue.message);
+}
+
+function normalizeCEOPlanModelOutput(value: unknown) {
+  const modelOutput = CEOPlanModelSchema.safeParse(value);
+  if (!modelOutput.success) {
+    return modelOutput;
+  }
+
+  const normalizedWeeklyPlan = [];
+  const captureIssues = [];
+
+  for (const [index, item] of modelOutput.data.weekly_plan.entries()) {
+    const captureSchema = parseActionCaptureModel(item.capture_schema);
+    if (!captureSchema.success) {
+      captureIssues.push(
+        ...captureSchema.error.issues.map((issue) => ({
+          ...issue,
+          path: [
+            "weekly_plan",
+            index,
+            "capture_schema",
+            ...issue.path,
+          ],
+        })),
+      );
+      continue;
+    }
+
+    normalizedWeeklyPlan.push({
+      ...item,
+      capture_schema: captureSchema.data,
+    });
+  }
+
+  if (captureIssues.length > 0) {
+    return {
+      success: false as const,
+      error: new ZodError(captureIssues),
+    };
+  }
+
+  const {
+    strategic_continuity: strategicContinuity,
+    ...planWithoutContinuity
+  } = modelOutput.data;
+
+  return CEOPlanSchema.safeParse({
+    ...planWithoutContinuity,
+    ...(strategicContinuity === null
+      ? {}
+      : { strategic_continuity: strategicContinuity }),
+    weekly_plan: normalizedWeeklyPlan,
+  });
 }

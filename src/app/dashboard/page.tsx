@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-import { generateCEOPlanAction } from "@/actions/ceo-plan";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DecisionHero } from "@/components/decision-hero";
 import { ExecutiveSummary } from "@/components/executive-summary";
@@ -12,15 +11,15 @@ import {
   getDecisionLoopStage,
   type DashboardJourney,
 } from "@/lib/dashboard-progress";
-import { StoredCEOPlanSchema } from "@/lib/ai/ceo-agent";
+import { parseStoredCEOPlanForDashboard } from "@/lib/ai/ceo-agent";
+import { parseStoredActionResult } from "@/lib/ai/action-deliverables";
 import { StoredExternalEvidenceSchema } from "@/lib/ai/external-evidence";
 import type {
   DashboardAction,
   DashboardWeeklyReview,
 } from "@/lib/dashboard-types";
 import { createClient } from "@/lib/supabase/server";
-import { OnboardingProgress } from "@/components/onboarding-progress";
-import { PlanGenerationSubmit } from "@/components/plan-generation-submit";
+import { PlanGenerationExperience } from "@/components/plan-generation-experience";
 import { PlanGeneratingStatus } from "@/components/plan-generating-status";
 import { WeeklyActionBoard } from "@/components/weekly-action-board";
 import { WeeklyProgress } from "@/components/weekly-progress";
@@ -137,7 +136,8 @@ export default async function DashboardPage({
         week_number,
         previous_plan_id,
         external_evidence,
-        evidence_status
+        evidence_status,
+        updated_at
       `,
     )
     .eq("business_id", business.id)
@@ -163,7 +163,7 @@ export default async function DashboardPage({
    */
   const parsedCEOPlan =
     ceoPlan?.status === "ready"
-      ? StoredCEOPlanSchema.safeParse({
+      ? parseStoredCEOPlanForDashboard({
           executive_summary:
             ceoPlan.executive_summary,
 
@@ -187,7 +187,7 @@ export default async function DashboardPage({
 
           time_allocation:
             ceoPlan.time_allocation,
-        })
+        }, ceoPlan.week_number)
       : null;
 
   const readyPlan =
@@ -242,7 +242,10 @@ export default async function DashboardPage({
           action_type,
           action_results (
             id,
-            status
+            status,
+            draft_content,
+            approved_content,
+            revision
           )
         `,
       )
@@ -264,9 +267,26 @@ export default async function DashboardPage({
 
     weeklyActions = (actions ?? []).map((action) => ({
       ...action,
-      action_results: Array.isArray(action.action_results)
+      action_results: (Array.isArray(action.action_results)
         ? action.action_results
-        : [],
+        : action.action_results
+        ? [action.action_results]
+        : []
+      ).map((result) => {
+            const parsedResult = parseStoredActionResult(
+              action.action_type,
+              result.status,
+              result.draft_content,
+              result.approved_content,
+            );
+
+            return {
+              id: result.id,
+              status: result.status,
+              revision: result.revision,
+              content: parsedResult.success ? parsedResult.data : null,
+            };
+          }),
     })) as DashboardAction[];
   }
 
@@ -433,52 +453,30 @@ export default async function DashboardPage({
         {displayMessage && <div className="success-box shrink-0" role="status">{displayMessage}</div>}
 
         {!ceoPlan && (
-          <div className="surface-card rounded-2xl p-5 sm:p-6 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(17rem,0.8fr)] lg:gap-8">
-            <div>
-              <OnboardingProgress currentStep={3} />
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Primera semana</p>
-              <h2 className="mt-2 text-2xl font-semibold text-slate-950">Prepara tu primera semana</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Con lo que nos contaste, el CEO IA identificará qué merece tu atención primero y preparará las acciones necesarias para llevar tus prioridades a la práctica.
-              </p>
-              <form action={generateCEOPlanAction} className="mt-5">
-                <PlanGenerationSubmit label="Generar mi plan" />
-              </form>
-            </div>
-
-            <aside className="mt-6 border-t border-slate-200 pt-5 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-7">
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Esto es lo que vamos a preparar</p>
-              <div className="mt-4 space-y-3">
-                {[
-                  ["01", "Tres prioridades claras", "Qué merece atención primero."],
-                  ["02", "Acciones prioritarias", "Solo los pasos necesarios para avanzar."],
-                  ["03", "Un plan adaptado a tu negocio", "Basado en lo que nos contaste."],
-                ].map(([number, title, description]) => (
-                  <div key={number} className="flex gap-3 rounded-xl bg-slate-50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-[0.65rem] font-bold text-white">{number}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{title}</p>
-                      <p className="mt-0.5 text-xs leading-5 text-slate-600">{description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </aside>
-          </div>
+          <PlanGenerationExperience
+            businessName={business.name}
+            context="first-week"
+            state="starting"
+            weekNumber={1}
+            autoStart
+          />
         )}
 
-        {ceoPlan?.status === "generating" && <PlanGeneratingStatus />}
+        {ceoPlan?.status === "generating" && (
+          <PlanGeneratingStatus
+            businessName={business.name}
+            weekNumber={ceoPlan.week_number}
+            updatedAt={ceoPlan.updated_at}
+          />
+        )}
 
         {ceoPlan?.status === "failed" && (
-          <div className="surface-card rounded-2xl p-5 sm:p-6">
-            <h2 className="text-xl font-semibold text-slate-950">No pudimos terminar tu plan</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Tu información está guardada. Puedes intentarlo nuevamente sin repetir el diagnóstico.
-            </p>
-            <form action={generateCEOPlanAction} className="mt-5">
-              <PlanGenerationSubmit label="Intentar nuevamente" />
-            </form>
-          </div>
+          <PlanGenerationExperience
+            businessName={business.name}
+            context={ceoPlan.week_number === 1 ? "first-week" : "next-week"}
+            state="failed"
+            weekNumber={ceoPlan.week_number}
+          />
         )}
 
         {readyPlan && ceoPlan && (

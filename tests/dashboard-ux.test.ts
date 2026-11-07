@@ -124,6 +124,25 @@ test("primary action CTA stays pinned in the detail panel", () => {
   assert.match(panel, /Ver resultado/);
 });
 
+test("AI actions keep generation, review, approval and evidence inside the dashboard panel", () => {
+  const panel = source("src/components/action-detail-panel.tsx");
+
+  assert.match(panel, /id="ai-action-workspace"/);
+  assert.match(panel, /workOnActionWithAI/);
+  assert.match(panel, /approveActionResult/);
+  assert.match(panel, /return_to/);
+  assert.match(panel, /Registrar evidencia y completar/);
+  assert.match(panel, /Abrir ruta directa de esta acción/);
+});
+
+test("AI deliverable previews use the dashboard typography contract", () => {
+  const preview = source("src/components/action-deliverable-preview.tsx");
+
+  assert.match(preview, /font-sans/);
+  assert.match(preview, /text-sm leading-6/);
+  assert.doesNotMatch(preview, /text-lg leading-8/);
+});
+
 test("hero shows the decision, recommendation, human certainty and decision links", () => {
   const hero = source("src/components/decision-hero.tsx");
 
@@ -138,6 +157,7 @@ test("hero shows the decision, recommendation, human certainty and decision link
 
 test("next action card is the protagonist and handles last action and weekly celebration", () => {
   const card = source("src/components/next-action-card.tsx");
+  const panel = source("src/components/action-detail-panel.tsx");
 
   assert.match(card, /href=\{`#tablero-semanal\?action=\$\{action\.id\}`\}/);
   assert.match(card, /Siguiente paso/);
@@ -145,7 +165,8 @@ test("next action card is the protagonist and handles last action and weekly cel
   assert.match(card, /Tiempo estimado/);
   assert.match(card, /Empezar esta acción/);
   assert.match(card, /Plan ejecutado\./);
-  assert.match(card, /Revisar mi semana/);
+  assert.match(card, /accent-button anim-rise anim-glow[^>]*>\s*Revisar mi semana/);
+  assert.doesNotMatch(panel, /Revisar mi semana/);
 });
 
 test("mobile next action CTA focuses the selected action in the weekly board", () => {
@@ -296,4 +317,13 @@ test("weekly review frames the review as learning", () => {
   assert.match(review, /¿Cómo le fue a tu negocio/);
   assert.match(review, /¿Qué nos dicen los resultados/);
   assert.match(review, /prefers-reduced-motion/);
+});
+
+test("weekly review typing uses natural character and punctuation pacing", () => {
+  const review = source("src/components/conversational-weekly-review.tsx");
+
+  assert.match(review, /TYPING_BASE_DELAY_MS = 34/);
+  assert.match(review, /TYPING_SENTENCE_DELAY_MS = 220/);
+  assert.match(review, /window\.setTimeout\(typeNextCharacter/);
+  assert.doesNotMatch(review, /setInterval/);
 });

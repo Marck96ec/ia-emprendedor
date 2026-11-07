@@ -7,25 +7,26 @@ import {
 } from "@/actions/action-ai";
 import { ActionWorkspaceSubmit } from "@/components/action-workspace-submit";
 import { ActionCompletionForm } from "@/components/action-completion-form";
-import { CopyMessageButton } from "@/components/copy-message-button";
-import { parseActionDeliverable } from "@/lib/ai/action-deliverables";
+import {
+  ActionDeliverablePreview,
+} from "@/components/action-deliverable-preview";
+import {
+  AIActionDefinitionSchema,
+  getAIAssistedActionCapability,
+  parseActionDeliverable,
+} from "@/lib/ai/action-deliverables";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
 import { getActionCaptureSchema } from "@/lib/action-capture";
+import {
+  getActionDeliverableExplanation,
+  getActionDeliverableTitle,
+} from "@/lib/action-deliverable-presentation";
 
 type ActionPageProps = {
   params: Promise<{ actionId: string }>;
   searchParams: Promise<{ error?: string }>;
 };
-
-function ResultSection({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-slate-200 pb-5 last:border-0 last:pb-0">
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <div className="mt-2 text-lg leading-8 text-slate-900">{children}</div>
-    </div>
-  );
-}
 
 export default async function ActionWorkspacePage({
   params,
@@ -67,9 +68,11 @@ export default async function ActionWorkspacePage({
     redirect("/dashboard");
   }
 
+  const actionDefinition = AIActionDefinitionSchema.safeParse(action);
   if (
-    action.execution_mode !== "ai_assisted" ||
-    !["value_proposition", "commercial_messages"].includes(action.action_type)
+    !actionDefinition.success ||
+    actionDefinition.data.execution_mode !== "ai_assisted" ||
+    !getAIAssistedActionCapability(actionDefinition.data.action_type)
   ) {
     redirect("/dashboard");
   }
@@ -134,20 +137,20 @@ export default async function ActionWorkspacePage({
               {result
                 ? "Regenerar entregable"
                 : action.action_type === "commercial_messages"
-                ? "Tus mensajes comerciales"
+                ? "Tus ofertas comerciales"
                 : "Tu propuesta"}
             </h2>
             <p className="mt-3 max-w-2xl text-slate-600">
               {result
                 ? "El borrador anterior no se pudo validar. Generaremos una nueva versión conservando la acción y el contexto del negocio."
                 : action.action_type === "commercial_messages"
-                ? "Prepararé tres variantes listas para usar, basadas en el contexto real de tu negocio."
+                ? "Prepararé dos ofertas distinguibles y listas para revisar, basadas en el contexto real de tu negocio."
                 : "Basándome en lo que ya conozco de tu negocio, prepararé una propuesta concreta para esta acción."}
             </p>
             <form action={workOnActionWithAI} className="mt-6">
               <input type="hidden" name="action_id" value={action.id} />
               <ActionWorkspaceSubmit
-                label={result ? "Regenerar con IA" : action.action_type === "commercial_messages" ? "Crear mensajes con IA" : "Crear propuesta con IA"}
+                label={result ? "Regenerar con IA" : action.action_type === "commercial_messages" ? "Crear ofertas con IA" : "Crear propuesta con IA"}
                 pendingLabel="Preparando entregable..."
               />
             </form>
@@ -166,50 +169,18 @@ export default async function ActionWorkspacePage({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="badge-chip">{result?.status === "approved" ? "Entregable final" : `Borrador · Revisión ${result?.revision}`}</p>
-                  <h2 className="mt-4 text-2xl font-semibold text-slate-950">
-                    {"deliverable_type" in content.data
-                      ? "Mensajes comerciales"
-                      : "Propuesta de valor"}
-                  </h2>
+                  <h2 className="mt-4 text-2xl font-semibold text-slate-950">{getActionDeliverableTitle(content.data)}</h2>
                 </div>
               </div>
-              {"deliverable_type" in content.data ? (
-                <div className="mt-7 grid gap-4">
-                  {content.data.messages.map((message, index) => (
-                    <article key={`${message.changing_factor}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">Variante {index + 1}</p>
-                          <h3 className="mt-2 text-lg font-semibold text-slate-950">{message.label}</h3>
-                        </div>
-                        <CopyMessageButton message={message.message} />
-                      </div>
-                      <p className="mt-4 text-sm font-semibold text-slate-600">Factor que cambia: {message.changing_factor}</p>
-                      <p className="mt-3 text-lg leading-8 text-slate-900">{message.message}</p>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-7 space-y-6">
-                  <ResultSection label="Propuesta de valor">{content.data.value_proposition}</ResultSection>
-                  <ResultSection label="Cliente objetivo">{content.data.target_customer}</ResultSection>
-                  <ResultSection label="Problema que resuelve">{content.data.problem_solved}</ResultSection>
-                  <ResultSection label="Diferenciador">{content.data.differentiator}</ResultSection>
-                  <ResultSection label="3 beneficios">
-                    <ul className="list-disc space-y-2 pl-5">
-                      {content.data.benefits.map((benefit) => <li key={benefit}>{benefit}</li>)}
-                    </ul>
-                  </ResultSection>
-                </div>
-              )}
+              <div className="mt-7">
+                <ActionDeliverablePreview content={content.data} />
+              </div>
             </section>
 
             <section className="mt-6 rounded-[2rem] bg-slate-900 p-6 text-white sm:p-8">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Estrategia de la IA</p>
               <p className="mt-3 leading-7 text-slate-200">
-                {"deliverable_type" in content.data
-                  ? content.data.explanation
-                  : content.data.rationale}
+                {getActionDeliverableExplanation(content.data)}
               </p>
             </section>
 
@@ -218,8 +189,8 @@ export default async function ActionWorkspacePage({
                 <form action={workOnActionWithAI} className="surface-card rounded-[2rem] p-6">
                   <input type="hidden" name="action_id" value={action.id} />
                   <label htmlFor="feedback" className="field-label">¿Qué te gustaría ajustar?</label>
-                  <textarea id="feedback" name="feedback" maxLength={500} rows={3} className="form-field resize-y" placeholder={action.action_type === "commercial_messages" ? "Cambia el factor de una variante o hazla más directa..." : "Hazla más directa, enfócala en un tipo de cliente..."} />
-                  <div className="mt-4"><ActionWorkspaceSubmit label={action.action_type === "commercial_messages" ? "Mejorar mensajes" : "Mejorar propuesta"} pendingLabel="Refinando..." secondary /></div>
+                  <textarea id="feedback" name="feedback" maxLength={500} rows={3} className="form-field resize-y" placeholder={action.action_type === "commercial_messages" ? "Haz una oferta más concreta o cambia el enfoque..." : "Hazla más directa, enfócala en un tipo de cliente..."} />
+                  <div className="mt-4"><ActionWorkspaceSubmit label={action.action_type === "commercial_messages" ? "Mejorar ofertas" : "Mejorar propuesta"} pendingLabel="Refinando..." secondary /></div>
                 </form>
                 <form action={approveActionResult} className="lg:pb-6">
                   <input type="hidden" name="action_result_id" value={result.id} />

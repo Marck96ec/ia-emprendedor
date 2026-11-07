@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { DiagnosticWizard } from "@/components/diagnostic-wizard";
+import { createDiagnostic } from "@/actions/diagnostic";
+import { ConversationalOnboarding } from "@/components/conversational-onboarding";
 import { createClient } from "@/lib/supabase/server";
 
 type DiagnosticPageProps = {
@@ -55,5 +56,12 @@ export default async function DiagnosticPage({
     redirect("/dashboard");
   }
 
-  return <DiagnosticWizard businessName={business.name} error={error} />;
+  return (
+    <ConversationalOnboarding
+      mode="diagnostic"
+      action={createDiagnostic}
+      businessName={business.name}
+      error={error}
+    />
+  );
 }

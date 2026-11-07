@@ -1,7 +1,4 @@
-import Link from "next/link";
-
-import { login } from "@/actions/auth";
-import { PasswordField } from "@/components/password-field";
+import { ProgressiveLoginForm } from "@/components/progressive-login-form";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -18,58 +15,7 @@ export default async function LoginPage({
   return (
     <main className="ambient-shell flex min-h-screen items-center justify-center px-4">
       <div className="surface-card w-full max-w-md rounded-[2rem] p-6 sm:p-8">
-        <p className="badge-chip">IA Emprendedor</p>
-
-        <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
-          Iniciar sesión
-        </h1>
-
-        <p className="mt-2 text-sm font-semibold leading-5 text-slate-800">
-          ¿Qué aprendiste de la última semana y qué prioridad merece tu atención ahora?
-        </p>
-
-        <p className="mt-1 text-sm leading-5 text-slate-600">
-          Retoma tu avance real y decide el siguiente paso de tu negocio con TuCEO IA.
-        </p>
-
-        {error && <div className="alert-box mt-6">{error}</div>}
-        {message && <div className="success-box mt-6">{message}</div>}
-
-        <form action={login} className="mt-6 space-y-5">
-          <div>
-            <label htmlFor="email" className="field-label">
-              Correo
-            </label>
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className="form-field"
-            />
-          </div>
-
-          <PasswordField
-            id="password"
-            name="password"
-            label="Contraseña"
-            required
-            autoComplete="current-password"
-          />
-
-          <button type="submit" className="primary-button w-full">
-            Entrar
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600">
-          ¿No tienes cuenta?{" "}
-          <Link href="/signup" className="link-button">
-            Regístrate
-          </Link>
-        </p>
+        <ProgressiveLoginForm initialError={error} initialMessage={message} />
       </div>
     </main>
   );

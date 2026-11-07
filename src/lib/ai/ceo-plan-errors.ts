@@ -37,10 +37,13 @@ export function toSafeCEOPlanError(
   }
 
   if (isInvalidCEOPlanOutputError(error)) {
+    const validationDetails = getSafeSDKValidationDetails(error);
     return new CEOPlanError(
       "structural",
       "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
       "El output del CEO IA no coincide con el contrato estructural.",
+      validationDetails.issuePaths,
+      validationDetails.issueMessages,
     );
   }
 
@@ -58,6 +61,21 @@ export function isInvalidCEOPlanOutputError(
     error instanceof ModelBehaviorError &&
     error.message.startsWith("Invalid output type:")
   );
+}
+
+function getSafeSDKValidationDetails(error: ModelBehaviorError) {
+  const match = error.message.match(
+    /^Invalid output type: final assistant output failed schema validation at "([^"]{1,200})" \(([^()\r\n]{1,200})\)\.?$/,
+  );
+
+  if (!match || !/^[A-Za-z0-9_.[\]-]+$/.test(match[1])) {
+    return { issuePaths: [], issueMessages: [] };
+  }
+
+  return {
+    issuePaths: [match[1]],
+    issueMessages: [match[2]],
+  };
 }
 
 export function safeCEOPlanLog(error: unknown) {

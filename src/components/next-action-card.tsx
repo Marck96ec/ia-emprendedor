@@ -56,7 +56,7 @@ export function NextActionCard({
               Ver resultado de la semana
             </a>
           ) : allCompleted ? (
-            <Link href="/weekly-review" className="accent-button min-h-11 w-full px-5 py-2.5 text-base sm:w-auto">
+            <Link href="/weekly-review" className="accent-button anim-rise anim-glow min-h-11 w-full px-5 py-2.5 text-base sm:w-auto">
               Revisar mi semana
             </Link>
           ) : null}

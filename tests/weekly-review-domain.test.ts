@@ -7,6 +7,7 @@ import {
 } from "../src/lib/business-evidence";
 import { buildCurrentMetricMessage } from "../src/lib/business-metrics";
 import { calculateProfitability } from "../src/lib/profitability";
+import { buildWeeklyReviewContext } from "../src/lib/weekly-review-context";
 import {
   validateStrategicContinuity,
 } from "../src/lib/strategic-continuity";
@@ -32,6 +33,20 @@ const captureSchema = {
   }],
   completion_rule: { type: "all_required_fields_valid" as const },
 };
+
+test("redacta correctamente el plural de acciones en el mensaje conversacional", () => {
+  const context = buildWeeklyReviewContext({
+    businessName: "Detalles que Hablan",
+    weekNumber: 1,
+    completedActions: 3,
+    totalActions: 3,
+    recordedResults: 3,
+    evidence: [],
+  });
+
+  assert.match(context.introMessage, /3 acciones/);
+  assert.doesNotMatch(context.introMessage, /acciónes/);
+});
 
 test("normaliza evidencia con origen y no inventa registros cuando el grupo está vacío", () => {
   const rows = extractBusinessEvidence({
@@ -98,6 +113,19 @@ test("la continuidad rechaza repetición sin una señal nueva", () => {
   });
 
   assert.equal(result.success, false);
+});
+
+test("la primera semana no requiere continuidad estratégica", () => {
+  const result = validateStrategicContinuity({
+    previousActions: [],
+    nextActions: [{
+      action: "Registrar consultas",
+      objective: "Conocer la demanda",
+      successMetric: "Consultas recibidas",
+    }],
+  });
+
+  assert.deepEqual(result, { success: true, repeatedActions: 0 });
 });
 
 test("la continuidad acepta profundizar con señal verificable nueva", () => {

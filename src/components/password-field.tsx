@@ -10,6 +10,9 @@ type PasswordFieldProps = {
   required?: boolean;
   minLength?: number;
   placeholder?: string;
+  autoFocus?: boolean;
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
 };
 
 function EyeIcon({ crossed = false }: { crossed?: boolean }) {
@@ -46,6 +49,9 @@ export function PasswordField({
   required = false,
   minLength,
   placeholder,
+  autoFocus = false,
+  ariaDescribedBy,
+  ariaInvalid,
 }: PasswordFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
@@ -66,6 +72,9 @@ export function PasswordField({
           minLength={minLength}
           autoComplete={autoComplete}
           placeholder={placeholder}
+          autoFocus={autoFocus}
+          aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
           className="form-field pr-12"
         />
 

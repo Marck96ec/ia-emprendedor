@@ -1,9 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { useRouter } from "next/navigation";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
-import { createWeeklyReview, saveWeeklyReviewDraft } from "@/actions/weekly-review";
+import { generateCEOPlanAction } from "@/actions/ceo-plan";
+import { PlanGenerationExperience } from "@/components/plan-generation-experience";
+import {
+  createWeeklyReview,
+  saveWeeklyReviewDraft,
+} from "@/actions/weekly-review";
 import {
   HYPOTHESIS_STATUS_LABELS,
   OUTCOME_STATUS_LABELS,
@@ -23,7 +37,7 @@ type ReviewQuestion = {
   choices?: Choice[];
   placeholder?: string;
   help?: string;
-};
+}
 
 type ConversationalWeeklyReviewProps = {
   businessName: string;
@@ -37,8 +51,20 @@ type ConversationalWeeklyReviewProps = {
 };
 
 const INITIAL_DRAFT: WeeklyReviewDraft = {};
+const TYPING_BASE_DELAY_MS = 34;
+const TYPING_SPACE_DELAY_MS = 18;
+const TYPING_COMMA_DELAY_MS = 120;
+const TYPING_SENTENCE_DELAY_MS = 220;
+
+function getTypingDelay(character: string): number {
+  if (character === " ") return TYPING_SPACE_DELAY_MS;
+  if (/[.!?]/.test(character)) return TYPING_SENTENCE_DELAY_MS;
+  if (/[,;:]/.test(character)) return TYPING_COMMA_DELAY_MS;
+  return TYPING_BASE_DELAY_MS;
+}
 
 function isAnswered(question: ReviewQuestion, value: unknown): boolean {
+  if (value === undefined || value === null) return !question.required;
   if (typeof value !== "string") return false;
   if (!value.trim()) return !question.required;
   return question.kind === "choice" || value.trim().length >= 5;
@@ -49,7 +75,15 @@ function getAnswerLabel(question: ReviewQuestion, value: unknown): string {
   return question.choices?.find((choice) => choice.value === value)?.label ?? value;
 }
 
-function TypedMessage({ text, immediate }: { text: string; immediate?: boolean }) {
+function TypedMessage({
+  text,
+  immediate,
+  onComplete,
+}: {
+  text: string;
+  immediate?: boolean;
+  onComplete?: () => void;
+}) {
   const [content, setContent] = useState(immediate ? text : "");
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -62,16 +96,34 @@ function TypedMessage({ text, immediate }: { text: string; immediate?: boolean }
   }, []);
 
   useEffect(() => {
-    if (immediate || reducedMotion) return;
+    if (immediate || reducedMotion) {
+      onComplete?.();
+      return;
+    }
+
     let index = 0;
-    const timer = window.setInterval(() => {
+
+    let timer: number | null = null;
+    const typeNextCharacter = () => {
       index += 1;
       setContent(text.slice(0, index));
-      if (index >= text.length) window.clearInterval(timer);
-    }, 16);
+      if (index >= text.length) {
+        onComplete?.();
+        return;
+      }
 
-    return () => window.clearInterval(timer);
-  }, [immediate, reducedMotion, text]);
+      timer = window.setTimeout(
+        typeNextCharacter,
+        getTypingDelay(text[index - 1] ?? ""),
+      );
+    };
+
+    timer = window.setTimeout(typeNextCharacter, TYPING_BASE_DELAY_MS);
+
+    return () => {
+      if (timer !== null) window.clearTimeout(timer);
+    };
+  }, [immediate, onComplete, reducedMotion, text]);
 
   const visibleContent = immediate || reducedMotion ? text : content;
 
@@ -105,6 +157,7 @@ export function ConversationalWeeklyReview({
   metricMessage,
   initialDraft,
 }: ConversationalWeeklyReviewProps) {
+  const router = useRouter();
   const questions = useMemo<ReviewQuestion[]>(() => [
     {
       id: "outcome_status",
@@ -163,13 +216,19 @@ export function ConversationalWeeklyReview({
     return firstIncomplete === -1 ? questions.length : Math.max(firstIncomplete, 0);
   });
   const [questionVisible, setQuestionVisible] = useState(true);
+  const [questionComplete, setQuestionComplete] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [submissionState, setSubmissionState] = useState<
+    "idle" | "saving" | "preparing" | "error"
+  >("idle");
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved" | "error">(
     initialDraft && Object.keys(initialDraft).length > 0 ? "saved" : "idle",
   );
   const draftSaveRef = useRef<Promise<unknown> | null>(null);
   const thinkingTimerRef = useRef<number | null>(null);
+  const preparationRefreshTimerRef = useRef<number | null>(null);
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -190,6 +249,22 @@ export function ConversationalWeeklyReview({
   useEffect(() => () => {
     if (thinkingTimerRef.current !== null) window.clearTimeout(thinkingTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (submissionState !== "preparing") return;
+
+    const refreshStatus = () => {
+      router.refresh();
+      preparationRefreshTimerRef.current = window.setTimeout(refreshStatus, 3000);
+    };
+
+    preparationRefreshTimerRef.current = window.setTimeout(refreshStatus, 3000);
+    return () => {
+      if (preparationRefreshTimerRef.current !== null) {
+        window.clearTimeout(preparationRefreshTimerRef.current);
+      }
+    };
+  }, [router, submissionState]);
 
   function queueDraftSave(nextAnswers: WeeklyReviewDraft) {
     setDraftStatus("saving");
@@ -216,6 +291,7 @@ export function ConversationalWeeklyReview({
   function beginThinking(nextIndex: number) {
     setThinking(true);
     setQuestionVisible(false);
+    setQuestionComplete(false);
     const delay = reducedMotion ? 0 : 240;
     thinkingTimerRef.current = window.setTimeout(() => {
       setThinking(false);
@@ -238,20 +314,77 @@ export function ConversationalWeeklyReview({
     if (thinkingTimerRef.current !== null) window.clearTimeout(thinkingTimerRef.current);
     setThinking(false);
     setQuestionVisible(true);
+    setQuestionComplete(false);
     setActiveIndex((current) => Math.max(0, current - 1));
   }
 
   function editQuestion(index: number) {
     setQuestionVisible(true);
     setThinking(false);
+    setQuestionComplete(false);
     setActiveIndex(index);
   }
 
   const currentQuestion = questions[activeIndex];
+  const handleQuestionComplete = useCallback(() => {
+    setQuestionComplete(true);
+  }, []);
   const isSummary = activeIndex >= questions.length;
   const progress = isSummary ? 100 : Math.round(((activeIndex + 1) / questions.length) * 100);
   const currentValue = currentQuestion ? answers[currentQuestion.id] : undefined;
   const currentValid = currentQuestion ? isAnswered(currentQuestion, currentValue) : true;
+  const isSubmitting =
+    submissionState === "saving" ||
+    submissionState === "preparing";
+
+  async function startPreparation() {
+    setSubmissionState("preparing");
+
+    try {
+      await generateCEOPlanAction();
+    } catch (error) {
+      if (isRedirectError(error)) return;
+
+      console.error("WEEKLY_REVIEW_GENERATION_START_ERROR", error);
+      setSubmissionError(
+        "Tus aprendizajes se guardaron, pero no pudimos iniciar la preparación. Puedes reintentarlo de forma segura.",
+      );
+      setSubmissionState("error");
+    }
+  }
+
+  async function handleReviewSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setSubmissionError(null);
+    setSubmissionState("saving");
+
+    let result;
+    try {
+      result = await createWeeklyReview(new FormData(event.currentTarget));
+    } catch (error) {
+      if (isRedirectError(error)) return;
+
+      console.error("WEEKLY_REVIEW_SAVE_REQUEST_ERROR", error);
+      setSubmissionError(
+        "No pudimos guardar tu revisión. Tus respuestas siguen en pantalla; inténtalo de nuevo.",
+      );
+      setSubmissionState("error");
+      return;
+    }
+
+    if (!result.success) {
+      setSubmissionError(
+        result.message ??
+          "No pudimos guardar tu revisión. Tus respuestas siguen en pantalla; inténtalo de nuevo.",
+      );
+      setSubmissionState("error");
+      return;
+    }
+
+    await startPreparation();
+  }
 
   return (
     <main className="ambient-shell min-h-screen px-4 py-8 sm:py-12">
@@ -328,13 +461,17 @@ export function ConversationalWeeklyReview({
               <div ref={scrollAnchorRef} className="flex items-start gap-3" aria-live="polite">
                 <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white" aria-hidden="true">T</div>
                 <div className="min-w-0 max-w-[90%] rounded-2xl rounded-tl-md bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-800">
-                  <TypedMessage text={currentQuestion.message} />
-                  {currentQuestion.help && <p className="mt-2 border-t border-slate-200 pt-2 text-xs leading-5 text-slate-600">{currentQuestion.help}</p>}
+                  <TypedMessage
+                    key={currentQuestion.id}
+                    text={currentQuestion.message}
+                    onComplete={handleQuestionComplete}
+                  />
+                  {currentQuestion.help && questionComplete && <p className="mt-2 border-t border-slate-200 pt-2 text-xs leading-5 text-slate-600">{currentQuestion.help}</p>}
                 </div>
               </div>
             )}
 
-            {!thinking && questionVisible && currentQuestion && (
+            {!thinking && questionVisible && questionComplete && currentQuestion && (
               <div className="ml-12 space-y-3">
                 {currentQuestion.kind === "choice" && (
                   <fieldset className="space-y-2">
@@ -403,14 +540,50 @@ export function ConversationalWeeklyReview({
                     </div>
                   ))}
                 </div>
-                <form action={createWeeklyReview} className="space-y-3">
-                  {Object.entries(answers).map(([key, value]) => (
-                    <input key={key} type="hidden" name={key} value={String(value ?? "")} />
-                  ))}
-                  <button type="submit" className="primary-button w-full">Confirmar y guardar aprendizajes</button>
-                  <Link href="/dashboard" className="secondary-button w-full">Salir sin guardar</Link>
-                  <p className="text-center text-xs leading-5 text-slate-500">Al confirmar, la revisión queda registrada como historial y ya no se puede editar.</p>
-                </form>
+                {submissionState === "preparing" ? (
+                  <PlanGenerationExperience
+                    businessName={businessName}
+                    context="next-week"
+                    state="generating"
+                    weekNumber={weekNumber + 1}
+                  />
+                ) : (
+                  <form onSubmit={handleReviewSubmit} className="space-y-3">
+                    {Object.entries(answers).map(([key, value]) => (
+                      <input key={key} type="hidden" name={key} value={String(value ?? "")} />
+                    ))}
+                    {submissionError && (
+                      <div className="alert-box" role="alert">
+                        {submissionError}
+                      </div>
+                    )}
+                    <button
+                      type="submit"
+                      className="primary-button w-full disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={isSubmitting}
+                    >
+                      {submissionState === "saving"
+                        ? "Guardando tus aprendizajes..."
+                        : "Confirmar y preparar mi siguiente semana"}
+                    </button>
+                    {submissionState === "error" &&
+                      submissionError?.includes("iniciar la preparación") && (
+                        <button
+                          type="button"
+                          className="secondary-button w-full"
+                          onClick={() => void startPreparation()}
+                        >
+                          Reintentar preparación
+                        </button>
+                      )}
+                    <Link href="/dashboard" className="secondary-button w-full">
+                      Salir sin guardar
+                    </Link>
+                    <p className="text-center text-xs leading-5 text-slate-500">
+                      Guardaremos lo que aprendiste y utilizaremos esos resultados para preparar tu próximo plan.
+                    </p>
+                  </form>
+                )}
               </div>
             )}
             <div ref={scrollAnchorRef} aria-hidden="true" />

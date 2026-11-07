@@ -1,0 +1,95 @@
+
+> ia-emprendedor@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.5 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.23.112.1:3000
+- Environments: .env.local
+✓ Ready in 816ms
+✓ Running next.config.ts took 60ms
+
+○ Compiling /dashboard ...
+ GET /dashboard 200 in 6.3s (next.js: 5.0s, proxy.ts: 439ms, application-code: 921ms)
+ GET /login 200 in 688ms (next.js: 286ms, proxy.ts: 21ms, application-code: 381ms)
+ GET /signup 200 in 361ms (next.js: 223ms, proxy.ts: 18ms, application-code: 119ms)
+ GET /signup?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar+tu+cuenta.&status=account_created 200 in 230ms (next.js: 62ms, proxy.ts: 38ms, application-code: 129ms)
+ POST /signup 200 in 1097ms (next.js: 249ms, proxy.ts: 15ms, application-code: 833ms)
+  └─ ƒ signup({}) in 500ms src/actions/auth.ts
+ GET /auth/confirm?token_hash=pkce_7e1db44151b82cf6f88eff0e606ebe8993d0a57045cf467d75ac0b79&type=email 307 in 868ms (next.js: 453ms, proxy.ts: 14ms, application-code: 401ms)
+ GET /dashboard 200 in 1499ms (next.js: 281ms, proxy.ts: 89ms, application-code: 1128ms)
+ GET /onboarding/business 200 in 2.5s (next.js: 1899ms, proxy.ts: 102ms, application-code: 508ms)
+ GET /auth/confirm?token_hash=pkce_7e1db44151b82cf6f88eff0e606ebe8993d0a57045cf467d75ac0b79&type=email 307 in 301ms (next.js: 160ms, proxy.ts: 22ms, application-code: 118ms)
+ GET /login?error=El+enlace+de+confirmaci%C3%B3n+no+es+v%C3%A1lido+o+ha+expirado. 200 in 202ms (next.js: 41ms, proxy.ts: 14ms, application-code: 147ms)
+ GET /signup 200 in 397ms (next.js: 39ms, proxy.ts: 13ms, application-code: 345ms)
+ GET /signup?qa=2 200 in 298ms (next.js: 28ms, proxy.ts: 22ms, application-code: 248ms)
+ GET /signup?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar+tu+cuenta.&status=account_created 200 in 356ms (next.js: 161ms, proxy.ts: 28ms, application-code: 167ms)
+ POST /signup?qa=2 200 in 1537ms (next.js: 244ms, proxy.ts: 34ms, application-code: 1259ms)
+  └─ ƒ signup({}) in 579ms src/actions/auth.ts
+ GET /auth/confirm?token_hash=pkce_5458e26b001a4608e57298ec2455923c5a0264dff4eccbb3046cb536&type=email 307 in 310ms (next.js: 66ms, proxy.ts: 18ms, application-code: 227ms)
+ GET /dashboard 200 in 679ms (next.js: 83ms, proxy.ts: 16ms, application-code: 580ms)
+ GET /onboarding/business 200 in 825ms (next.js: 220ms, proxy.ts: 21ms, application-code: 584ms)
+ GET /dashboard 200 in 1211ms (next.js: 164ms, proxy.ts: 58ms, application-code: 989ms)
+ POST /onboarding/business 200 in 1718ms (next.js: 101ms, proxy.ts: 27ms, application-code: 1591ms)
+  └─ ƒ createBusiness({}) in 317ms src/actions/business.ts
+ GET /onboarding/diagnostic 200 in 4.6s (next.js: 3.0s, proxy.ts: 70ms, application-code: 1495ms)
+ GET /onboarding/diagnostic 200 in 1205ms (next.js: 285ms, proxy.ts: 80ms, application-code: 840ms)
+ GET /dashboard 200 in 2.0s (next.js: 352ms, proxy.ts: 20ms, application-code: 1638ms)
+ POST /onboarding/diagnostic 200 in 4.9s (next.js: 658ms, proxy.ts: 25ms, application-code: 4.2s)
+  └─ ƒ createDiagnostic({}) in 2071ms src/actions/diagnostic.ts
+CEO_EVIDENCE_GENERATED {
+  planId: '3b755c31-c334-43b9-84fb-bdd6be9a62ff',
+  evidence_status: 'ready',
+  item_count: 3
+}
+ GET /dashboard?message=Tu+semana+1+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.7s (next.js: 196ms, proxy.ts: 56ms, application-code: 2.4s)
+ POST /dashboard 200 in 47s (next.js: 293ms, proxy.ts: 24ms, application-code: 46s)
+  └─ ƒ generateCEOPlanAction() in 43079ms src/actions/ceo-plan.ts
+ GET /weekly-review 200 in 2.4s (next.js: 762ms, proxy.ts: 20ms, application-code: 1653ms)
+ POST /weekly-review 200 in 2.6s (next.js: 932ms, proxy.ts: 50ms, application-code: 1665ms)
+  └─ ƒ saveWeeklyReviewDraft({"outcome_status":"mixed"}) in 1156ms src/actions/weekly-review.ts
+ POST /weekly-review 200 in 2.4s (next.js: 120ms, proxy.ts: 21ms, application-code: 2.3s)
+  └─ ƒ saveWeeklyReviewDraft({"observed_result":"Recibimos algunas consultas, pero todavía no se convirtieron en ventas.","outcome_status":"mixed"}) in 1982ms src/actions/weekly-review.ts
+ POST /weekly-review 200 in 1920ms (next.js: 143ms, proxy.ts: 35ms, application-code: 1742ms)
+  └─ ƒ saveWeeklyReviewDraft({"hypothesis_status":"inconclusive","observed_result":"Recibimos algunas consultas, pero todavía no se convirtieron en ventas.","outcome_status":"mixed"}) in 1683ms src/actions/weekly-review.ts
+ POST /weekly-review 200 in 1502ms (next.js: 119ms, proxy.ts: 22ms, application-code: 1361ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Tres personas pidieron más detalles; aún no sabemos qué mensaje convierte mejor.","hypothesis_status":"inconclusive","observed_result":"Recibimos algunas consultas, pero todavía no se convirtieron en ventas.","...":"1 item not stringified"}) in 1047ms src/actions/weekly-review.ts
+ POST /weekly-review 200 in 2.6s (next.js: 379ms, proxy.ts: 31ms, application-code: 2.2s)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Tres personas pidieron más detalles; aún no sabemos qué mensaje convierte mejor.","hypothesis_status":"inconclusive","learning":"Probaré dos mensajes distintos y registraré cuál genera más respuestas calificadas.","...":"2 items not stringified"}) in 1966ms src/actions/weekly-review.ts
+✓ Compiled in 1021ms
+ POST /weekly-review 200 in 2.1s (next.js: 742ms, proxy.ts: 26ms, application-code: 1298ms)
+  └─ ƒ saveWeeklyReviewDraft({"evidence":"Tres personas pidieron más detalles; aún no sabemos qué mensaje convierte mejor.","hypothesis_status":"inconclusive","learning":"Probaré dos mensajes distintos y registraré cuál genera más respuestas calificadas.","...":"2 items not stringified"}) in 1080ms src/actions/weekly-review.ts
+ POST /weekly-review 200 in 1608ms (next.js: 126ms, proxy.ts: 22ms, application-code: 1459ms)
+  └─ ƒ createWeeklyReview({}) in 648ms src/actions/weekly-review.ts
+CEO_EVIDENCE_GENERATED {
+  planId: 'e692c9a6-ee16-4777-ba21-eb30abecef29',
+  evidence_status: 'ready',
+  item_count: 3
+}
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.4s (next.js: 36ms, proxy.ts: 16ms, application-code: 2.3s)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.4s (next.js: 23ms, proxy.ts: 45ms, application-code: 2.3s)
+ POST /weekly-review 200 in 27.0s (next.js: 137ms, proxy.ts: 82ms, application-code: 26.8s)
+  └─ ƒ generateCEOPlanAction() in 24079ms src/actions/ceo-plan.ts
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.3s (next.js: 68ms, proxy.ts: 81ms, application-code: 2.2s)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.3s (next.js: 140ms, proxy.ts: 199ms, application-code: 1927ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.1s (next.js: 178ms, proxy.ts: 109ms, application-code: 1802ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 2.2s (next.js: 363ms, proxy.ts: 106ms, application-code: 1693ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1822ms (next.js: 87ms, proxy.ts: 64ms, application-code: 1671ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1663ms (next.js: 82ms, proxy.ts: 48ms, application-code: 1533ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1476ms (next.js: 239ms, proxy.ts: 123ms, application-code: 1114ms)
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1117ms (next.js: 117ms, proxy.ts: 118ms, application-code: 882ms)
+✓ Compiled in 1197ms
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1238ms (next.js: 368ms, proxy.ts: 222ms, application-code: 649ms)
+ GET /onboarding/business 200 in 355ms (next.js: 142ms, proxy.ts: 16ms, application-code: 197ms)
+ GET /signup 200 in 262ms (next.js: 48ms, proxy.ts: 65ms, application-code: 150ms)
+ GET /signup?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar+tu+cuenta.&status=account_created 200 in 245ms (next.js: 45ms, proxy.ts: 41ms, application-code: 160ms)
+ GET /login?error=El+enlace+de+confirmaci%C3%B3n+no+es+v%C3%A1lido+o+ha+expirado. 200 in 221ms (next.js: 53ms, proxy.ts: 33ms, application-code: 135ms)
+ GET /dashboard 200 in 1712ms (next.js: 148ms, proxy.ts: 28ms, application-code: 1537ms)
+ GET /dashboard 200 in 1335ms (next.js: 237ms, proxy.ts: 63ms, application-code: 1034ms)
+✓ Compiled in 416ms
+✓ Compiled in 584ms
+ GET /login?code=85d68d6d-a4aa-479f-8174-e5aab9330f14&error=El+enlace+de+confirmaci%C3%B3n+no+es+v%C3%A1lido+o+ha+expirado. 200 in 940ms (next.js: 328ms, proxy.ts: 90ms, application-code: 521ms)
+ GET /onboarding/business 307 in 2.3s (next.js: 1256ms, proxy.ts: 28ms, application-code: 1025ms)
+ GET /login 200 in 920ms (next.js: 161ms, proxy.ts: 72ms, application-code: 687ms)
+ GET /onboarding/business 307 in 3.9s (next.js: 929ms, proxy.ts: 252ms, application-code: 2.7s)
+ GET /dashboard 200 in 10.4s (next.js: 738ms, proxy.ts: 161ms, application-code: 9.5s)
