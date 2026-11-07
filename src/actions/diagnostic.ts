@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { DiagnosticOnboardingSchema } from "@/lib/onboarding-validation";
+import type { OnboardingActionResult } from "@/lib/onboarding-action";
 import { createClient } from "@/lib/supabase/server";
 
-export async function createDiagnostic(formData: FormData) {
+export async function createDiagnostic(
+  formData: FormData,
+): Promise<OnboardingActionResult> {
   const parsed = DiagnosticOnboardingSchema.safeParse({
     business_stage: formData.get("business_stage"),
     team_size: formData.get("team_size"),
@@ -21,12 +24,11 @@ export async function createDiagnostic(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "Completa todos los datos del diagnóstico. Puedes usar valores aproximados.",
-        ),
-    );
+    return {
+      success: false,
+      message:
+        "Completa todos los datos del diagnóstico. Puedes usar valores aproximados.",
+    };
   }
 
   const {
@@ -67,12 +69,10 @@ export async function createDiagnostic(formData: FormData) {
       businessError,
     );
 
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "No pudimos cargar tu negocio. Intenta nuevamente.",
-        ),
-    );
+    return {
+      success: false,
+      message: "No pudimos cargar tu negocio. Intenta nuevamente.",
+    };
   }
 
   if (!business) {
@@ -93,12 +93,10 @@ export async function createDiagnostic(formData: FormData) {
       lookupError,
     );
 
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "No pudimos verificar tu diagnóstico.",
-        ),
-    );
+    return {
+      success: false,
+      message: "No pudimos verificar tu diagnóstico.",
+    };
   }
 
   if (existingDiagnostic) {
@@ -129,12 +127,10 @@ export async function createDiagnostic(formData: FormData) {
       hint: error.hint,
     });
 
-    redirect(
-      "/onboarding/diagnostic?error=" +
-        encodeURIComponent(
-          "No pudimos guardar tu diagnóstico. Intenta nuevamente.",
-        ),
-    );
+    return {
+      success: false,
+      message: "No pudimos guardar tu diagnóstico. Intenta nuevamente.",
+    };
   }
 
   revalidatePath("/dashboard");

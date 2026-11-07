@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { BusinessOnboardingSchema } from "@/lib/onboarding-validation";
+import type { OnboardingActionResult } from "@/lib/onboarding-action";
 import { createClient } from "@/lib/supabase/server";
 
-export async function createBusiness(formData: FormData) {
+export async function createBusiness(
+  formData: FormData,
+): Promise<OnboardingActionResult> {
   const parsed = BusinessOnboardingSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description"),
@@ -14,12 +17,11 @@ export async function createBusiness(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect(
-      "/onboarding/business?error=" +
-        encodeURIComponent(
-          "Completa el nombre, la descripción y cómo gana dinero tu empresa.",
-        ),
-    );
+    return {
+      success: false,
+      message:
+        "Completa el nombre, la descripción y cómo gana dinero tu empresa.",
+    };
   }
 
   const { name, description, revenue_model: revenueModel } = parsed.data;
@@ -47,12 +49,10 @@ export async function createBusiness(formData: FormData) {
   if (existingBusinessError) {
     console.error("BUSINESS_LOOKUP_ERROR", existingBusinessError);
 
-    redirect(
-      "/onboarding/business?error=" +
-        encodeURIComponent(
-          "No pudimos verificar tu negocio. Intenta nuevamente.",
-        ),
-    );
+    return {
+      success: false,
+      message: "No pudimos verificar tu negocio. Intenta nuevamente.",
+    };
   }
 
   if (existingBusiness) {
@@ -75,14 +75,12 @@ export async function createBusiness(formData: FormData) {
       hint: error.hint,
     });
 
-    redirect(
-      "/onboarding/business?error=" +
-        encodeURIComponent(
-          "No pudimos crear tu negocio. Intenta nuevamente.",
-        ),
-    );
+    return {
+      success: false,
+      message: "No pudimos crear tu negocio. Intenta nuevamente.",
+    };
   }
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  redirect("/onboarding/diagnostic");
 }

@@ -78,3 +78,18 @@ CEO_EVIDENCE_GENERATED {
  GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1663ms (next.js: 82ms, proxy.ts: 48ms, application-code: 1533ms)
  GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1476ms (next.js: 239ms, proxy.ts: 123ms, application-code: 1114ms)
  GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1117ms (next.js: 117ms, proxy.ts: 118ms, application-code: 882ms)
+✓ Compiled in 1197ms
+ GET /dashboard?message=Tu+semana+2+est%C3%A1+lista.+Revisa+tu+plan+de+ejecuci%C3%B3n. 200 in 1238ms (next.js: 368ms, proxy.ts: 222ms, application-code: 649ms)
+ GET /onboarding/business 200 in 355ms (next.js: 142ms, proxy.ts: 16ms, application-code: 197ms)
+ GET /signup 200 in 262ms (next.js: 48ms, proxy.ts: 65ms, application-code: 150ms)
+ GET /signup?message=Cuenta+creada.+Revisa+tu+correo+para+confirmar+tu+cuenta.&status=account_created 200 in 245ms (next.js: 45ms, proxy.ts: 41ms, application-code: 160ms)
+ GET /login?error=El+enlace+de+confirmaci%C3%B3n+no+es+v%C3%A1lido+o+ha+expirado. 200 in 221ms (next.js: 53ms, proxy.ts: 33ms, application-code: 135ms)
+ GET /dashboard 200 in 1712ms (next.js: 148ms, proxy.ts: 28ms, application-code: 1537ms)
+ GET /dashboard 200 in 1335ms (next.js: 237ms, proxy.ts: 63ms, application-code: 1034ms)
+✓ Compiled in 416ms
+✓ Compiled in 584ms
+ GET /login?code=85d68d6d-a4aa-479f-8174-e5aab9330f14&error=El+enlace+de+confirmaci%C3%B3n+no+es+v%C3%A1lido+o+ha+expirado. 200 in 940ms (next.js: 328ms, proxy.ts: 90ms, application-code: 521ms)
+ GET /onboarding/business 307 in 2.3s (next.js: 1256ms, proxy.ts: 28ms, application-code: 1025ms)
+ GET /login 200 in 920ms (next.js: 161ms, proxy.ts: 72ms, application-code: 687ms)
+ GET /onboarding/business 307 in 3.9s (next.js: 929ms, proxy.ts: 252ms, application-code: 2.7s)
+ GET /dashboard 200 in 10.4s (next.js: 738ms, proxy.ts: 161ms, application-code: 9.5s)

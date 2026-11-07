@@ -82,7 +82,13 @@ export function DiagnosticWizard({
 
           {error && <div className="alert-box mt-4" role="alert">{error}</div>}
 
-          <form ref={formRef} action={createDiagnostic} className="mt-5">
+          <form
+            ref={formRef}
+            action={async (formData) => {
+              await createDiagnostic(formData);
+            }}
+            className="mt-5"
+          >
             <fieldset data-step="0" hidden={currentStep !== 0}>
               <legend className="sr-only">Situación actual</legend>
               <div className="grid gap-4 sm:grid-cols-2">
