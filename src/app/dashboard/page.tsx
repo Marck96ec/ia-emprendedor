@@ -138,7 +138,8 @@ export default async function DashboardPage({
         week_number,
         previous_plan_id,
         external_evidence,
-        evidence_status
+        evidence_status,
+        updated_at
       `,
     )
     .eq("business_id", business.id)
@@ -488,16 +489,23 @@ export default async function DashboardPage({
           </div>
         )}
 
-        {ceoPlan?.status === "generating" && <PlanGeneratingStatus />}
+        {ceoPlan?.status === "generating" && (
+          <PlanGeneratingStatus
+            businessName={business.name}
+            weekNumber={ceoPlan.week_number}
+            updatedAt={ceoPlan.updated_at}
+          />
+        )}
 
         {ceoPlan?.status === "failed" && (
           <div className="surface-card rounded-2xl p-5 sm:p-6">
             <h2 className="text-xl font-semibold text-slate-950">No pudimos terminar tu plan</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Tu información está guardada. Puedes intentarlo nuevamente sin repetir el diagnóstico.
+              Tu información está guardada.               Tu revisión y tus aprendizajes están guardados. Puedes reintentar
+              la preparación sin repetir el diagnóstico.
             </p>
             <form action={generateCEOPlanAction} className="mt-5">
-              <PlanGenerationSubmit label="Intentar nuevamente" />
+              <PlanGenerationSubmit label="Reintentar preparación" />
             </form>
           </div>
         )}

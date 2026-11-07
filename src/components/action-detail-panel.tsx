@@ -50,7 +50,7 @@ function NextWeekButton({ weekNumber }: { weekNumber: number }) {
       disabled={pending}
       className="primary-button min-h-11 w-full px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Preparando..." : `Preparar semana ${weekNumber}`}
+      {pending ? "Preparando..." : `Reintentar preparación de semana ${weekNumber}`}
     </button>
   );
 }
