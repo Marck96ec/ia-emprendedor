@@ -22,14 +22,14 @@ export default async function SignupPage({
   return (
     <main className="ambient-shell flex min-h-screen items-center justify-center px-4">
       <div className="surface-card w-full max-w-md rounded-[2rem] p-6 sm:p-8">
-        <p className="badge-chip">IA Emprendedor</p>
+        <p className="badge-chip">TUCEO IA</p>
 
         <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
           Crear cuenta
         </h1>
 
         <p className="mt-2 text-sm text-slate-600">
-          Empieza a construir el plan de tu negocio con IA Emprendedor.
+          Empieza a construir el plan de tu negocio con TUCEO IA.
         </p>
 
         {error && <div className="alert-box mt-6" role="alert">{error}</div>}
