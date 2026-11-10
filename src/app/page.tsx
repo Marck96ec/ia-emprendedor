@@ -501,7 +501,7 @@ export default function Home() {
                           >
                             {item.done ? "✓" : "·"}
                           </span>
-                          <span className="truncate">{item.action}</span>
+                          <span className="min-w-0">{item.action}</span>
                         </span>
                         <span
                           className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
