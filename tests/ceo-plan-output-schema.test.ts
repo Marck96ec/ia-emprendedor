@@ -8,6 +8,8 @@ import { ModelBehaviorError } from "@openai/agents";
 import {
   CEOPlanSchema,
   CEOPlanModelSchema,
+  parseStoredCEOPlanForDashboard,
+  StoredCEOPlanSchema,
   validateCEOPlanBusinessRules,
   type CEOPlan,
 } from "../src/lib/ai/ceo-agent";
@@ -29,6 +31,7 @@ import {
   ActionCaptureModelSchema,
   ActionCaptureSchema,
   GENERIC_ACTION_CAPTURE_SCHEMA,
+  parseActionCaptureModel,
 } from "../src/lib/action-capture";
 
 const validPlan: CEOPlan = {
@@ -165,8 +168,20 @@ test("usa un model capture schema no recursivo con todos los tipos v1", () => {
     { ...base, type: "text", placeholder: null, max_length: null },
     { ...base, id: "long_text", type: "textarea", placeholder: null, max_length: null },
     { ...base, id: "amount", type: "number", min: null, max: null },
-    { ...base, id: "choice", type: "single_select", options: [] },
-    { ...base, id: "choices", type: "multi_select", min_items: null, max_items: null, options: [] },
+    {
+      ...base,
+      id: "choice",
+      type: "single_select",
+      options: [{ value: "yes", label: "Sí" }],
+    },
+    {
+      ...base,
+      id: "choices",
+      type: "multi_select",
+      min_items: null,
+      max_items: null,
+      options: [{ value: "yes", label: "Sí" }],
+    },
     {
       ...base,
       id: "group",
@@ -189,6 +204,7 @@ test("usa un model capture schema no recursivo con todos los tipos v1", () => {
 
   assert.equal(ActionCaptureModelSchema.safeParse(capture).success, true);
   assert.equal(ActionCaptureSchema.safeParse(capture).success, false);
+  assert.equal(parseActionCaptureModel(capture).success, true);
   assert.equal(
     ActionCaptureModelSchema.safeParse({
       ...capture,
@@ -213,6 +229,90 @@ test("usa un model capture schema no recursivo con todos los tipos v1", () => {
     action_type: "generic",
     capture_schema: capture,
   }).success, true);
+});
+
+test("representa la ausencia de continuidad como null en el contrato del modelo", async () => {
+  const modelCapture = {
+    ...GENERIC_ACTION_CAPTURE_SCHEMA,
+    description: null,
+    fields: GENERIC_ACTION_CAPTURE_SCHEMA.fields.map((field) => ({
+      ...field,
+      description: null,
+      placeholder: null,
+      max_length: null,
+    })),
+  };
+  const modelOutput = {
+    ...validPlan,
+    strategic_continuity: null,
+    weekly_plan: validPlan.weekly_plan.map((item) => ({
+      ...item,
+      capture_schema: modelCapture,
+    })),
+  };
+
+  assert.equal(CEOPlanModelSchema.safeParse(modelOutput).success, true);
+  assert.equal(
+    CEOPlanModelSchema.safeParse({
+      ...modelOutput,
+      strategic_continuity: undefined,
+    }).success,
+    false,
+  );
+
+  process.env.OPENAI_API_KEY = "test-key";
+  const result = await generateCEOPlan(input, async () => ({
+    finalOutput: modelOutput,
+  }));
+
+  assert.equal(result.strategic_continuity, undefined);
+  assert.equal(result.weekly_plan[0].capture_schema.description, undefined);
+});
+
+test("normaliza la continuidad null de la primera semana antes de validar el plan persistido", () => {
+  const parsed = parseStoredCEOPlanForDashboard(
+    {
+      ...validPlan,
+      strategic_continuity: null,
+    },
+    1,
+  );
+
+  assert.equal(parsed.success, true);
+  assert.equal(
+    parsed.success ? parsed.data.strategic_continuity : null,
+    undefined,
+  );
+  assert.equal(
+    parseStoredCEOPlanForDashboard(
+      {
+        ...validPlan,
+        strategic_continuity: null,
+        executive_summary: 123,
+      },
+      1,
+    ).success,
+    false,
+  );
+});
+
+test("rechaza la continuidad null en planes persistidos desde la segunda semana", () => {
+  const parsed = parseStoredCEOPlanForDashboard(
+    {
+      ...validPlan,
+      strategic_continuity: null,
+    },
+    2,
+  );
+
+  assert.equal(parsed.success, false);
+  assert.equal(
+    StoredCEOPlanSchema.safeParse({
+      ...validPlan,
+      strategic_continuity: null,
+    }).success,
+    false,
+  );
 });
 
 test("acepta un plan estructuralmente válido de tres acciones", () => {
@@ -690,16 +790,55 @@ test("rechaza incoherencia de modo y tipo sin depender de la redacción", () => 
   );
 });
 
+test("permite una capacidad comercial explícita aunque el texto no use keywords", () => {
+  const plan = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            action: "Comparar dos alternativas",
+            objective: "Observar qué propuesta es más clara",
+            success_metric: "Registrar lo observado",
+            execution_mode: "ai_assisted" as const,
+            action_type: "commercial_messages" as const,
+          }
+        : item,
+    ),
+  };
+
+  assert.equal(validateCEOPlanBusinessRules(plan).success, true);
+});
+
+test("toda acción asistida debe tener una capacidad ejecutable", () => {
+  const invalidPlan = {
+    ...validPlan,
+    weekly_plan: validPlan.weekly_plan.map((item, index) =>
+      index === 0
+        ? {
+            ...item,
+            execution_mode: "ai_assisted" as const,
+            action_type: "generic" as const,
+          }
+        : item,
+    ),
+  };
+
+  assert.equal(validateCEOPlanBusinessRules(invalidPlan).success, false);
+});
+
 test("reintenta una salida inválida una sola vez y acepta la corregida", async () => {
   process.env.OPENAI_API_KEY = "test-key";
   let attempts = 0;
+  const prompts: string[] = [];
 
-  const result = await generateCEOPlan(input, async () => {
+  const result = await generateCEOPlan(input, async (_agent, prompt) => {
     attempts += 1;
+    prompts.push(prompt);
 
     if (attempts === 1) {
       throw new ModelBehaviorError(
-        "Invalid output type: final assistant output did not match the expected schema.",
+        'Invalid output type: final assistant output failed schema validation at "strategic_continuity" (Invalid input: expected object, received null).',
       );
     }
 
@@ -711,6 +850,14 @@ test("reintenta una salida inválida una sola vez y acepta la corregida", async 
     ...validPlan,
     diagnosis: validPlan.strategic_diagnosis.diagnosis.summary,
   });
+  assert.match(
+    prompts[1],
+    /Campos que fallaron validación:\s+strategic_continuity/,
+  );
+  assert.match(
+    prompts[1],
+    /Invalid input: expected object, received null/,
+  );
 });
 
 test("no reintenta errores que no son de salida", async () => {
@@ -737,12 +884,23 @@ test("clasifica solo la salida inválida reconocida por Agents SDK", () => {
   const otherModelBehavior = new ModelBehaviorError(
     "Model returned no final output for the structured output type.",
   );
+  const detailedInvalidOutput = new ModelBehaviorError(
+    'Invalid output type: final assistant output failed schema validation at "weekly_plan.0.capture_schema.fields.1.id" (Invalid string: must match pattern).',
+  );
 
   assert.equal(isInvalidCEOPlanOutputError(invalidOutput), true);
   assert.equal(isInvalidCEOPlanOutputError(otherModelBehavior), false);
   assert.equal(
     toSafeCEOPlanError(invalidOutput).code,
     "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID",
+  );
+  assert.deepEqual(
+    toSafeCEOPlanError(detailedInvalidOutput).issuePaths,
+    ["weekly_plan.0.capture_schema.fields.1.id"],
+  );
+  assert.deepEqual(
+    toSafeCEOPlanError(detailedInvalidOutput).issueMessages,
+    ["Invalid string: must match pattern"],
   );
   assert.equal(toSafeCEOPlanError(otherModelBehavior).kind, "transient");
   assert.equal(
@@ -770,6 +928,19 @@ test("usa una RPC transaccional y limpia acciones parciales", () => {
   assert.match(migration, /insert into public\.weekly_actions/);
   assert.match(migration, /set status = 'ready'/);
   assert.match(migration, /create or replace function public\.fail_ceo_plan/);
+});
+
+test("no persiste un resultado inválido antes de completar la generación", () => {
+  const source = readFileSync(
+    join(process.cwd(), "src", "actions", "ceo-plan.ts"),
+    "utf8",
+  );
+  const generationIndex = source.indexOf("const output = await generateCEOPlan");
+  const persistenceIndex = source.indexOf('supabase.rpc("complete_ceo_plan"');
+
+  assert.ok(generationIndex >= 0);
+  assert.ok(persistenceIndex > generationIndex);
+  assert.match(source, /supabase\.rpc\(\s*"fail_ceo_plan"/);
 });
 
 test("persiste el razonamiento estratégico junto al plan", () => {

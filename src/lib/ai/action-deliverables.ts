@@ -47,32 +47,74 @@ export type CommercialMessages = z.infer<
   typeof CommercialMessagesSchema
 >;
 
+const CommercialOfferSchema = z.object({
+  offer_name: commercialMessageText,
+  target_customer: commercialMessageText,
+  promise: commercialMessageText,
+  what_is_included: commercialMessageText,
+  call_to_action: commercialMessageText,
+});
+
+export const CommercialOffersSchema = z.object({
+  deliverable_type: z.literal("commercial_offers"),
+  offers: z.array(CommercialOfferSchema).length(2),
+  explanation: z.string().trim().min(1),
+}).superRefine((deliverable, context) => {
+  const offerNames = deliverable.offers.map((offer) =>
+    offer.offer_name
+      .trim()
+      .toLocaleLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""),
+  );
+
+  if (new Set(offerNames).size !== offerNames.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Cada oferta debe ser distinguible por su nombre",
+      path: ["offers"],
+    });
+  }
+});
+
+export type CommercialOffers = z.infer<
+  typeof CommercialOffersSchema
+>;
+
 export type ActionDeliverable =
   | ValueProposition
-  | CommercialMessages;
+  | CommercialMessages
+  | CommercialOffers;
 
-const COMMERCIAL_MESSAGE_PATTERN =
-  /\b(mensaje|mensajes|variante|variantes|version|versiones|anuncio|anuncios|copy|whatsapp|correo|email|venta|ventas|vender|oferta|guion)\b/i;
-
-const MULTIPLE_MESSAGE_PATTERN =
-  /\b(2|3|dos|tres|varias|varios|multiples|múltiples)\s+(mensajes|variantes|versiones|anuncios|copies)\b/i;
-
-export function isCommercialMessagesRequest(input: {
+export type AIAssistedActionDefinition = {
+  execution_mode: "ai_assisted";
+  action_type: AIAssistedActionType;
   action: string;
   objective: string;
   success_metric: string;
-}): boolean {
-  const text = [
-    input.action,
-    input.objective,
-    input.success_metric,
-  ].join(" ");
+};
 
-  return (
-    COMMERCIAL_MESSAGE_PATTERN.test(text) &&
-    (MULTIPLE_MESSAGE_PATTERN.test(text) ||
-      /\b(mensaje|mensajes|variante|variantes|version|versiones)\b/i.test(text))
-  );
+export const AI_ACTION_CAPABILITIES = {
+  value_proposition: {
+    action_type: "value_proposition",
+    deliverable_types: ["value_proposition"] as const,
+  },
+  commercial_messages: {
+    action_type: "commercial_messages",
+    deliverable_types: ["commercial_offers", "commercial_messages"] as const,
+  },
+} as const;
+
+export function getAIAssistedActionCapability(actionType: string) {
+  if (actionType === "value_proposition") {
+    return AI_ACTION_CAPABILITIES.value_proposition;
+  }
+
+  if (actionType === "commercial_messages") {
+    return AI_ACTION_CAPABILITIES.commercial_messages;
+  }
+
+  return null;
 }
 
 export const AIActionDefinitionSchema = z.object({
@@ -108,28 +150,13 @@ export const AIActionDefinitionSchema = z.object({
     });
   }
 
-  const requestsCommercialMessages = isCommercialMessagesRequest(action);
-
   if (
-    action.action_type === "commercial_messages" &&
-    !requestsCommercialMessages
+    action.execution_mode === "ai_assisted" &&
+    !getAIAssistedActionCapability(action.action_type)
   ) {
     context.addIssue({
       code: "custom",
-      message:
-        "La acción commercial_messages debe solicitar mensajes o variantes comerciales",
-      path: ["action_type"],
-    });
-  }
-
-  if (
-    action.action_type === "value_proposition" &&
-    requestsCommercialMessages
-  ) {
-    context.addIssue({
-      code: "custom",
-      message:
-        "Una acción que solicita mensajes o variantes debe usar commercial_messages",
+      message: "La acción asistida no tiene una capacidad ejecutable",
       path: ["action_type"],
     });
   }
@@ -144,7 +171,10 @@ export function parseActionDeliverable(
   content: unknown,
 ) {
   if (actionType === "commercial_messages") {
-    return CommercialMessagesSchema.safeParse(content);
+    return z.union([
+      CommercialOffersSchema,
+      CommercialMessagesSchema,
+    ]).safeParse(content);
   }
 
   if (actionType === "value_proposition") {

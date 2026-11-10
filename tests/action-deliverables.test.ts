@@ -3,11 +3,13 @@ import test from "node:test";
 
 import {
   AIActionDefinitionSchema,
+  CommercialOffersSchema,
   CommercialMessagesSchema,
   parseActionDeliverable,
   parseStoredActionResult,
   validateActionResultForApproval,
 } from "../src/lib/ai/action-deliverables";
+import { buildCommercialOffersPrompt } from "../src/lib/ai/generate-commercial-offers";
 import { buildCommercialMessagesPrompt } from "../src/lib/ai/generate-commercial-messages";
 
 const validCommercialMessages = {
@@ -33,9 +35,30 @@ const validCommercialMessages = {
 };
 
 const actionContext = {
-  action: "Escribir tres variantes de mensaje comercial para WhatsApp",
-  objective: "Probar qué ángulo genera más conversaciones con clientes",
-  success_metric: "Enviar las tres variantes y registrar respuestas",
+  action: "Definir y probar una oferta corta para dos combinaciones",
+  objective: "Comparar dos alternativas comerciales con clientes",
+  success_metric: "Registrar el uso real de las dos ofertas y sus respuestas",
+};
+
+const validCommercialOffers = {
+  deliverable_type: "commercial_offers" as const,
+  offers: [
+    {
+      offer_name: "Diagnóstico express",
+      target_customer: "Comercios con una necesidad urgente",
+      promise: "Entender el siguiente ajuste prioritario en una sesión breve",
+      what_is_included: "Revisión inicial y recomendación concreta",
+      call_to_action: "Escríbeme para coordinar la sesión",
+    },
+    {
+      offer_name: "Acompañamiento práctico",
+      target_customer: "Comercios que necesitan implementar el ajuste",
+      promise: "Aplicar el cambio con seguimiento cercano",
+      what_is_included: "Implementación guiada y revisión del primer resultado",
+      call_to_action: "Cuéntame tu caso para revisar si encaja",
+    },
+  ],
+  explanation: "Las ofertas cambian el nivel de acompañamiento sin inventar precios.",
 };
 
 test("acepta exactamente tres mensajes con factores diferentes", () => {
@@ -61,22 +84,50 @@ test("rechaza mensajes incompletos o factores duplicados", () => {
   assert.equal(CommercialMessagesSchema.safeParse(duplicated).success, false);
 });
 
+test("acepta exactamente dos ofertas distinguibles y rechaza duplicadas", () => {
+  assert.equal(CommercialOffersSchema.safeParse(validCommercialOffers).success, true);
+  assert.equal(
+    CommercialOffersSchema.safeParse({
+      ...validCommercialOffers,
+      offers: validCommercialOffers.offers.map((offer) => ({
+        ...offer,
+        offer_name: "Misma oferta",
+      })),
+    }).success,
+    false,
+  );
+});
+
 test("relaciona el tipo de acción con el entregable correcto", () => {
   const commercialAction = AIActionDefinitionSchema.safeParse({
     execution_mode: "ai_assisted",
     action_type: "commercial_messages",
     ...actionContext,
   });
-  const incorrectlyClassifiedAction = AIActionDefinitionSchema.safeParse({
+  const actionWithDifferentWording = AIActionDefinitionSchema.safeParse({
     execution_mode: "ai_assisted",
-    action_type: "value_proposition",
-    ...actionContext,
+    action_type: "commercial_messages",
+    action: "Comparar dos alternativas",
+    objective: "Observar qué propuesta es más clara",
+    success_metric: "Registrar lo observado",
   });
 
   assert.equal(commercialAction.success, true);
-  assert.equal(incorrectlyClassifiedAction.success, false);
+  assert.equal(actionWithDifferentWording.success, true);
+  assert.equal(
+    AIActionDefinitionSchema.safeParse({
+      execution_mode: "manual",
+      action_type: "commercial_messages",
+      ...actionContext,
+    }).success,
+    false,
+  );
   assert.equal(
     parseActionDeliverable("commercial_messages", validCommercialMessages).success,
+    true,
+  );
+  assert.equal(
+    parseActionDeliverable("commercial_messages", validCommercialOffers).success,
     true,
   );
   assert.equal(
@@ -125,6 +176,45 @@ test("conserva borrador, feedback y contexto en una revisión", () => {
   assert.match(prompt, /exactamente tres mensajes/);
 });
 
+test("el prompt de ofertas exige dos entregables distinguibles", () => {
+  const prompt = buildCommercialOffersPrompt({
+    business: {
+      name: "Taller Norte",
+      revenue_model: "Cobro por reparaciones a pequeños comercios.",
+      description: "Reparaciones para pequeños comercios.",
+    },
+    diagnostic: {
+      business_stage: "validating",
+      team_size: 2,
+      owner_hours_per_week: 5,
+      main_challenge: "Pocas conversaciones comerciales",
+      primary_goal: "Aumentar solicitudes",
+      customers_description: "Comercios de barrio",
+      sales_process: "Referidos y WhatsApp",
+      owner_responsibilities: "Vendo, coordino el trabajo y reviso las finanzas.",
+      monthly_revenue: 1200,
+      currency_code: "USD",
+    },
+    action: {
+      ...actionContext,
+      sequence: 2,
+      action_type: "commercial_messages",
+    },
+    plan: {
+      executive_summary: "Priorizar conversaciones",
+      diagnosis: "La oferta se entiende tarde",
+      priorities: ["Claridad comercial"],
+    },
+    currentDraft: validCommercialOffers,
+    currentKnowledge: null,
+    feedback: "Haz la segunda oferta más concreta.",
+  });
+
+  assert.match(prompt, /exactamente dos ofertas/);
+  assert.match(prompt, /offer_name/);
+  assert.match(prompt, /Haz la segunda oferta más concreta/);
+});
+
 test("recupera el contenido aprobado y mantiene compatibilidad histórica", () => {
   const approved = parseStoredActionResult(
     "commercial_messages",
@@ -162,7 +252,7 @@ test("valida el resultado y el tipo de acción antes de aprobar", () => {
     },
     {
       status: "draft",
-      draft_content: validCommercialMessages,
+      draft_content: validCommercialOffers,
     },
   );
   const invalidApproval = validateActionResultForApproval(
@@ -174,8 +264,8 @@ test("valida el resultado y el tipo de acción antes de aprobar", () => {
     {
       status: "draft",
       draft_content: {
-        ...validCommercialMessages,
-        messages: validCommercialMessages.messages.slice(0, 2),
+        ...validCommercialOffers,
+        offers: validCommercialOffers.offers.slice(0, 1),
       },
     },
   );

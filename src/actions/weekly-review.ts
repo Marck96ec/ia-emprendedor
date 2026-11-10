@@ -59,6 +59,12 @@ export type WeeklyReviewDraftSaveResult = {
   message?: string;
 };
 
+export type WeeklyReviewSaveResult = {
+  success: boolean;
+  alreadySaved?: boolean;
+  message?: string;
+};
+
 export async function saveWeeklyReviewDraft(
   draft: WeeklyReviewDraft,
 ): Promise<WeeklyReviewDraftSaveResult> {
@@ -163,7 +169,7 @@ export async function saveWeeklyReviewDraft(
 
 export async function createWeeklyReview(
   formData: FormData,
-) {
+): Promise<WeeklyReviewSaveResult> {
   const parsed = WeeklyReviewSchema.safeParse({
     outcome_status: String(
       formData.get("outcome_status") ?? "",
@@ -199,11 +205,10 @@ export async function createWeeklyReview(
   });
 
   if (!parsed.success) {
-    redirect(
-      reviewError(
-        "Completa correctamente la revisión semanal.",
-      ),
-    );
+    return {
+      success: false,
+      message: "Completa correctamente la revisión semanal.",
+    };
   }
 
   const supabase = await createClient();
@@ -314,15 +319,17 @@ export async function createWeeklyReview(
       reviewLookupError,
     );
 
-    redirect(
-      reviewError(
-        "No pudimos verificar tu revisión.",
-      ),
-    );
+    return {
+      success: false,
+      message: "No pudimos verificar tu revisión.",
+    };
   }
 
   if (existingReview) {
-    redirect("/dashboard");
+    return {
+      success: true,
+      alreadySaved: true,
+    };
   }
 
   /*
@@ -344,19 +351,17 @@ export async function createWeeklyReview(
       actionsError,
     );
 
-    redirect(
-      reviewError(
-        "No pudimos cargar tus acciones.",
-      ),
-    );
+    return {
+      success: false,
+      message: "No pudimos cargar tus acciones.",
+    };
   }
 
   if (!actions || actions.length === 0) {
-    redirect(
-      reviewError(
-        "Tu plan semanal todavía no tiene acciones persistidas.",
-      ),
-    );
+    return {
+      success: false,
+      message: "Tu plan semanal todavía no tiene acciones persistidas.",
+    };
   }
 
   const completedActions =
@@ -416,7 +421,10 @@ export async function createWeeklyReview(
      * contra duplicados.
      */
     if (error.code === "23505") {
-      redirect("/dashboard");
+      return {
+        success: true,
+        alreadySaved: true,
+      };
     }
 
     console.error(
@@ -424,11 +432,10 @@ export async function createWeeklyReview(
       error,
     );
 
-    redirect(
-      reviewError(
-        "No pudimos guardar tu revisión.",
-      ),
-    );
+    return {
+      success: false,
+      message: "No pudimos guardar tu revisión.",
+    };
   }
 
   const { error: draftDeleteError } = await supabase
@@ -443,10 +450,5 @@ export async function createWeeklyReview(
   revalidatePath("/dashboard");
   revalidatePath("/weekly-review");
 
-  redirect(
-    "/dashboard?message=" +
-      encodeURIComponent(
-        "Revisión semanal guardada.",
-      ),
-  );
+  return { success: true };
 }
