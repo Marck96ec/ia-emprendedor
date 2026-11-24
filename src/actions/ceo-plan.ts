@@ -12,6 +12,7 @@ import {
 import type { CEOPlan } from "@/lib/ai/ceo-agent";
 import { DecisionLearningSchema } from "@/lib/decision-learning";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
+import { buildBusinessAssessment } from "@/lib/business-assessment-adapter";
 import {
   CEOPlanError,
   safeCEOPlanLog,
@@ -128,6 +129,28 @@ export async function generateCEOPlanAction() {
 
   if (!diagnostic) {
     redirect("/onboarding/diagnostic");
+  }
+
+  const {
+    data: businessEvidence,
+    error: businessEvidenceError,
+  } = await supabase
+    .from("business_evidence")
+    .select("id, evidence_type, certainty, observed_at")
+    .eq("business_id", business.id)
+    .order("observed_at", { ascending: false });
+
+  if (businessEvidenceError) {
+    console.error(
+      "CEO_PLAN_BUSINESS_EVIDENCE_ERROR",
+      businessEvidenceError,
+    );
+
+    redirect(
+      dashboardError(
+        "No pudimos cargar la evidencia empresarial.",
+      ),
+    );
   }
 
   const businessKnowledge = await loadBusinessKnowledge(business.id);
@@ -745,6 +768,17 @@ if (latestPlan?.status === "generating") {
    * 6. Ejecutar CEO IA.
    */
 
+    const assessment = buildBusinessAssessment({
+      diagnostic,
+      evidence: businessEvidence ?? [],
+      completedActions: previousWeek?.review.completedActions ?? 0,
+      totalActions: previousWeek?.review.totalActions ?? 0,
+      latestReview: previousWeek
+        ? { outcome_status: previousWeek.review.outcomeStatus }
+        : null,
+      reviewedWeeks: previousWeek ? 1 : 0,
+    });
+
     const output = await generateCEOPlan({
       business: {
         name: business.name,
@@ -786,6 +820,7 @@ if (latestPlan?.status === "generating") {
           diagnostic.currency_code,
       },
 
+      assessment,
       previousWeek,
       businessKnowledge,
     });

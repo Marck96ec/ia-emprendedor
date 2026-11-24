@@ -1,8 +1,8 @@
 # CEO Command Center v3.1
 
-**Estado:** propuesta UX/UI y plan de implementación incremental  
+**Estado:** propuesta UX/UI, implementación inicial y plan incremental
 **Fecha de auditoría:** 2026-11-24  
-**Alcance de esta ejecución:** documentación únicamente. No se modifica código funcional, esquema de Supabase, dependencias, rutas ni despliegues.
+**Alcance de esta ejecución:** primera entrega funcional sin cambios de esquema, dependencias, rutas nuevas ni despliegues.
 
 ## 1. Resumen ejecutivo
 
@@ -23,7 +23,7 @@ La propuesta se apoya en capacidades reales ya existentes:
 - generación, revisión, aprobación y confirmación de entregables;
 - revisión semanal, aprendizaje estratégico e historial.
 
-La propuesta no presupone capacidades que todavía no existen. La evaluación determinística de madurez, salud, dimensiones del ADN, misiones persistentes y hitos empresariales requieren contratos y reglas explícitos antes de entrar en producción.
+La implementación inicial incorpora la evaluación determinística de madurez, salud y dimensiones del ADN sin persistencia nueva. Las misiones persistentes y los hitos empresariales todavía requieren contratos y reglas explícitos antes de entrar en producción.
 
 ## 2. Auditoría de la experiencia actual
 
@@ -74,9 +74,9 @@ Fuentes principales:
 | Ejecución asistida por IA | Implementada | Mantener generación, refinamiento, aprobación y registro de evidencia |
 | Progreso de ejecución | Implementado | Reusar `WeeklyProgress` como escala de ejecución, sin llamarlo progreso empresarial |
 | Revisión y aprendizaje | Implementado | Reusar `weekly_reviews`, `HistoryTimeline` y `buildDashboardJourney` |
-| Evolución empresarial | No implementada | Añadir después de definir el motor determinístico |
-| Salud empresarial | No implementada como evaluación persistida | Añadir después de definir metodología, fuentes y vigencia |
-| ADN Empresarial | No implementado como modelo de seis dimensiones | Añadir después de definir estados, evidencia y drawer |
+| Evolución empresarial | Implementación inicial en runtime | `src/lib/business-assessment.ts` y `BusinessEvolutionCard` |
+| Salud empresarial | Implementación inicial no persistida | Derivada de señales explícitas y separada de madurez |
+| ADN Empresarial | Implementación inicial de seis dimensiones | `BusinessDNA` con estados conservadores y drawer |
 | Misión estratégica | No existe como entidad persistida | Usar temporalmente el objetivo estratégico del plan, sin inventar un ID de misión |
 | Hitos empresariales | No existe un motor de condiciones | Mostrar únicamente un estado informativo real hasta definir criterios |
 
@@ -98,7 +98,17 @@ BUSINESS_MATURITY_STAGES =
 - estado provisional o indeterminado de una evaluación;
 - vigencia, confianza y evidencia por dimensión.
 
-Por tanto, el CEO Command Center v3.1 debe tratar estas áreas como **dependientes del motor de evaluación**. No debe inferir un nivel a partir de acciones completadas, semanas revisadas o ausencia de datos.
+La primera implementación funcional incorpora ahora un motor determinístico versionado en
+[`src/lib/business-assessment.ts`](../../src/lib/business-assessment.ts), con un adaptador de datos reales en
+[`src/lib/business-assessment-adapter.ts`](../../src/lib/business-assessment-adapter.ts). El motor no crea una metodología perdida ni infiere datos financieros ausentes:
+
+- utiliza la etapa declarada y señales operativas explícitas;
+- devuelve estados provisionales o indeterminados cuando faltan señales;
+- mantiene salud separada de madurez;
+- expone reglas aplicadas, riesgos, evidencias e información faltante;
+- nunca convierte evidencia declarada/documentada en evidencia verificada.
+
+Las misiones persistentes y los hitos con condiciones verificables continúan siendo capacidades futuras. El CEO Command Center no infiere un nivel a partir de acciones completadas, semanas revisadas o ausencia de datos.
 
 La evidencia operativa existente (`business_evidence`) es una base útil, pero no equivale por sí sola a una evaluación de madurez o salud. Sus tipos actuales son `action_result`, `product`, `price`, `cost`, `opportunity`, `follow_up`, `sale` y `metric`.
 
@@ -294,12 +304,13 @@ Cada estado debe tener texto, icono o patrón además del color. La decisión de
 
 Esta fase no debe mostrar niveles, salud, ADN ni hitos ficticios.
 
-### Fase 2 — Motor de evaluación
+### Fase 2 — Motor de evaluación — implementación inicial
 
 - implementar reglas determinísticas fuera de React;
-- persistir evaluaciones y sus fuentes mediante migraciones Supabase con RLS;
 - exponer contratos tipados para nivel, salud, dimensiones y confianza;
-- agregar pruebas de estados indeterminados y provisionales.
+- agregar pruebas de estados indeterminados, provisionales y escenarios conservadores.
+
+La persistencia de evaluaciones queda pendiente: la primera entrega calcula la evaluación en runtime y no modifica el esquema de Supabase.
 
 ### Fase 3 — Comprensión empresarial
 
@@ -348,15 +359,23 @@ Esta fase no debe mostrar niveles, salud, ADN ni hitos ficticios.
 12. No se realizan llamadas nuevas a OpenAI únicamente para pintar la UI.
 13. Se mantienen RLS, separación de capas y ausencia de secretos en Client Components.
 
-## 11. Archivos de esta propuesta
+## 11. Archivos de esta propuesta e implementación
 
 - `docs/business-evolution/ceo-command-center-v3.1.md`
 - `docs/business-evolution/dashboard-ux-specification.md`
 - `docs/business-evolution/dashboard-component-mapping.md`
+- `src/lib/business-assessment.ts`
+- `src/lib/business-assessment-adapter.ts`
+- `src/components/business-evolution-card.tsx`
+- `src/components/business-dna.tsx`
+- `src/components/business-milestone-card.tsx`
+- `src/components/strategic-mission-card.tsx`
+- `tests/business-assessment.test.ts`
+- `tests/fixtures/business-assessment-scenarios.ts`
 
 ## 12. Validación prevista
 
-Esta ejecución es documental y no requiere validación de runtime. Antes de implementar la Fase 1 o posteriores, ejecutar:
+La implementación inicial se validó con:
 
 ```bash
 npm run lint
@@ -364,4 +383,3 @@ npm run typecheck
 npm run build
 npm test
 ```
-

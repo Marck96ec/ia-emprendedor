@@ -8,6 +8,21 @@
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --executive-blue: #172d46;
+  --executive-blue-soft: #e8eef5;
+  --status-favorable: #479b80;
+  --status-favorable-soft: #eaf6f1;
+  --status-favorable-ink: #21634f;
+  --status-attention: #c79b47;
+  --status-attention-soft: #fff7e8;
+  --status-attention-ink: #795b1e;
+  --status-critical: #ce5555;
+  --status-critical-soft: #fff0f0;
+  --status-critical-ink: #8d2f2f;
+  --status-unevaluated: #909090;
+  --status-unevaluated-soft: #f1f2f3;
+  --status-unevaluated-ink: #5f6368;
+  --surface-neutral: #f5f6f8;
   --card: rgba(255, 255, 255, 0.82);
   --card-border: rgba(148, 163, 184, 0.2);
   --muted: #475569;

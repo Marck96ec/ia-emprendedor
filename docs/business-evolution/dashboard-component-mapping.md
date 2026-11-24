@@ -25,11 +25,11 @@
 | Componente | Disponibilidad | Contrato mínimo requerido | Dependencia |
 |---|---|---|---|
 | `CEOCommandCenter` | Implementable | props compuestas del dashboard actual | Ninguna nueva |
-| `BusinessEvolutionCard` | Dependiente del motor | evaluación, nivel, etapa, salud, confianza, estado y fecha | Motor de evaluación |
-| `BusinessLevelIndicator` | Dependiente del motor | nivel 1–5 o estado indeterminado | Motor de evaluación |
-| `BusinessHealthIndicator` | Dependiente del motor | estado cualitativo, severidad, explicación y fuente | Motor de salud |
-| `BusinessDNA` | Dependiente del motor | seis dimensiones evaluadas | Motor de evaluación |
-| `BusinessDimensionCard` | Dependiente del motor | dimensión, estado, etiqueta e indicador no cromático | Motor de evaluación |
+| `BusinessEvolutionCard` | Implementado con evaluación runtime | evaluación, nivel, etapa, salud, confianza, estado y fecha | `src/components/business-evolution-card.tsx` |
+| `BusinessLevelIndicator` | Implementado dentro de la tarjeta | nivel 1–5 o estado indeterminado | Indicador conservador |
+| `BusinessHealthIndicator` | Implementado dentro de la tarjeta | estado cualitativo, explicación y riesgos | Salud separada de madurez |
+| `BusinessDNA` | Implementado | seis dimensiones evaluadas | `src/components/business-dna.tsx` |
+| `BusinessDimensionCard` | Implementado dentro de `BusinessDNA` | dimensión, estado, reglas, faltantes y evidencias | Drawer de detalle |
 | `CEODecisionCard` | Implementable | `DashboardStrategicDiagnosis` y resumen | Contrato existente |
 | `StrategicMissionCard` | Dependiente de misiones | misión, objetivo, planes vinculados y estado | Persistencia de misión |
 | `WeeklyProgress` | Implementable | datos actuales del componente | Contrato existente |
@@ -97,9 +97,11 @@ Esto puede alimentar el detalle de una dimensión o condición de hito después 
 - cómo se distingue `real`, `estimated` y `unknown`;
 - qué regla produce un estado cualitativo.
 
-## 4. Contrato futuro del motor de evaluación
+## 4. Contrato implementado del motor de evaluación
 
-Este es un contrato conceptual para diseñar antes de una migración. No se crea en esta ejecución.
+El contrato actual se implementa en `src/lib/business-assessment.ts` y se alimenta mediante
+`src/lib/business-assessment-adapter.ts`. No requiere una migración porque la evaluación se deriva
+en runtime con datos existentes.
 
 ```ts
 type BusinessAssessmentStatus =
@@ -195,9 +197,9 @@ Un contador como `2 de 4` solo es válido si las cuatro condiciones están defin
 
 | Elemento | Depende de | Bloqueo actual |
 |---|---|---|
-| Evolución empresarial | Motor de niveles y estados | No hay evaluación persistida |
-| Salud empresarial | Reglas de salud y vigencia | No hay contrato de salud |
-| ADN Empresarial | Evaluación por seis dimensiones | No hay dimensión ni estado persistido |
+| Evolución empresarial | Motor de niveles y estados | Evaluación derivada en runtime; no persistida |
+| Salud empresarial | Reglas de salud y vigencia | Evaluación inicial derivada en runtime |
+| ADN Empresarial | Evaluación por seis dimensiones | Seis dimensiones disponibles; la mayoría puede quedar sin evaluar |
 | Detalle de dimensión | Evidencia y condiciones | Hay evidencia operativa, faltan reglas |
 | Misión formal | Entidad y relación con planes | No hay tabla ni contrato |
 | Hito empresarial | Catálogo y verificación | No hay motor de hitos |
@@ -226,11 +228,11 @@ La UI puede derivar de forma segura:
 
 “Iniciada”, “bloqueada” y “error recuperable” necesitan una fuente explícita. Si no existe esa fuente, se debe mostrar el estado real más cercano y una explicación, no una etiqueta decorativa.
 
-## 8. Plan de archivos para una futura implementación
+## 8. Plan de archivos para la implementación y futuras fases
 
-### Fase visual, sin esquema
+### Fase visual, sin esquema — implementada
 
-Posibles archivos:
+Archivos implementados:
 
 - `src/components/ceo-command-center.tsx`
 - `src/components/ceo-decision-card.tsx`
@@ -239,6 +241,9 @@ Posibles archivos:
 - `src/components/assessment-details-drawer.tsx` si la extensión de `ExecutiveContextDrawer` deja de ser clara
 - `src/app/globals.css` para tokens semánticos
 - `src/app/dashboard/page.tsx` para composición
+
+La integración del CEO Agent recibe la evaluación determinística como contexto de solo lectura
+en `src/lib/ai/generate-ceo-plan.ts`; el contrato de salida existente no fue reemplazado.
 
 ### Fase de evaluación, con migración
 
@@ -259,4 +264,3 @@ La migración debe preservar RLS y documentar explícitamente las tablas, polít
 - La decisión y la acción actual continúan funcionando.
 - Los cambios de datos incluyen tipos, validación, migración y RLS.
 - Los tests cubren los estados nuevos y no solo el camino feliz.
-

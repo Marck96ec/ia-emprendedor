@@ -24,6 +24,11 @@ import { PlanGeneratingStatus } from "@/components/plan-generating-status";
 import { WeeklyActionBoard } from "@/components/weekly-action-board";
 import { WeeklyProgress } from "@/components/weekly-progress";
 import { ExternalEvidenceSection, summarizeEvidence } from "@/components/external-evidence-section";
+import { BusinessDNA } from "@/components/business-dna";
+import { BusinessEvolutionCard } from "@/components/business-evolution-card";
+import { BusinessMilestoneCard } from "@/components/business-milestone-card";
+import { StrategicMissionCard } from "@/components/strategic-mission-card";
+import { buildBusinessAssessment } from "@/lib/business-assessment-adapter";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -92,7 +97,18 @@ export default async function DashboardPage({
     error: diagnosticError,
   } = await supabase
     .from("business_diagnostics")
-    .select("id, owner_hours_per_week")
+    .select(
+      `
+        id,
+        business_stage,
+        team_size,
+        owner_hours_per_week,
+        owner_responsibilities,
+        customers_description,
+        sales_process,
+        monthly_revenue
+      `,
+    )
     .eq("business_id", business.id)
     .maybeSingle();
 
@@ -109,6 +125,26 @@ export default async function DashboardPage({
 
   if (!diagnostic) {
     redirect("/onboarding/diagnostic");
+  }
+
+  const {
+    data: businessEvidence,
+    error: businessEvidenceError,
+  } = await supabase
+    .from("business_evidence")
+    .select("id, evidence_type, certainty, observed_at")
+    .eq("business_id", business.id)
+    .order("observed_at", { ascending: false });
+
+  if (businessEvidenceError) {
+    console.error(
+      "BUSINESS_EVIDENCE_LOAD_ERROR",
+      businessEvidenceError,
+    );
+
+    throw new Error(
+      "No pudimos cargar la evidencia empresarial",
+    );
   }
 
   /*
@@ -362,6 +398,14 @@ export default async function DashboardPage({
       review as DashboardWeeklyReview | null;
   }
 
+  const businessAssessment = buildBusinessAssessment({
+    diagnostic,
+    evidence: businessEvidence ?? [],
+    completedActions,
+    totalActions,
+    latestReview: weeklyReview,
+  });
+
   /*
    * Progreso acumulado derivado del historial existente.
    */
@@ -480,64 +524,77 @@ export default async function DashboardPage({
         )}
 
         {readyPlan && ceoPlan && (
-          <div className="flex flex-col gap-3 cockpit:min-h-0 cockpit:flex-1 cockpit:short:gap-2">
-            <div className="grid gap-3 cockpit:short:gap-2 min-[900px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-              <DecisionHero
-                summary={readyPlan.executive_summary}
-                strategicDiagnosis={readyPlan.strategic_diagnosis}
-                priorities={readyPlan.priorities}
-                focusPanel={
-                  <ExecutiveSummary
-                    summary={readyPlan.executive_summary}
-                    decisionHypothesis={readyPlan.decision_hypothesis}
-                  />
-                }
-                evidencePanel={
-                  <ExternalEvidenceSection
-                    status={ceoPlan.evidence_status}
-                    evidence={evidenceData}
-                  />
-                }
-                evidenceSummary={summarizeEvidence(ceoPlan.evidence_status, evidenceData)}
+          <div className="grid min-h-0 gap-3 cockpit:flex-1 min-[1100px]:grid-cols-[minmax(16rem,0.35fr)_minmax(0,0.65fr)]">
+            <aside className="min-w-0 space-y-3 cockpit:min-h-0 cockpit:overflow-y-auto cockpit:pr-1">
+              <BusinessEvolutionCard assessment={businessAssessment} />
+              <BusinessDNA assessment={businessAssessment} />
+              <BusinessMilestoneCard assessment={businessAssessment} />
+            </aside>
+
+            <div className="flex min-w-0 min-h-0 flex-col gap-3 cockpit:short:gap-2">
+              <div className="grid gap-3 cockpit:short:gap-2 min-[900px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+                <DecisionHero
+                  summary={readyPlan.executive_summary}
+                  strategicDiagnosis={readyPlan.strategic_diagnosis}
+                  priorities={readyPlan.priorities}
+                  focusPanel={
+                    <ExecutiveSummary
+                      summary={readyPlan.executive_summary}
+                      decisionHypothesis={readyPlan.decision_hypothesis}
+                    />
+                  }
+                  evidencePanel={
+                    <ExternalEvidenceSection
+                      status={ceoPlan.evidence_status}
+                      evidence={evidenceData}
+                    />
+                  }
+                  evidenceSummary={summarizeEvidence(ceoPlan.evidence_status, evidenceData)}
+                />
+                <NextActionCard
+                  action={firstPendingAction}
+                  pendingCount={totalActions - completedActions}
+                  reviewed={Boolean(weeklyReview)}
+                  allCompleted={allActionsCompleted}
+                />
+              </div>
+
+              <StrategicMissionCard
+                objective={readyPlan.strategic_diagnosis.critical_decision.expected_outcome}
+                actions={weeklyActions}
               />
-              <NextActionCard
-                action={firstPendingAction}
-                pendingCount={totalActions - completedActions}
+
+              <div className="grid shrink-0 divide-y divide-slate-200/70 rounded-2xl bg-white/70 sm:border sm:border-slate-200 sm:bg-white/80 sm:shadow-sm cockpit:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] cockpit:divide-x cockpit:divide-y-0">
+                <WeeklyProgress
+                  completedActions={completedActions}
+                  totalActions={totalActions}
+                  weekNumber={ceoPlan.week_number}
+                  executedActions={journey.executedActions}
+                  evaluatedDecisions={journey.evaluatedDecisions}
+                  validatedHypotheses={journey.validatedHypotheses}
+                  reviewStreak={journey.reviewStreak}
+                />
+                <section className="px-4 py-3" aria-labelledby="decision-loop-title">
+                  <h2 id="decision-loop-title" className="eyebrow">Ciclo de decisión</h2>
+                  <div className="mt-1.5">
+                    <DecisionLoop
+                      stage={getDecisionLoopStage({
+                        reviewed: Boolean(weeklyReview),
+                        allCompleted: allActionsCompleted,
+                      })}
+                    />
+                  </div>
+                </section>
+                <TimeAllocationCard timeAllocation={dashboardTimeAllocation} />
+              </div>
+
+              <WeeklyActionBoard
+                actions={weeklyActions}
                 reviewed={Boolean(weeklyReview)}
-                allCompleted={allActionsCompleted}
+                review={weeklyReview}
+                nextWeekNumber={weeklyReview ? ceoPlan.week_number + 1 : null}
               />
             </div>
-
-            <div className="grid shrink-0 divide-y divide-slate-200/70 rounded-2xl bg-white/70 sm:border sm:border-slate-200 sm:bg-white/80 sm:shadow-sm cockpit:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] cockpit:divide-x cockpit:divide-y-0">
-              <WeeklyProgress
-                completedActions={completedActions}
-                totalActions={totalActions}
-                weekNumber={ceoPlan.week_number}
-                executedActions={journey.executedActions}
-                evaluatedDecisions={journey.evaluatedDecisions}
-                validatedHypotheses={journey.validatedHypotheses}
-                reviewStreak={journey.reviewStreak}
-              />
-              <section className="px-4 py-3" aria-labelledby="decision-loop-title">
-                <h2 id="decision-loop-title" className="eyebrow">Ciclo de decisión</h2>
-                <div className="mt-1.5">
-                  <DecisionLoop
-                    stage={getDecisionLoopStage({
-                      reviewed: Boolean(weeklyReview),
-                      allCompleted: allActionsCompleted,
-                    })}
-                  />
-                </div>
-              </section>
-              <TimeAllocationCard timeAllocation={dashboardTimeAllocation} />
-            </div>
-
-            <WeeklyActionBoard
-              actions={weeklyActions}
-              reviewed={Boolean(weeklyReview)}
-              review={weeklyReview}
-              nextWeekNumber={weeklyReview ? ceoPlan.week_number + 1 : null}
-            />
           </div>
         )}
       </div>

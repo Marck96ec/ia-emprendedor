@@ -87,6 +87,23 @@ test("dashboard orders welcome, decision, next action, progress/time strip, then
   assert.deepEqual(order, [...order].sort((a, b) => a - b));
 });
 
+test("dashboard composes the command center around real assessment data", () => {
+  const page = source("src/app/dashboard/page.tsx");
+
+  for (const marker of [
+    "<BusinessEvolutionCard",
+    "<BusinessDNA",
+    "<BusinessMilestoneCard",
+    "<StrategicMissionCard",
+    "buildBusinessAssessment",
+  ]) {
+    assert.ok(page.includes(marker), marker);
+  }
+
+  assert.match(page, /business_evidence/);
+  assert.match(page, /min-\[1100px\]:grid-cols-\[minmax\(16rem,0\.35fr\)_minmax\(0,0\.65fr\)\]/);
+});
+
 test("desktop dashboard is a single viewport with internal scrolling areas", () => {
   const page = source("src/app/dashboard/page.tsx");
   const board = source("src/components/weekly-action-board.tsx");
