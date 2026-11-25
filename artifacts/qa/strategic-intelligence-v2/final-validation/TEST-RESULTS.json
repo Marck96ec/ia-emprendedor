@@ -1,0 +1,128 @@
+{
+  "validation": "Final Release Validation v2.2",
+  "date": "2026-11-25",
+  "branch": "feature/strategic-intelligence-v2",
+
+  "technical_validation": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "build": "PASS",
+    "test_suite": {
+      "total": 184,
+      "pass": 180,
+      "fail": 0,
+      "skipped": 4,
+      "skipped_reason": "Supabase integration tests require active RLS session — these test isolation, RLS, persistence and recovery of failed plans",
+      "result": "PASS"
+    },
+    "git_diff_check": "PASS (only expected CRLF warning on Windows)"
+  },
+
+  "observability_implementation": {
+    "status": "IMPLEMENTED",
+    "file": "src/lib/ai/generate-ceo-plan.ts",
+    "log_prefix": "CEO_PLAN_TRACE",
+    "fields_logged": [
+      "correlationId",
+      "targetWeek",
+      "attempt",
+      "phase",
+      "result",
+      "errorCode",
+      "errorCategory",
+      "rejectedFields (max 10)",
+      "repairsApplied"
+    ],
+    "fields_not_logged": [
+      "business content",
+      "model output text",
+      "action descriptions",
+      "PII"
+    ],
+    "sample_trace": "{\"correlationId\":\"1d847145\",\"targetWeek\":2,\"attempt\":1,\"phase\":\"attempt_rejected\",\"result\":\"rejected\",\"errorCode\":\"CEO_PLAN_SEMANTIC_OUTPUT_INVALID\",\"errorCategory\":\"semantic\",\"rejectedFields\":[\"weekly_plan.2.strategy.progression\"],\"repairsApplied\":[\"action.1.deliverable\"]}"
+  },
+
+  "evaluator_v8": {
+    "version": "v8-final-validation",
+    "file": "artifacts/qa/strategic-intelligence-v2/final-validation/evaluate-model-v8.mjs",
+    "id_generation": "crypto.randomUUID() — no predictable patterns",
+    "scenarios": 5,
+    "samples_per_scenario": 3,
+    "total_runs": 15,
+    "pass": 12,
+    "fail": 3,
+    "pass_rate": "80%",
+    "api_calls_used": 27,
+    "reference_category_errors": 0,
+    "progression_category_errors_in_fails": 3,
+    "capacity_category_errors_in_fails": 1
+  },
+
+  "checkpoint_recovery": {
+    "original_blocked_in_local_db": false,
+    "reason": "Original blocked plans were in production environment, not local Supabase",
+    "db_evidence": {
+      "cafe_horizonte_qa_w2": "ready (created 2026-11-25 with fix applied)",
+      "taller_andino_qa_w2": "ready (created 2026-11-25 with fix applied)",
+      "nova_studio_qa_w2": "ready (created 2026-11-25 with fix applied)"
+    },
+    "fixture_equivalents": {
+      "mantenimiento_w2": "2/3 PASS in evaluator v8",
+      "cafe_horizonte_w2": "3/3 PASS in evaluator v8",
+      "taller_andino_w2": "3/3 PASS in evaluator v8",
+      "limpieza_w4": "2/3 PASS in evaluator v8"
+    }
+  },
+
+  "cause_validation": {
+    "C1_uuid_reference": {
+      "status": "CONFIRMED_FIXED",
+      "evidence": "0 reference errors in 27 API calls with crypto.randomUUID() IDs",
+      "fix_file": "src/lib/ai/generate-ceo-plan.ts lines 221-232, 434"
+    },
+    "C2_evidence_unknown": {
+      "status": "CONFIRMED_FIXED",
+      "evidence": "limpieza_w4 S1: attempt-1 had new_evidence_id error; fix injected valid evidence IDs; attempt-2 passed",
+      "fix_file": "src/lib/ai/generate-ceo-plan.ts lines 227-232, 434"
+    },
+    "C3_accumulated_history": {
+      "status": "OPEN_PARTIAL_MITIGATION",
+      "evidence": "3/15 failures (20%) due to progression errors with 5+ action history",
+      "current_mitigation": "REPARACIÓN ESTRATÉGICA instructs model to use progression=new, but sometimes introduces error on different action",
+      "recommendation": "Add work_key+intent of pending actions to repair prompt to guide continuation selection"
+    },
+    "C4_observability": {
+      "status": "ADDRESSED",
+      "evidence": "CEO_PLAN_TRACE logging implemented — correlationId, targetWeek, attempt, phase, errorCode, errorCategory, rejectedFields, repairsApplied"
+    }
+  },
+
+  "business_validation": {
+    "mantenimiento_no_social_media": {
+      "result": "PASS",
+      "evidence": "All 2/3 PASS plans respected social_media: unavailable constraint. No plan proposed using social media. Plans used WhatsApp or existing contacts instead."
+    },
+    "mantenimiento_offer_reused": {
+      "result": "PASS",
+      "evidence": "All PASS plans referenced the offer definition from W1 via prior_action_id or completed_prerequisite_id pointing to 'Definir oferta' action."
+    },
+    "limpieza_4h_week": {
+      "result": "PARTIAL",
+      "evidence": "2/3 PASS. 1 FAIL due to estimated_hours overflow in attempt 2 (capacity constraint: 4h/week). The 4h limit is the tightest constraint in all scenarios."
+    },
+    "progression_analysis": {
+      "new": "Used for genuinely new work with no prior equivalent",
+      "continuation": "Used when continuing pending work from prior week — model correctly matched prior_action_id",
+      "advance": "Not observed in PASS plans — not applicable in these scenarios",
+      "rework": "1 case in limpieza_w4 S1 — resolved by fix injecting valid evidence ID",
+      "unjustified_repetition": "0 confirmed cases in PASS plans"
+    }
+  },
+
+  "skipped_tests_detail": [
+    "La evidencia de acciones se valida en Supabase y la tabla no admite escrituras directas",
+    "El validador de PostgreSQL coincide con el de TypeScript en los fixtures compartidos",
+    "Supabase local conserva memoria antigua, registra cambios y aísla a dos propietarios",
+    "CEO plan RPC en Supabase local protege propietarios, estados y atomicidad"
+  ]
+}

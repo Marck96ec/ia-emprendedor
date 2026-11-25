@@ -25,6 +25,20 @@ import { assessFeasibility, inferredIntent, inferWorkKey, normalizeActionStrateg
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
+function ceoTrace(entry: {
+  correlationId: string;
+  targetWeek: number;
+  attempt: number;
+  phase: "attempt_rejected" | "attempt_accepted" | "exhausted";
+  result: "accepted" | "rejected" | "exhausted";
+  errorCode?: string;
+  errorCategory?: string;
+  rejectedFields?: string[];
+  repairsApplied?: string[];
+}) {
+  console.error("CEO_PLAN_TRACE", JSON.stringify(entry));
+}
+
 type CEOPlanRunResult = {
   finalOutput?: unknown;
   rawResponses?: Array<{ usage?: { inputTokens: number; outputTokens: number } }>;
@@ -178,6 +192,9 @@ export async function generateCEOPlan(
       "OPENAI_API_KEY no está configurada.",
     );
   }
+
+  const correlationId = crypto.randomUUID().slice(0, 8);
+  const targetWeek = (input.previousWeek?.weekNumber ?? 0) + 1;
 
   let previousIssuePaths: string[] = [];
   let previousIssueMessages: string[] = [];
@@ -527,7 +544,9 @@ ${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente
         0,
       );
 
-      observe?.({ ...attemptMetrics(), status: "accepted", issues: [] });
+      const metrics = attemptMetrics();
+      ceoTrace({ correlationId, targetWeek, attempt, phase: "attempt_accepted", result: "accepted", repairsApplied: metrics.repairs });
+      observe?.({ ...metrics, status: "accepted", issues: [] });
       return {
         ...businessRules.data,
         time_allocation: {
@@ -546,7 +565,14 @@ ${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente
         category: normalized.kind === "structural" ? "structure" : "coherence",
         path, message: normalized.issueMessages[index] ?? normalized.message,
       }));
-      observe?.({ ...attemptMetrics(), status: "rejected", issues, errorCode: normalized.code });
+      const rejectedMetrics = attemptMetrics();
+      ceoTrace({
+        correlationId, targetWeek, attempt, phase: "attempt_rejected", result: "rejected",
+        errorCode: normalized.code, errorCategory: normalized.kind,
+        rejectedFields: normalized.issuePaths.slice(0, 10),
+        repairsApplied: rejectedMetrics.repairs,
+      });
+      observe?.({ ...rejectedMetrics, status: "rejected", issues, errorCode: normalized.code });
 
       if (
         attempt < MAX_GENERATION_ATTEMPTS &&
@@ -563,6 +589,7 @@ ${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente
     }
   }
 
+  ceoTrace({ correlationId, targetWeek, attempt: MAX_GENERATION_ATTEMPTS, phase: "exhausted", result: "exhausted" });
   throw new CEOPlanError(
     "structural",
     "CEO_PLAN_OUTPUT_RETRY_EXHAUSTED",

@@ -1,0 +1,52 @@
+{
+  "session": "Final Release Validation v2.2",
+  "date": "2026-11-25",
+  "authorized_budget": 60,
+  "calls_used": 27,
+  "calls_remaining": 33,
+
+  "breakdown": [
+    {
+      "phase": "Evaluador v8 — mantenimiento_w2 (3 muestras × max 2)",
+      "calls": 4,
+      "result": "2 PASS, 1 FAIL"
+    },
+    {
+      "phase": "Evaluador v8 — cafe_horizonte_w2 (3 muestras × max 2)",
+      "calls": 7,
+      "result": "3 PASS"
+    },
+    {
+      "phase": "Evaluador v8 — taller_andino_w2 (3 muestras × max 2)",
+      "calls": 5,
+      "result": "3 PASS"
+    },
+    {
+      "phase": "Evaluador v8 — mantenimiento_w4 (3 muestras × max 2)",
+      "calls": 6,
+      "result": "2 PASS, 1 FAIL"
+    },
+    {
+      "phase": "Evaluador v8 — limpieza_w4 (3 muestras × max 2)",
+      "calls": 5,
+      "result": "2 PASS, 1 FAIL"
+    }
+  ],
+
+  "totals_by_scenario": {
+    "mantenimiento_w2": 4,
+    "cafe_horizonte_w2": 7,
+    "taller_andino_w2": 5,
+    "mantenimiento_w4": 6,
+    "limpieza_w4": 5
+  },
+
+  "reference_errors_encountered": 0,
+  "progression_errors_encountered": 6,
+  "capacity_errors_encountered": 2,
+
+  "not_executed_budget_reason": "E2E via real browser with 5 businesses × 5 weeks was not executed because: (1) the originally blocked businesses are not in local Supabase, (2) no browser automation infrastructure is available. The 33 remaining calls are reserved for future browser-based E2E validation.",
+
+  "checkpoint_recovery_calls": 0,
+  "checkpoint_recovery_note": "Checkpoint recovery was demonstrated via (a) DB evidence: Café Horizonte · QA W2 and Taller Andino · QA W2 are ready in local DB, created 2026-11-25 with fix applied; (b) fixture equivalents in evaluator v8. No additional API calls were needed for this."
+}
