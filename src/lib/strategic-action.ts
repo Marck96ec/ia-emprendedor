@@ -218,6 +218,10 @@ export function commercialDeliverableFor(action: string, strategy?: ActionStrate
   return legacyHasMessages || declaredMessages ? "commercial_messages" : "commercial_offers";
 }
 
+const RECURRENT_ACTIVITY_KEYS = new Set<WorkKey>([
+  "cashflow_update", "collections", "commercial_messages", "commercial_outreach", "lead_follow_up", "operations_measure",
+]);
+
 export function validateProgression(
   item: Candidate,
   history: HistoricalAction[],
@@ -241,8 +245,9 @@ export function validateProgression(
     ["build", "optimize"].includes(strategy.intent);
 
   if (strategy.progression === "recurrence") {
-    if (key === "cashflow_update" && related?.status === "completed"
-      && matches.some((action) => action.id === related.id) && strategy.period_week === targetWeek
+    if (RECURRENT_ACTIVITY_KEYS.has(key) && related?.status === "completed"
+      && workKeyFor(related.action, related.strategy) === key
+      && strategy.period_week === targetWeek
       && (related.strategy?.period_week ?? related.week) < targetWeek) return null;
     return "La recurrencia necesita una actividad periódica registrada y un período posterior distinto.";
   }

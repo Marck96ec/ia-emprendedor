@@ -1,0 +1,61 @@
+{
+  "session": "Strategic Recurrence & Final Recovery v2.4",
+  "date": "2026-11-25",
+  "spec": "No realizar nuevas llamadas al proveedor hasta verificar el consumo y disponer de autorización adicional explícita.",
+
+  "this_session_v24": {
+    "api_calls_made": 0,
+    "explanation": "Esta sesión v2.4 NO realizó ninguna llamada al proveedor real (OpenAI). Solo se ejecutaron tests determinísticos locales (npm test) y operaciones de código.",
+    "work_done_without_api": [
+      "Auditoría de evidencia de observaciones JSON",
+      "Implementación del fix validateProgression (recurrencia extendida)",
+      "Actualización del prompt en generate-ceo-plan.ts",
+      "6 tests determinísticos añadidos a strategic-intelligence.test.ts",
+      "npm test: 190 tests PASS",
+      "npm run typecheck: 0 errors",
+      "npm run lint: 0 errors",
+      "Creación de artefactos final-recovery/"
+    ]
+  },
+
+  "cumulative_history": {
+    "v2_3_session": {
+      "calls_previous_sessions": 27,
+      "calls_this_session_estimate": "49-76",
+      "status": "LIKELY_EXHAUSTED",
+      "detail": "Week-1 failures in runs after full 5-scenario parallel run"
+    }
+  },
+
+  "effective_call_counter": {
+    "note": "El spec v2.4 exige un contador efectivo de llamadas para QA (no estimaciones). El E2E script actual no exporta un contador de generaciones.",
+    "proposal": "Antes de ejecutar nuevos E2E runs, instrumentar el script o verificar via CEO_PLAN_TRACE en stderr.",
+    "CEO_PLAN_TRACE": "Ya activo en generate-ceo-plan.ts. Registra correlationId, targetWeek, attempt, phase, result. Puede ser parseado del stderr para contar exactamente las llamadas."
+  },
+
+  "budget_pending_authorization": {
+    "calls_needed_minimum": 14,
+    "calls_needed_maximum": 27,
+    "scenarios": [
+      {
+        "scenario": "limpieza (W1-W5)",
+        "weeks": 5,
+        "estimated_calls": "5-7",
+        "reason": "5 generaciones + posibles repairs en W5"
+      },
+      {
+        "scenario": "cafe-horizonte (W1-W5)",
+        "weeks": 5,
+        "estimated_calls": "5-7",
+        "reason": "5 generaciones + posibles repairs en W5"
+      },
+      {
+        "scenario": "nova-studio (W1-W5) — re-verificación",
+        "weeks": 5,
+        "estimated_calls": "5-7",
+        "reason": "Re-verificación completa sobre código candidato final"
+      }
+    ],
+    "status": "PENDING_AUTHORIZATION"
+  }
+}

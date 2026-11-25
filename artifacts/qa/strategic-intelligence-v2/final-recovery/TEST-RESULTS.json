@@ -1,0 +1,84 @@
+{
+  "session": "Strategic Recurrence & Final Recovery v2.4",
+  "date": "2026-11-25",
+  "branch": "feature/strategic-intelligence-v2",
+
+  "technical_validation": {
+    "typecheck": "PASS — 0 errors",
+    "lint": "PASS — 0 errors, 4 warnings preexistentes en QA artifact",
+    "test_suite": {
+      "total": 190,
+      "pass": 186,
+      "fail": 0,
+      "skipped": 4,
+      "skipped_reason": "4 Supabase integration tests (need SUPABASE_LOCAL_TESTS=1)",
+      "result": "PASS",
+      "delta_vs_v23": "+6 tests (6 recurrence tests added)"
+    },
+    "api_calls": 0
+  },
+
+  "new_tests_v24": [
+    {
+      "name": "seguimiento de prospectos admite recurrencia en semana posterior con nueva ronda",
+      "work_key": "lead_follow_up",
+      "result": "PASS"
+    },
+    {
+      "name": "repetición injustificada sobre mismos prospectos bloquea la progresión",
+      "work_key": "lead_follow_up",
+      "assertions": ["progression=new FAIL (ya existe)", "progression=recurrence PASS"],
+      "result": "PASS"
+    },
+    {
+      "name": "seguimiento periódico de cobros admite recurrencia en período posterior",
+      "work_key": "collections",
+      "assertions": ["recurrence PASS", "new FAIL (ya existe)"],
+      "result": "PASS"
+    },
+    {
+      "name": "control operativo recurrente en período distinto pasa la validación",
+      "work_key": "operations_measure",
+      "result": "PASS"
+    },
+    {
+      "name": "recurrencia sin período posterior válido falla",
+      "work_key": "collections",
+      "assertions": ["same period_week → error /período/"],
+      "result": "PASS"
+    },
+    {
+      "name": "negocio con cuatro horas y cuatro semanas de historial puede recurrir con nueva ronda",
+      "work_key": "collections",
+      "assertions": ["recurrence W5 PASS", "new W5 FAIL (ya existe)"],
+      "result": "PASS"
+    }
+  ],
+
+  "code_changes": {
+    "src/lib/strategic-action.ts": {
+      "change": "RECURRENT_ACTIVITY_KEYS set + extended recurrence block",
+      "work_keys_added": ["collections", "commercial_messages", "commercial_outreach", "lead_follow_up", "operations_measure"],
+      "work_keys_already_supported": ["cashflow_update"],
+      "typecheck": "PASS",
+      "tests_before": "1 (cashflow_update only)",
+      "tests_after": "7 (1 existing + 6 new)"
+    },
+    "src/lib/ai/generate-ceo-plan.ts": {
+      "change_1": "CONTRATO section: generalized recurrence description from cashflow-only to all periodic activities",
+      "change_2": "REPARACIÓN ESTRATÉGICA completedHistoryRef: added progression=recurrence as option",
+      "typecheck": "PASS"
+    },
+    "tests/strategic-intelligence.test.ts": {
+      "tests_added": 6,
+      "typecheck": "PASS"
+    }
+  },
+
+  "e2e_status": {
+    "pending_authorization": true,
+    "scenarios_to_run": ["limpieza", "cafe-horizonte", "nova-studio"],
+    "api_calls_needed": "14-27",
+    "note": "No E2E runs executed in this session. Waiting for explicit API budget authorization."
+  }
+}

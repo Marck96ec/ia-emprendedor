@@ -179,6 +179,98 @@ test("la recurrencia exige un período posterior y el retrabajo una referencia a
   assert.equal(validateProgression(refreshed, [offer], [uuid(4)], 2, true), null);
 });
 
+test("seguimiento de prospectos admite recurrencia en semana posterior con nueva ronda", () => {
+  const prevFollow = {
+    id: uuid(10), week: 3,
+    action: "Registrar y clasificar cada respuesta para detectar interés real",
+    objective: "Medir señales de interés", status: "completed" as const,
+    result: "5 respuestas registradas",
+    strategy: strategy({ work_key: "lead_follow_up", intent: "validate", period_week: 3 }),
+  };
+  assert.equal(validateProgression(candidate("Registrar y clasificar cada respuesta para detectar interés real", {
+    work_key: "lead_follow_up", intent: "validate", progression: "recurrence",
+    prior_action_id: uuid(10), period_week: 4,
+  }), [prevFollow], [], 4, false), null);
+});
+
+test("repetición injustificada sobre mismos prospectos bloquea la progresión", () => {
+  const sent = prior(
+    "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
+    "completed", strategy({ work_key: "lead_follow_up", intent: "validate", period_week: 2 }),
+  );
+  assert.match(validateProgression(candidate(
+    "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
+    { work_key: "lead_follow_up", intent: "validate", progression: "new", prior_action_id: null },
+  ), [sent], [], 3, false) ?? "", /ya existe/);
+  assert.equal(validateProgression(candidate(
+    "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
+    { work_key: "lead_follow_up", intent: "validate", progression: "recurrence", prior_action_id: sent.id, period_week: 3 },
+  ), [sent], [], 3, false), null);
+});
+
+test("seguimiento periódico de cobros admite recurrencia en período posterior", () => {
+  const col = {
+    id: uuid(20), week: 2,
+    action: "Cobrar saldos pendientes del mes con mensaje de WhatsApp",
+    objective: "Recuperar efectivo", status: "completed" as const,
+    result: "USD 300 recuperados",
+    strategy: strategy({ work_key: "collections", intent: "execute", period_week: 2 }),
+  };
+  assert.equal(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "recurrence",
+    prior_action_id: uuid(20), period_week: 5,
+  }), [col], [], 5, false), null);
+  assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "new", prior_action_id: null,
+  }), [col], [], 5, false) ?? "", /ya existe/);
+});
+
+test("control operativo recurrente en período distinto pasa la validación", () => {
+  const measure = {
+    id: uuid(21), week: 1,
+    action: "Revisar calidad del servicio entregado esta semana",
+    objective: "Medir calidad operativa", status: "completed" as const,
+    result: "1 error detectado y corregido",
+    strategy: strategy({ work_key: "operations_measure", intent: "validate", period_week: 1 }),
+  };
+  assert.equal(validateProgression(candidate("Revisar calidad del servicio entregado esta semana", {
+    work_key: "operations_measure", intent: "validate", progression: "recurrence",
+    prior_action_id: uuid(21), period_week: 4,
+  }), [measure], [], 4, false), null);
+});
+
+test("recurrencia sin período posterior válido falla", () => {
+  const col = {
+    id: uuid(22), week: 2,
+    action: "Cobrar saldos pendientes del mes con mensaje de WhatsApp",
+    objective: "Recuperar efectivo", status: "completed" as const,
+    result: "USD 200 recuperados",
+    strategy: strategy({ work_key: "collections", intent: "execute", period_week: 2 }),
+  };
+  assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "recurrence",
+    prior_action_id: uuid(22), period_week: 2,
+  }), [col], [], 3, false) ?? "", /período/);
+});
+
+test("negocio con cuatro horas y cuatro semanas de historial puede recurrir con nueva ronda", () => {
+  const makeHistItem = (n: number): HistoricalAction => ({
+    id: uuid(30 + n), week: n,
+    action: "Cobrar saldos pendientes del mes con mensaje de WhatsApp",
+    objective: "Recuperar efectivo", status: "completed",
+    result: "Resultado registrado",
+    strategy: strategy({ work_key: "collections", intent: "execute", period_week: n }),
+  });
+  const history = [makeHistItem(1), makeHistItem(2), makeHistItem(3), makeHistItem(4)];
+  assert.equal(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "recurrence",
+    prior_action_id: uuid(34), period_week: 5,
+  }), history, [], 5, false), null);
+  assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "new", prior_action_id: null,
+  }), history, [], 5, false) ?? "", /ya existe/);
+});
+
 test("el seguimiento de cobros enruta textos de cobro y nunca fichas de oferta", () => {
   const title = "Crear dos mensajes de cobro para saldos pendientes";
   const scripted = {

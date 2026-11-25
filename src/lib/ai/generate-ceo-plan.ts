@@ -327,8 +327,15 @@ ${context ? `CONTRATO DE CONTEXTO Y FACTIBILIDAD:
   Si un bloqueo sigue activo, resuélvelo. Un advance necesita una acción
   completada. Para un trabajo independiente usa progression=new y
   prior_action_id=null, aun cuando la decisión se apoye en un aprendizaje.
-  Una recurrencia de flujo de caja enlaza el registro anterior y declara
-  period_week igual a targetWeek. La etiqueta deepening no justifica repetir.
+  Actividades periódicas legítimas (cobros, seguimiento de prospectos, nueva
+  ronda de mensajes a nuevos contactos, medición operativa o revisión de caja)
+  pueden declarar progression=recurrence cuando se repiten en un período nuevo
+  con distinto alcance o grupo. Enlaza la acción previa completada con
+  prior_action_id y declara period_week igual a targetWeek. Cambiar únicamente
+  el título o la semana sin un alcance o grupo nuevo no es suficiente. Los
+  work_keys que admiten recurrencia son: cashflow_update, collections,
+  commercial_messages, commercial_outreach, lead_follow_up, operations_measure.
+  La etiqueta deepening no justifica repetir.
 - Para ai_assisted declara el entregable real. commercial_offers genera dos ofertas.
   commercial_messages prepara textos completos, normalmente tres variantes.
   Los mensajes de cobro no son fichas de ofertas. El especialista no realiza
@@ -467,7 +474,7 @@ un paso futuro. Mantén las tres prioridades y la continuidad cuando corresponda
 Para errores de captura conserva las evidencias necesarias, usa ids únicos en
 snake_case y permite registrar un resultado nulo o inferior a la meta.
 La suma de estimated_hours de todas las acciones del plan no puede superar ${input.diagnostic.ownerHoursPerWeek} horas semanales disponibles. Si una acción supera ese límite, reduce su alcance o elimínala.
-${pendingHistoryRef ? `\nAcciones pendientes en historial (usa progression=continuation + prior_action_id=<id> para continuar una; elige un trabajo con distinto alcance si quieres progression=new y prior_action_id=null):\n${pendingHistoryRef}` : ""}${completedHistoryRef ? `\nAcciones completadas en historial (si usas el mismo work_key con progression=new, la validación fallará; usa progression=advance + prior_action_id=<id> para profundizar, o elige un trabajo nuevo de work_key distinto):\n${completedHistoryRef}` : ""}${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente uno de estos si necesitas prior_action_id o completed_prerequisite_id):\n${validHistoryRef}` : ""}${validEvidenceRef ? `\nIDs válidos para new_evidence_id (certainty != unknown): ${validEvidenceRef}` : ""}
+${pendingHistoryRef ? `\nAcciones pendientes en historial (usa progression=continuation + prior_action_id=<id> para continuar una; elige un trabajo con distinto alcance si quieres progression=new y prior_action_id=null):\n${pendingHistoryRef}` : ""}${completedHistoryRef ? `\nAcciones completadas en historial (con progression=new para el mismo work_key la validación falla; opciones: progression=advance + prior_action_id=<id> para profundizar; progression=recurrence + prior_action_id=<id> + period_week=<semana actual> para una nueva ronda periódica de cobros, mensajes, seguimiento o medición; o elige un work_key distinto con progression=new):\n${completedHistoryRef}` : ""}${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente uno de estos si necesitas prior_action_id o completed_prerequisite_id):\n${validHistoryRef}` : ""}${validEvidenceRef ? `\nIDs válidos para new_evidence_id (certainty != unknown): ${validEvidenceRef}` : ""}
 ` : ""}
 `,
       );
