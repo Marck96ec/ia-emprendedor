@@ -1,0 +1,68 @@
+{
+  "evaluations": [
+    {
+      "case": "mantenimiento",
+      "version": "v2",
+      "sample": 2,
+      "seconds": 34.357,
+      "attempts": [
+        {
+          "seconds": 17.4,
+          "promptChars": 13647,
+          "inputTokens": 7651,
+          "outputTokens": 2689
+        },
+        {
+          "seconds": 16.948,
+          "promptChars": 14717,
+          "inputTokens": 7876,
+          "outputTokens": 2769
+        }
+      ],
+      "status": "FAIL",
+      "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+      "messages": [
+        "La acción requiere un trabajo previo que aún no está completado. Propón una alternativa viable o el prerrequisito como acción independiente."
+      ]
+    },
+    {
+      "case": "limpieza",
+      "version": "v2",
+      "sample": 1,
+      "seconds": 30.674,
+      "attempts": [
+        {
+          "seconds": 14.303,
+          "promptChars": 10594,
+          "inputTokens": 7029,
+          "outputTokens": 2376
+        },
+        {
+          "seconds": 16.36,
+          "promptChars": 11593,
+          "inputTokens": 7243,
+          "outputTokens": 2819
+        }
+      ],
+      "status": "FAIL",
+      "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+      "messages": [
+        "Una confianza high no puede coexistir con múltiples unknowns"
+      ]
+    }
+  ],
+  "journeys": [
+    {
+      "scenario": "limpieza",
+      "stage": "week-2-generation",
+      "error": "El plan de semana 2 quedó en estado failed.",
+      "retainedReview": true
+    },
+    {
+      "scenario": "mantenimiento",
+      "stage": "week-2-generation",
+      "error": "El plan de semana 2 quedó en estado failed.",
+      "retainedReview": true
+    }
+  ]
+}

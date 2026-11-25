@@ -15,6 +15,7 @@ import {
 } from "../src/lib/ai/ceo-agent";
 import {
   generateCEOPlan,
+  type GenerationAttempt,
   type GenerateCEOPlanInput,
 } from "../src/lib/ai/generate-ceo-plan";
 import {
@@ -33,6 +34,8 @@ import {
   GENERIC_ACTION_CAPTURE_SCHEMA,
   parseActionCaptureModel,
 } from "../src/lib/action-capture";
+import { buildStrategicContext } from "../src/lib/strategic-context";
+import type { ActionStrategy, HistoricalAction } from "../src/lib/strategic-action";
 
 const validPlan: CEOPlan = {
   executive_summary: "Resumen semanal",
@@ -156,6 +159,73 @@ const input: GenerateCEOPlanInput = {
   previousWeek: null,
   businessKnowledge: { valueProposition: null },
 };
+
+const defaultStrategy: ActionStrategy = {
+  work_key: "other", intent: "execute", requires: [], completed_prerequisite_id: null,
+  depends_on_sequence: null, progression: "new", prior_action_id: null,
+  justification: "Una prueba independiente para la decisión semanal.",
+  prior_barrier: null, new_evidence_id: null, period_week: null, deliverable: null,
+};
+
+const pending: HistoricalAction = {
+  id: "00000000-0000-4000-8000-000000000001", week: 1,
+  action: "Crear dos mensajes comerciales distintos", objective: "Preparar el contacto",
+  status: "pending", result: null, strategy: null,
+};
+
+function reliabilityContext(history: HistoricalAction[] = []) {
+  return buildStrategicContext({ targetWeek: 2, history, memory: [], evidence: [],
+    knowledge: input.businessKnowledge, declaredContext: "" });
+}
+
+test("recalibra confianza con varias incógnitas sin gastar otra llamada ni borrar incógnitas", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const attempts: GenerationAttempt[] = [];
+  const unknowns = ["Canal útil", "Interés local"];
+  const output = { ...validPlan, strategic_diagnosis: { ...validPlan.strategic_diagnosis, confidence: "high", unknowns },
+    weekly_plan: [{ ...validPlan.weekly_plan[0], strategy: defaultStrategy }] };
+  const plan = await generateCEOPlan({ ...input, strategicContext: reliabilityContext() },
+    async () => ({ finalOutput: output }), (attempt) => attempts.push(attempt));
+  assert.equal(plan.strategic_diagnosis.confidence, "medium");
+  assert.deepEqual(plan.strategic_diagnosis.unknowns, unknowns);
+  assert.equal(attempts.length, 1);
+  assert.deepEqual(attempts[0].repairs, ["confidence_reduced"]);
+});
+
+test("solo mueve un prerrequisito pendiente cuando su continuación inequívoca existe antes en el plan", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const attempts: GenerationAttempt[] = [];
+  const weekly_plan = [
+    { ...validPlan.weekly_plan[0], action: pending.action, strategy: { ...defaultStrategy, intent: "build" } },
+    { ...validPlan.weekly_plan[1], action: "Probar un mensaje en una conversación real",
+      strategy: { ...defaultStrategy, completed_prerequisite_id: pending.id } },
+  ];
+  const plan = await generateCEOPlan({ ...input, strategicContext: reliabilityContext([pending]) },
+    async () => ({ finalOutput: { ...validPlan, weekly_plan } }), (attempt) => attempts.push(attempt));
+  assert.equal(plan.weekly_plan[1].strategy?.completed_prerequisite_id, null);
+  assert.equal(plan.weekly_plan[1].strategy?.depends_on_sequence, 1);
+  assert.ok(attempts[0].repairs.includes("action.2.prerequisite_moved_to_current_plan"));
+});
+
+test("conserva el error referencial y la propuesta rechazada en una reparación del modelo", async () => {
+  process.env.OPENAI_API_KEY = "test-key";
+  const attempts: GenerationAttempt[] = [];
+  const bad = { ...validPlan.weekly_plan[0], action: "Enviar el guion pendiente",
+    strategy: { ...defaultStrategy, completed_prerequisite_id: pending.id } };
+  const good = { ...validPlan.weekly_plan[0], action: "Revisar de dónde llegan consultas",
+    strategy: { ...defaultStrategy, intent: "discover" } };
+  const plan = await generateCEOPlan({ ...input, strategicContext: reliabilityContext([pending]) }, async (_agent, prompt) => {
+    if (attempts.length === 1) {
+      assert.match(prompt, /Propuesta anterior rechazada/);
+      assert.match(prompt, /Enviar el guion pendiente/);
+      assert.match(prompt, /"category":"reference"/);
+      assert.match(prompt, /Crear dos mensajes comerciales/);
+    }
+    return { finalOutput: { ...validPlan, weekly_plan: [attempts.length === 0 ? bad : good] } };
+  }, (attempt) => attempts.push(attempt));
+  assert.deepEqual(attempts.map((attempt) => attempt.status), ["rejected", "accepted"]);
+  assert.equal(plan.weekly_plan[0].action, good.action);
+});
 
 test("usa un model capture schema no recursivo con todos los tipos v1", () => {
   const base = {

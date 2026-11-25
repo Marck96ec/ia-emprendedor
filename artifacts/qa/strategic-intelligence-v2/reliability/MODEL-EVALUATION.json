@@ -1,0 +1,1016 @@
+{
+  "version": "v7-strategic-reliability",
+  "model": "gpt-5.4-mini",
+  "budget": {
+    "scenarios": 2,
+    "generationsPerScenario": 5,
+    "maxAgentCallsPerGeneration": 2,
+    "maxAgentCalls": 20
+  },
+  "results": [
+    {
+      "scenario": "mantenimiento",
+      "sample": 2,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 11630,
+          "repairs": [
+            "action.1.progression",
+            "action.2.progression",
+            "action.2.prior_action_id"
+          ],
+          "inputTokens": 7733,
+          "outputTokens": 2915,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos seguir validando la oferta urgente con mensajes de prueba o cambiar primero el canal de captación disponible?",
+        "recommended_direction": "Probar la oferta urgente con dos mensajes comerciales diferenciados y registrar respuestas reales antes de ampliar el plan.",
+        "rationale": "Ya existe una oferta concreta; el siguiente aprendizaje útil es verificar si el mercado responde a esa propuesta. Antes de cambiar de estrategia, conviene aislar si el bloqueo está en el mensaje o en el canal.",
+        "expected_outcome": "Obtener consultas iniciales o, si no aparecen, una señal clara de que el problema está en el canal o en la distribución, no en la oferta.",
+        "target_metric": "Consultas cualificadas"
+      },
+      "continuity": {
+        "mode": "continuation",
+        "justification": "La hipótesis anterior no fue validada ni refutada; sigue faltando evidencia de mercado, así que conviene continuar la validación comercial sin repetir mecánicamente la misma acción.",
+        "unresolved_uncertainty": "Aún no sabemos si el problema está en la propuesta, el canal o la falta total de demanda.",
+        "new_verifiable_signal": "Número y tipo de respuestas a dos mensajes comerciales distintos.",
+        "prior_evidence_gap": "La semana 1 solo produjo una oferta definida; no hubo prueba comercial ni registro de respuestas."
+      },
+      "time": {
+        "available_hours": 25,
+        "allocated_hours": 5,
+        "reserved_hours": 20,
+        "rationale": "Con 25 horas disponibles y un negocio en validación, basta con una semana ligera enfocada en aprendizaje comercial; el resto queda para operación y urgencias."
+      },
+      "actions": [
+        {
+          "title": "Crear dos mensajes comerciales distintos para probar la oferta de reparaciones urgentes",
+          "reason": "La decisión crítica exige evidencia sobre qué mensaje activa consultas; sin eso no se puede validar la captación.",
+          "expectedResult": "Una prueba comercial usable para aprender qué promesa genera más interés",
+          "successMetric": "Dos mensajes completos y claramente diferenciados, listos para usar",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "build",
+            "requires": [
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000001",
+            "depends_on_sequence": null,
+            "progression": "continuation",
+            "prior_action_id": "00000000-0000-4000-8000-000000000002",
+            "justification": "La oferta ya fue definida la semana anterior; ahora se necesita el entregable comercial para probarla.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": null,
+            "deliverable": "commercial_messages"
+          },
+          "feasibility": "feasible",
+          "matchingPrior": "00000000-0000-4000-8000-000000000002"
+        },
+        {
+          "title": "Probar los mensajes en un canal disponible y registrar respuestas reales",
+          "reason": "La hipótesis central solo se valida con respuestas reales; sin prueba no hay aprendizaje.",
+          "expectedResult": "Confirmar si existe demanda inicial o si hace falta cambiar canal o enfoque",
+          "successMetric": "Registro de respuestas, dudas, silencios e interés observado",
+          "strategy": {
+            "work_key": "lead_follow_up",
+            "intent": "validate",
+            "requires": [
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 1,
+            "progression": "continuation",
+            "prior_action_id": "00000000-0000-4000-8000-000000000003",
+            "justification": "Tras crear los mensajes, se necesita una prueba real para medir interés y registrar evidencia.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": null,
+            "deliverable": null
+          },
+          "feasibility": "unknown",
+          "matchingPrior": "00000000-0000-4000-8000-000000000003"
+        },
+        {
+          "title": "Definir la siguiente decisión según las respuestas obtenidas",
+          "reason": "La empresa necesita una respuesta estratégica, no solo actividad; esta síntesis evita repetir pruebas inútiles.",
+          "expectedResult": "Una decisión más clara para la semana siguiente basada en evidencia real",
+          "successMetric": "Conclusión escrita sobre si seguir, cambiar canal o ajustar la oferta",
+          "strategy": {
+            "work_key": "other",
+            "intent": "optimize",
+            "requires": [],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 2,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La decisión crítica debe cerrarse con una lectura explícita de la evidencia obtenida esta semana.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": null,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 11630
+    },
+    {
+      "scenario": "mantenimiento",
+      "sample": 1,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 10827,
+          "repairs": [
+            "action.1.deliverable",
+            "action.2.progression",
+            "action.2.prior_action_id"
+          ],
+          "inputTokens": 7733,
+          "outputTokens": 2728,
+          "status": "rejected",
+          "issues": [
+            {
+              "path": "weekly_plan.0.strategy.progression",
+              "category": "progression",
+              "message": "No hay un pendiente equivalente a esta acción. Si es un trabajo independiente, usa progression=new y prior_action_id=null."
+            }
+          ],
+          "errorCode": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID"
+        },
+        {
+          "attempt": 2,
+          "durationMs": 7420,
+          "repairs": [],
+          "inputTokens": 8868,
+          "outputTokens": 1719,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos priorizar verificar un canal real de entrada de consultas con los recursos ya disponibles, antes de invertir más tiempo en ajustar mensajes u oferta?",
+        "recommended_direction": "Hacer una verificación simple y manual de cómo podrían llegar consultas hoy, usando lo que el propietario ya tiene a mano, y registrar la evidencia obtenida.",
+        "rationale": "El negocio ya tiene una oferta base, pero no tiene validada la adquisición. Dado que el objetivo es generar clientes y la semana anterior no dio señales de mercado, primero hay que descubrir si existe un canal accionable.",
+        "expected_outcome": "Identificar un canal posible o confirmar que aún no existe uno utilizable para captar consultas.",
+        "target_metric": "Canal de entrada identificado y evidencia de consultas o ausencia de ellas registrada"
+      },
+      "continuity": {
+        "mode": "adjustment",
+        "justification": "La semana 1 validó solo la oferta; ahora toca ajustar el foco hacia el canal de adquisición porque no hubo resultados de mercado.",
+        "unresolved_uncertainty": "Sigue sin estar claro qué canal concreto puede traer consultas.",
+        "new_verifiable_signal": "Registro claro del origen de cualquier consulta o de la ausencia de un canal utilizable.",
+        "prior_evidence_gap": "La semana anterior solo produjo una oferta escrita y ninguna evidencia de mercado."
+      },
+      "time": {
+        "available_hours": 25,
+        "allocated_hours": 2,
+        "reserved_hours": 23,
+        "rationale": "La acción de esta semana es corta y de alto aprendizaje; el resto queda libre para operación y cotización del negocio."
+      },
+      "actions": [
+        {
+          "title": "Revisar los últimos contactos, conversaciones y fuentes de entrada disponibles para identificar de dónde podría venir una consulta real y registrar una señal concreta de canal",
+          "reason": "La decisión crítica es validar adquisición; sin saber de dónde llegarían consultas, no conviene seguir ajustando la oferta.",
+          "expectedResult": "Aclarar la ruta mínima por la que el negocio podría recibir primeras consultas o confirmar que hoy no está definida",
+          "successMetric": "Un canal posible identificado o confirmación explícita de que no existe canal confirmado; además, una señal concreta registrada si aparece",
+          "strategy": {
+            "work_key": "channel_setup",
+            "intent": "discover",
+            "requires": [
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": null,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "No existe un pendiente equivalente; esta es una verificación independiente para descubrir el canal de adquisición disponible.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "unknown",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 18249
+    },
+    {
+      "scenario": "mantenimiento",
+      "sample": 3,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 10107,
+          "repairs": [
+            "action.2.progression",
+            "action.2.prior_action_id"
+          ],
+          "inputTokens": 7733,
+          "outputTokens": 2689,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos mantener la oferta de reparaciones urgentes y probarla ya con un canal accesible, o cambiar primero el canal de captación?",
+        "recommended_direction": "Probar la oferta actual con un mensaje comercial simple y un canal que pueda usarse de inmediato para obtener consultas reales.",
+        "rationale": "El negocio ya tiene una oferta concreta; repetir definición sin mercado no reduce la incertidumbre. La forma más barata de aprender es exponer esa oferta y medir interés antes de rediseñar más.",
+        "expected_outcome": "Aparecen o no aparecen consultas cualificadas, permitiendo decidir si la oferta funciona o si el cuello de botella es el canal.",
+        "target_metric": "Consultas cualificadas"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La semana anterior ya se definió la oferta; ahora toca profundizar con una prueba comercial real en vez de repetir la definición.",
+        "unresolved_uncertainty": "Sigue sin saberse si la oferta atrae consultas y qué canal produce mejor respuesta.",
+        "new_verifiable_signal": "Respuestas o consultas reales a partir de los mensajes comerciales.",
+        "prior_evidence_gap": "No había evidencia de mercado; solo una oferta preparada."
+      },
+      "time": {
+        "available_hours": 25,
+        "allocated_hours": 5,
+        "reserved_hours": 20,
+        "rationale": "Basta con pocas horas del dueño para activar una prueba, revisar respuestas y decidir el siguiente paso; el resto debe quedar disponible para cotización y coordinación operativa."
+      },
+      "actions": [
+        {
+          "title": "Crear dos mensajes comerciales distintos para probar la oferta de reparaciones urgentes",
+          "reason": "La decisión crítica requiere una forma concreta de exponer la oferta y medir interés real.",
+          "expectedResult": "Un activo comercial utilizable para comparar respuesta del mercado",
+          "successMetric": "Dos mensajes distinguibles listos para usar y revisados",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "build",
+            "requires": [
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000001",
+            "depends_on_sequence": null,
+            "progression": "continuation",
+            "prior_action_id": "00000000-0000-4000-8000-000000000002",
+            "justification": "La oferta ya fue definida en la semana anterior; ahora se necesita el activo comercial para probarla.",
+            "prior_barrier": "resolved",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": "commercial_messages"
+          },
+          "feasibility": "feasible",
+          "matchingPrior": "00000000-0000-4000-8000-000000000002"
+        },
+        {
+          "title": "Probar la oferta con los mensajes en un canal disponible y registrar respuestas",
+          "reason": "La hipótesis solo se valida con respuestas reales del mercado.",
+          "expectedResult": "Señales concretas sobre si la oferta genera consultas cualificadas",
+          "successMetric": "Respuestas registradas con tipo de interés u objeción",
+          "strategy": {
+            "work_key": "lead_follow_up",
+            "intent": "validate",
+            "requires": [
+              "whatsapp",
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000001",
+            "depends_on_sequence": 1,
+            "progression": "continuation",
+            "prior_action_id": "00000000-0000-4000-8000-000000000003",
+            "justification": "Después de tener la oferta y los mensajes, la validación requiere observar respuestas reales.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "unknown",
+          "matchingPrior": "00000000-0000-4000-8000-000000000003"
+        },
+        {
+          "title": "Decidir si el próximo ajuste debe ser del mensaje o del canal según la respuesta obtenida",
+          "reason": "Evita repetir pruebas sin aprendizaje y conecta la validación con la siguiente iteración.",
+          "expectedResult": "Un camino claro para la siguiente semana",
+          "successMetric": "Decisión documentada con criterio de ajuste",
+          "strategy": {
+            "work_key": "other",
+            "intent": "optimize",
+            "requires": [],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 2,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La decisión final de la semana debe salir de la evidencia obtenida, no de suposiciones.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 10107
+    },
+    {
+      "scenario": "mantenimiento",
+      "sample": 4,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 12502,
+          "repairs": [
+            "action.1.progression",
+            "action.2.progression",
+            "action.2.prior_action_id"
+          ],
+          "inputTokens": 7733,
+          "outputTokens": 3157,
+          "status": "rejected",
+          "issues": [
+            {
+              "path": "weekly_plan.1.strategy.completed_prerequisite_id",
+              "category": "reference",
+              "message": "La acción requiere un trabajo previo que aún no está completado. Propón una alternativa viable o el prerrequisito como acción independiente."
+            }
+          ],
+          "errorCode": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID"
+        },
+        {
+          "attempt": 2,
+          "durationMs": 7893,
+          "repairs": [],
+          "inputTokens": 9045,
+          "outputTokens": 1942,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos probar la oferta actual con un canal realmente disponible y medir si genera consultas, o rediseñar primero el canal de adquisición?",
+        "recommended_direction": "Hacer una prueba comercial simple con el canal disponible más factible y registrar si aparecen consultas cualificadas.",
+        "rationale": "El negocio ya tiene una oferta concreta; lo que falta es evidencia de demanda. Antes de cambiar otra vez la propuesta, conviene comprobar si el mercado responde a una prueba real y medible.",
+        "expected_outcome": "Primeras consultas cualificadas o evidencia suficiente para concluir que el problema está en el canal o en el mensaje.",
+        "target_metric": "consultas cualificadas"
+      },
+      "continuity": {
+        "mode": "continuation",
+        "justification": "La hipótesis anterior sigue abierta porque la oferta ya fue creada, pero todavía no se validó con el mercado.",
+        "unresolved_uncertainty": "Sigue sin saberse qué canal puede producir consultas de forma confiable.",
+        "new_verifiable_signal": "Respuestas y consultas cualificadas derivadas de una prueba comercial real.",
+        "prior_evidence_gap": "La semana pasada solo se construyó la oferta; no hubo evidencia comercial externa."
+      },
+      "time": {
+        "available_hours": 25,
+        "allocated_hours": 3,
+        "reserved_hours": 22,
+        "rationale": "Solo se necesita una acción de alto valor para validar la demanda; el resto del tiempo debe quedar libre para cotizar, coordinar y atender trabajos reales."
+      },
+      "actions": [
+        {
+          "title": "Preparar y ejecutar una prueba comercial simple con la oferta de reparaciones urgentes usando un canal realmente disponible para el propietario, y registrar las respuestas obtenidas.",
+          "reason": "La decisión crítica es comprobar demanda real; el cuello de botella es la validación comercial, no la operación interna.",
+          "expectedResult": "Aprender si la oferta ya puede atraer consultas o si el problema está en el canal/mensaje.",
+          "successMetric": "Respuestas registradas y clasificadas por interés, duda o rechazo; incluyendo cuántas consultas fueron realmente cualificadas.",
+          "strategy": {
+            "work_key": "lead_follow_up",
+            "intent": "validate",
+            "requires": [
+              "existing_contacts",
+              "whatsapp"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": null,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "Convierte la oferta ya existente en evidencia de mercado usando un canal que el propietario pueda usar sin asumir recursos no confirmados.",
+            "prior_barrier": "unchanged",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "unknown",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 20395
+    },
+    {
+      "scenario": "mantenimiento",
+      "sample": 5,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 11868,
+          "repairs": [
+            "action.1.deliverable",
+            "action.2.progression",
+            "action.2.prior_action_id"
+          ],
+          "inputTokens": 7733,
+          "outputTokens": 2935,
+          "status": "rejected",
+          "issues": [
+            {
+              "path": "weekly_plan.0.strategy.progression",
+              "category": "progression",
+              "message": "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado."
+            }
+          ],
+          "errorCode": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID"
+        },
+        {
+          "attempt": 2,
+          "durationMs": 8591,
+          "repairs": [],
+          "inputTokens": 8998,
+          "outputTokens": 1956,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos priorizar la verificación del origen real de consultas antes de invertir más esfuerzo en difusión amplia?",
+        "recommended_direction": "Hacer una verificación breve y trazable del origen de consultas con el activo ya definido, usando solo recursos confirmados.",
+        "rationale": "En un negocio de servicios urgentes, saber de dónde llegan las primeras consultas vale más que ampliar visibilidad sin evidencia; eso evita desperdiciar horas del dueño en canales no confirmados.",
+        "expected_outcome": "Obtener una primera señal verificable sobre qué fuente de contacto puede convertirse en adquisición real, o confirmar que aún falta un canal viable.",
+        "target_metric": "Origen de consultas identificable"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La semana pasada la validación quedó inconclusa; ahora se profundiza la misma línea, pero cambiando de construir oferta a medir el origen real de consultas.",
+        "unresolved_uncertainty": "Sigue sin saberse qué canal concreto produce demanda y si la oferta actual es suficiente para activarla.",
+        "new_verifiable_signal": "Registro de consultas con fuente identificada y clasificación básica de interés.",
+        "prior_evidence_gap": "Faltó una señal de mercado; solo se completó la definición de la oferta."
+      },
+      "time": {
+        "available_hours": 25,
+        "allocated_hours": 2,
+        "reserved_hours": 23,
+        "rationale": "Solo se programa una acción breve y de alto aprendizaje; el resto queda libre para operación y seguimiento."
+      },
+      "actions": [
+        {
+          "title": "Registrar durante esta semana cada consulta entrante y su origen exacto, usando el canal que ya esté realmente disponible y cualquier contacto existente confirmado por el propietario",
+          "reason": "La decisión crítica es aprender el origen de consultas antes de escalar difusión; sin esa señal no hay base para invertir más horas en captación.",
+          "expectedResult": "Una señal clara sobre qué fuente o contacto sí genera interés comercial",
+          "successMetric": "Cada consulta registrada con su origen, tipo de necesidad y si pidió cotización",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "discover",
+            "requires": [
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": null,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La semana anterior no produjo evidencia comercial; esta acción no continúa un pendiente, sino que crea una verificación nueva y factible sobre el origen de consultas.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "unknown",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 20459
+    },
+    {
+      "scenario": "limpieza",
+      "sample": 2,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 12150,
+          "repairs": [
+            "action.1.deliverable"
+          ],
+          "inputTokens": 7566,
+          "outputTokens": 3038,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos optimizar el mensaje y el cierre por WhatsApp para convertir el interés local en reservas, o seguir cambiando la oferta base?",
+        "recommended_direction": "Optimizar el mensaje de WhatsApp y el seguimiento sobre la oferta ya definida, manteniendo el foco en los dos barrios.",
+        "rationale": "Ya existe una oferta local validada parcialmente y hubo consultas; repetir cambios de oferta sin aprender del cierre dispersaría el esfuerzo. El siguiente aprendizaje más valioso es qué argumento, formato o oferta concreta convierte interés en reserva dentro del radio rentable.",
+        "expected_outcome": "Más consultas calificadas y primeras reservas sin ampliar zonas.",
+        "target_metric": "reservas y consultas calificadas"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La semana anterior validó interés local pero no cierre; ahora conviene profundizar en la conversión del mismo mercado antes de expandir o rehacer la oferta.",
+        "unresolved_uncertainty": "Sigue sin saberse qué elemento del mensaje o del cierre está frenando la reserva.",
+        "new_verifiable_signal": "Registrar respuestas reales de WhatsApp y si terminan en reserva, objeción repetida o silencio.",
+        "prior_evidence_gap": "Solo hubo consultas; faltó evidencia sobre cierre, objeciones y formato de mensaje más efectivo."
+      },
+      "time": {
+        "available_hours": 4,
+        "allocated_hours": 4,
+        "reserved_hours": 0,
+        "rationale": "Con solo 4 horas, conviene dedicar casi todo a un experimento comercial corto y al seguimiento manual; no hay margen para tareas accesorias."
+      },
+      "actions": [
+        {
+          "title": "Redactar y enviar un mensaje de WhatsApp a los contactos locales usando la oferta ya definida, pidiendo una reserva o una respuesta concreta sobre horario/precio.",
+          "reason": "Es la forma más directa de validar la hipótesis crítica sin cambiar de mercado ni ampliar traslados.",
+          "expectedResult": "Aprender qué frena la compra y si la oferta local ya puede cerrar ventas.",
+          "successMetric": "Respuestas reales registradas y al menos una reserva o una objeción clara repetida.",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "validate",
+            "requires": [
+              "whatsapp",
+              "existing_contacts",
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": null,
+            "progression": "advance",
+            "prior_action_id": "00000000-0000-4000-8000-000000000201",
+            "justification": "La oferta base ya existe; ahora hay que validar qué mensaje comercial la convierte en reserva.",
+            "prior_barrier": "unchanged",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        },
+        {
+          "title": "Redactar dos variantes cortas del mensaje comercial para WhatsApp: una orientada a urgencia y otra a confianza/localidad, listas para probar.",
+          "reason": "La hipótesis actual necesita una prueba más fuerte del mensaje, no solo de la oferta.",
+          "expectedResult": "Identificar qué enfoque comercial abre más conversaciones útiles.",
+          "successMetric": "Dos variantes diferenciadas, listas para usar y comparables en respuesta.",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "build",
+            "requires": [
+              "whatsapp",
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": 1,
+            "progression": "advance",
+            "prior_action_id": "00000000-0000-4000-8000-000000000201",
+            "justification": "Probar dos ángulos permite aprender qué mensaje convierte mejor sin ampliar el alcance.",
+            "prior_barrier": "unchanged",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": "commercial_messages"
+          },
+          "feasibility": "unknown",
+          "matchingPrior": null
+        },
+        {
+          "title": "Registrar en una nota simple las objeciones, preguntas y reservas recibidas durante la semana para decidir el siguiente ajuste.",
+          "reason": "La decisión crítica depende de reconocer el patrón real de objeciones, no solo de enviar mensajes.",
+          "expectedResult": "Base suficiente para decidir si se mantiene, ajusta o cambia el enfoque comercial la próxima semana.",
+          "successMetric": "Un resumen con al menos un patrón claro de respuesta.",
+          "strategy": {
+            "work_key": "other",
+            "intent": "optimize",
+            "requires": [
+              "whatsapp"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 1,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "Necesitamos evidencia del cierre para decidir el siguiente ajuste, independientemente del canal utilizado.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 12150
+    },
+    {
+      "scenario": "limpieza",
+      "sample": 1,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 12329,
+          "repairs": [
+            "action.1.deliverable",
+            "action.3.intent"
+          ],
+          "inputTokens": 7566,
+          "outputTokens": 3080,
+          "status": "rejected",
+          "issues": [
+            {
+              "path": "weekly_plan.2.estimated_hours",
+              "category": "capacity",
+              "message": "Una acción activa debe consumir más de cero horas"
+            }
+          ],
+          "errorCode": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID"
+        },
+        {
+          "attempt": 2,
+          "durationMs": 8551,
+          "repairs": [
+            "action.1.deliverable"
+          ],
+          "inputTokens": 8882,
+          "outputTokens": 2042,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos priorizar una prueba breve de WhatsApp con la oferta local actual para descubrir qué respuesta lleva a reserva, o asumir que el problema es otro y cambiar de foco?",
+        "recommended_direction": "Probar un mensaje comercial local más concreto por WhatsApp a contactos existentes y medir si aparecen respuestas con intención de reservar.",
+        "rationale": "Con poca capacidad, sin redes sociales y con interés ya observado, la decisión más rentable es validar conversión antes de cambiar de canal o ampliar la oferta.",
+        "expected_outcome": "Obtener una señal clara de si la oferta local actual genera consultas accionables o si el freno está en otro punto del proceso comercial.",
+        "target_metric": "respuestas con intención de agendar o pedir precio final"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La oferta local ya fue definida y la semana anterior produjo interés, pero no reservas; conviene profundizar la misma línea de validación en lugar de repetir la definición del servicio.",
+        "unresolved_uncertainty": "Sigue sin confirmarse qué ángulo comercial convierte mejor en reserva en estos barrios.",
+        "new_verifiable_signal": "Mensajes de WhatsApp con intención concreta de agendar o cerrar.",
+        "prior_evidence_gap": "La evidencia previa mostró consultas, pero no conversión a reserva."
+      },
+      "time": {
+        "available_hours": 4,
+        "allocated_hours": 2,
+        "reserved_hours": 2,
+        "rationale": "Solo hay una acción activa porque el objetivo de la semana es aprender una señal de conversión real; el resto del tiempo queda libre para atención operativa, seguimiento o imprevistos."
+      },
+      "actions": [
+        {
+          "title": "Enviar un mensaje breve de la oferta local a contactos existentes de los dos barrios y registrar qué respuesta concreta genera cada uno.",
+          "reason": "La decisión crítica es validar conversión local; esta acción usa el canal disponible y la oferta ya definida para obtener evidencia real.",
+          "expectedResult": "Aprender si el cuello de botella está en el mensaje comercial o si hace falta revisar otra parte de la demanda.",
+          "successMetric": "Cada contacto recibe el mensaje y se registra al menos la respuesta observada, indicando si hubo intención de reserva, pedido de precio o rechazo.",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "validate",
+            "requires": [
+              "whatsapp",
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": null,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "Acción nueva e independiente para validar la conversión de la oferta local usando recursos disponibles.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 20881
+    },
+    {
+      "scenario": "limpieza",
+      "sample": 3,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 13469,
+          "repairs": [
+            "action.1.deliverable"
+          ],
+          "inputTokens": 7566,
+          "outputTokens": 3217,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Conviene concentrar esta semana en una prueba de cierre por WhatsApp con la oferta local ya definida, o seguir reformulando la oferta antes de volver a contactar?",
+        "recommended_direction": "Usar la oferta local ya definida y probar una secuencia breve de WhatsApp para convertir interés en reserva dentro de los dos barrios.",
+        "rationale": "Ya existe una propuesta suficientemente concreta y hubo interés real de la zona; el siguiente aprendizaje útil es si esa oferta cierra o no, no seguir redefiniéndola sin evidencia nueva.",
+        "expected_outcome": "Señales de conversión más claras: reservas, objeciones concretas o un patrón sobre por qué no se cierra.",
+        "target_metric": "Reservas confirmadas o, en su defecto, respuestas cualificadas que expliquen la fricción de cierre."
+      },
+      "continuity": {
+        "mode": "continuation",
+        "justification": "La semana anterior validó interés local pero no conversión; conviene continuar la línea comercial, no cambiar de eje.",
+        "unresolved_uncertainty": "Sigue sin saberse si el freno está en la oferta, el precio o el mensaje de cierre.",
+        "new_verifiable_signal": "Respuestas por WhatsApp y reservas confirmadas desde contactos de los dos barrios.",
+        "prior_evidence_gap": "La prueba anterior mostró consultas pero no midió cierre ni fricciones específicas de decisión."
+      },
+      "time": {
+        "available_hours": 4,
+        "allocated_hours": 4,
+        "reserved_hours": 0,
+        "rationale": "Con solo 4 horas semanales, el tiempo debe ir casi completo a una prueba de conversión y a capturar aprendizaje; no conviene añadir trabajo accesorio."
+      },
+      "actions": [
+        {
+          "title": "Enviar por WhatsApp la oferta local ya definida a los contactos del barrio y pedir confirmación de interés o reserva",
+          "reason": "La decisión crítica es comprobar si la oferta local vende; WhatsApp y contactos existentes son los únicos canales confirmados.",
+          "expectedResult": "Reservas confirmadas o señales claras de fricción comercial",
+          "successMetric": "Contacto enviado y respuesta clasificada de cada conversación iniciada",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "execute",
+            "requires": [
+              "existing_contacts",
+              "whatsapp",
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": null,
+            "progression": "advance",
+            "prior_action_id": "00000000-0000-4000-8000-000000000201",
+            "justification": "La oferta ya fue definida; ahora toca usarla para generar conversaciones y aprender qué frena o activa la reserva.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        },
+        {
+          "title": "Registrar las objeciones y razones de cada contacto que no reserva",
+          "reason": "Sin esta evidencia, cualquier cambio de oferta sería adivinar; aquí está el aprendizaje estratégico.",
+          "expectedResult": "Mapa simple de fricciones repetidas para ajustar el siguiente mensaje o la oferta",
+          "successMetric": "Motivo principal registrado por conversación relevante",
+          "strategy": {
+            "work_key": "customer_research",
+            "intent": "validate",
+            "requires": [
+              "existing_contacts",
+              "whatsapp"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 1,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "Si la conversión no ocurre, necesitamos saber si el bloqueo es precio, confianza o traslado antes de reformular nada.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        },
+        {
+          "title": "Reservar el foco operativo solo para los traslados dentro de los dos barrios durante esta prueba",
+          "reason": "La capacidad es muy limitada y el negocio debe proteger margen y tiempo; esto evita que la semana se contamine con oportunidades fuera de zona.",
+          "expectedResult": "Mayor disciplina comercial y mejor lectura de la demanda local real",
+          "successMetric": "Criterio interno claro de no aceptar pedidos fuera del radio de prueba",
+          "strategy": {
+            "work_key": "operations_measure",
+            "intent": "maintain",
+            "requires": [
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": 1,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La estrategia comercial solo funciona si la operación mantiene el radio acotado; esto protege tiempo y margen mientras se prueba el cierre.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 13469
+    },
+    {
+      "scenario": "limpieza",
+      "sample": 4,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 11962,
+          "repairs": [
+            "action.1.intent"
+          ],
+          "inputTokens": 7566,
+          "outputTokens": 2941,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos seguir empujando la captación por WhatsApp con la oferta local actual o cambiar el enfoque hacia una prueba más convincente para cerrar reservas?",
+        "recommended_direction": "Seguir con la oferta local actual, pero convertirla en una prueba comercial enfocada en reservar, no solo en informar.",
+        "rationale": "Ya hay señales de interés en la zona y la oferta está definida; ahora el mayor valor está en aprender qué mensaje y qué prueba convierten ese interés en una primera reserva sin ampliar el radio de trabajo.",
+        "expected_outcome": "Más consultas cualificadas y primeras reservas dentro de los dos barrios objetivo.",
+        "target_metric": "consultas cualificadas y reservas"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La semana anterior validó interés local pero no conversión; no conviene cambiar de dirección todavía, sino profundizar la prueba comercial sobre el mismo canal y zona.",
+        "unresolved_uncertainty": "Sigue sin saberse qué fricción concreta impide cerrar la reserva.",
+        "new_verifiable_signal": "Mensajes de WhatsApp que pidan fecha, precio o confirmación para reservar.",
+        "prior_evidence_gap": "Solo hubo consultas; faltó evidencia de cierre o de cuál argumento comercial mueve la decisión."
+      },
+      "time": {
+        "available_hours": 4,
+        "allocated_hours": 4,
+        "reserved_hours": 0,
+        "rationale": "Con solo 4 horas del dueño, conviene dedicar casi todo a una acción de alto impacto comercial y dejar margen mínimo para seguimiento."
+      },
+      "actions": [
+        {
+          "title": "Preparar dos variantes de mensaje comercial por WhatsApp para ofrecer la limpieza local a contactos del barrio",
+          "reason": "La hipótesis actual depende de convertir consultas en reservas; el mensaje es el principal experimento de conversión.",
+          "expectedResult": "Un activo comercial usable para probar qué argumento mueve mejor la respuesta.",
+          "successMetric": "Dos variantes de mensaje listas, distintas en enfoque y con llamada clara a reservar.",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "build",
+            "requires": [
+              "existing_contacts",
+              "whatsapp",
+              "value_proposition"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": null,
+            "progression": "advance",
+            "prior_action_id": "00000000-0000-4000-8000-000000000201",
+            "justification": "Se parte de la oferta ya definida y se convierte en mensajes para probar si el interés local termina en reservas.",
+            "prior_barrier": "resolved",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": "commercial_messages"
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        },
+        {
+          "title": "Contactar por WhatsApp a los dos contactos interesados y registrar si piden precio, fecha o reserva",
+          "reason": "La evidencia más valiosa ahora es saber si quienes ya preguntaron avanzan hacia reserva con la oferta local.",
+          "expectedResult": "Señal concreta sobre si el problema está en el mensaje o en la disposición real del mercado cercano.",
+          "successMetric": "Dos contactos contactados y la reacción de cada uno registrada.",
+          "strategy": {
+            "work_key": "lead_follow_up",
+            "intent": "validate",
+            "requires": [
+              "whatsapp",
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": 1,
+            "progression": "advance",
+            "prior_action_id": "00000000-0000-4000-8000-000000000201",
+            "justification": "Esta acción valida directamente si la oferta local y el mensaje generan reservas entre contactos ya interesados.",
+            "prior_barrier": "resolved",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        },
+        {
+          "title": "Definir cuál fricción domina entre precio, confianza o disponibilidad según las respuestas recibidas",
+          "reason": "Sin identificar la fricción dominante, el negocio puede repetir mensajes que no resuelven el bloqueo real.",
+          "expectedResult": "Decisión más informada para el siguiente ciclo comercial.",
+          "successMetric": "Una conclusión breve sobre la fricción principal y el ajuste sugerido.",
+          "strategy": {
+            "work_key": "other",
+            "intent": "optimize",
+            "requires": [
+              "existing_contacts"
+            ],
+            "completed_prerequisite_id": "00000000-0000-4000-8000-000000000201",
+            "depends_on_sequence": 2,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La interpretación de respuestas depende de haber hecho primero el contacto y recoger reacciones reales.",
+            "prior_barrier": "unreported",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 11962
+    },
+    {
+      "scenario": "limpieza",
+      "sample": 5,
+      "targetWeek": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "durationMs": 11965,
+          "repairs": [
+            "action.1.deliverable",
+            "action.2.deliverable"
+          ],
+          "inputTokens": 7566,
+          "outputTokens": 2962,
+          "status": "rejected",
+          "issues": [
+            {
+              "path": "weekly_plan.1.strategy.progression",
+              "category": "progression",
+              "message": "No hay un pendiente equivalente a esta acción. Si es un trabajo independiente, usa progression=new y prior_action_id=null."
+            }
+          ],
+          "errorCode": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID"
+        },
+        {
+          "attempt": 2,
+          "durationMs": 8652,
+          "repairs": [
+            "action.1.deliverable"
+          ],
+          "inputTokens": 8790,
+          "outputTokens": 2015,
+          "status": "accepted",
+          "issues": []
+        }
+      ],
+      "status": "PASS",
+      "decision": {
+        "question": "¿Debemos priorizar confirmar el canal real de entrada de las consultas o asumir que el problema está en el cierre y ajustar el mensaje?",
+        "recommended_direction": "Confirmar de forma simple cómo llegan las consultas y qué tipo de respuesta genera la oferta local antes de cambiar el mensaje.",
+        "rationale": "Con evidencia limitada y pocas horas disponibles, primero conviene saber si el negocio está recibiendo consultas por el canal esperado y qué tan cerca están de reserva; eso evita optimizar a ciegas.",
+        "expected_outcome": "Una señal clara sobre el origen de las consultas y sobre si el interés local merece insistencia comercial o ajuste del discurso.",
+        "target_metric": "consultas cualificadas registradas con su origen y resultado"
+      },
+      "continuity": {
+        "mode": "deepening",
+        "justification": "La semana anterior validó que hay interés local, pero no aclaró el punto de fricción. Ahora se profundiza con una señal más específica antes de cambiar de estrategia.",
+        "unresolved_uncertainty": "Sigue sin saberse si el cuello de botella principal está en el canal de entrada o en la conversión a reserva.",
+        "new_verifiable_signal": "Cada nueva consulta quedará registrada con su origen y su desenlace, permitiendo ver el patrón real.",
+        "prior_evidence_gap": "Solo había dos consultas sin reserva; faltaba distinguir origen y conversión para decidir con más precisión."
+      },
+      "time": {
+        "available_hours": 4,
+        "allocated_hours": 2,
+        "reserved_hours": 2,
+        "rationale": "La acción clave cabe en una sola sesión corta; se reserva tiempo para seguimiento comercial o imprevistos sin llenar artificialmente la semana."
+      },
+      "actions": [
+        {
+          "title": "Registrar en WhatsApp cada consulta nueva de los dos barrios con su origen, tipo de servicio pedido y si terminó en reserva o no.",
+          "reason": "La decisión crítica depende de distinguir si el problema está en el canal de entrada o en el cierre; sin esa evidencia no conviene cambiar la estrategia.",
+          "expectedResult": "Un patrón verificable sobre qué fuente trae consultas y si esas consultas avanzan a reserva.",
+          "successMetric": "Cada consulta nueva queda registrada con origen, barrio, servicio solicitado y resultado final.",
+          "strategy": {
+            "work_key": "commercial_messages",
+            "intent": "validate",
+            "requires": [
+              "existing_contacts",
+              "whatsapp"
+            ],
+            "completed_prerequisite_id": null,
+            "depends_on_sequence": null,
+            "progression": "new",
+            "prior_action_id": null,
+            "justification": "La oferta local ya existe y ahora se necesita una señal operativa sobre el canal y la conversión real; esta captura usa recursos disponibles sin exigir redes sociales.",
+            "prior_barrier": "resolved",
+            "new_evidence_id": null,
+            "period_week": 2,
+            "deliverable": null
+          },
+          "feasibility": "feasible",
+          "matchingPrior": null
+        }
+      ],
+      "durationMs": 20617
+    }
+  ]
+}

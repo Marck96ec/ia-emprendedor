@@ -15,6 +15,7 @@ import {
 } from "@/lib/action-capture";
 import { extractBusinessEvidence } from "@/lib/business-evidence";
 import { createClient } from "@/lib/supabase/server";
+import { rememberBusinessFeedback } from "@/lib/strategic-context-server";
 
 const UpdateWeeklyActionSchema = z.object({
   action_id: z.string().uuid(),
@@ -160,6 +161,9 @@ export async function updateWeeklyActionStatus(
       planContextError ?? new Error("Missing CEO plan context"),
     );
   } else {
+    await rememberBusinessFeedback(supabase, planContext.business_id, {
+      id: action.id, type: "action_result", fields: completionData as Record<string, unknown>,
+    });
     const evidence = extractBusinessEvidence({
       businessId: planContext.business_id,
       actionId: action.id,

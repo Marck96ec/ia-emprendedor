@@ -66,7 +66,8 @@ export function inferWorkKey(action: string): WorkKey {
   if (/\b(mensajes? comerciales|guiones? comerciales|redactar mensajes|crear mensajes)\b/.test(title)) return "commercial_messages";
   if (/\b(validar|probar|contactar|enviar|publicar|difundir|prospectar)\b/.test(title)
     && /\b(ofertas?|prospectos?|mensajes?|clientes?|canales?|redes sociales)\b/.test(title)) return "commercial_outreach";
-  if (/\b(propuesta de valor|oferta principal|oferta de valor|oferta comercial principal|oferta base)\b/.test(title)) {
+  if (/\b(propuesta de valor|oferta principal|oferta de valor|oferta comercial principal|oferta base)\b/.test(title)
+    || /^(crear|definir|redactar|formular|disenar|estructurar) (?:una |la )?oferta comercial\b/.test(title)) {
     return "offer_definition";
   }
   if (/\b(delegar|delegacion|responsable disponible)\b/.test(title)) return "owner_delegation";
@@ -89,9 +90,19 @@ function workKeyFor(action: string, strategy?: ActionStrategy | null) {
   return inferred !== "other" ? inferred : strategy?.work_key ?? "other";
 }
 
+const workWords = new Set(["para", "sobre", "segun", "entre", "cada", "este", "esta", "estas", "estos", "desde",
+  "hacer", "medir", "revisar", "validar", "registrar", "probar", "definir", "preparar", "crear", "clasificar",
+  "identificar", "enviar", "contactar", "separar", "arreglar", "nuevo", "nueva", "semanal", "semana"]);
+
+function targetWords(title: string) {
+  return new Set(title.split(" ").filter((word) => word.length > 3 && !workWords.has(word))
+    .map((word) => word.length > 4 ? word.replace(/(?:as|os|es|s)$/, "") : word));
+}
+
 export function sameWork(a: Pick<HistoricalAction, "action" | "strategy">, b: Pick<Candidate, "action" | "strategy">) {
   const title = normalizeWorkText(a.action);
-  if (title && title === normalizeWorkText(b.action)) return true;
+  const nextTitle = normalizeWorkText(b.action);
+  if (title && title === nextTitle) return true;
   const key = workKeyFor(a.action, a.strategy);
   if (key === "other" || key !== workKeyFor(b.action, b.strategy)) return false;
   const firstIntent = inferredIntent(a.action) ?? a.strategy?.intent;
@@ -100,7 +111,16 @@ export function sameWork(a: Pick<HistoricalAction, "action" | "strategy">, b: Pi
     firstIntent && nextIntent && ["build", "optimize"].includes(firstIntent) && ["build", "optimize"].includes(nextIntent)) {
     return true;
   }
-  return Boolean(firstIntent && firstIntent === nextIntent);
+  if (!firstIntent || firstIntent !== nextIntent) return false;
+  if (key === "cashflow_update" || (key === "lead_follow_up" && responseTracking.test(title) && responseTracking.test(nextTitle))) {
+    return true;
+  }
+  // General work families contain different tests. A shared category or
+  // phase alone says nothing about whether their target is the same.
+  const first = targetWords(title);
+  const next = targetWords(nextTitle);
+  const common = [...first].filter((word) => next.has(word)).length;
+  return common >= 2 && common / Math.min(first.size, next.size) >= 0.67 && common / Math.max(first.size, next.size) >= 0.5;
 }
 
 export function requiredResources(item: Pick<Candidate, "action" | "role_recommendation" | "strategy">): Resource[] {

@@ -10,6 +10,7 @@ import {
 } from "@/lib/decision-learning";
 import { StrategicDiagnosisSchema } from "@/lib/ai/ceo-agent";
 import { createClient } from "@/lib/supabase/server";
+import { rememberBusinessFeedback } from "@/lib/strategic-context-server";
 import {
   WeeklyReviewDraftSchema,
   type WeeklyReviewDraft,
@@ -386,7 +387,7 @@ export async function createWeeklyReview(
     metricAfter,
   });
 
-  const { error } = await supabase
+  const { data: savedReview, error } = await supabase
     .from("weekly_reviews")
     .insert({
       ceo_plan_id: ceoPlan.id,
@@ -412,7 +413,7 @@ export async function createWeeklyReview(
       total_actions: actions.length,
 
       decision_learning: decisionLearning,
-    });
+    }).select("id").single();
 
   if (error) {
     /*
@@ -437,6 +438,15 @@ export async function createWeeklyReview(
       message: "No pudimos guardar tu revisión.",
     };
   }
+
+  await rememberBusinessFeedback(supabase, business.id, {
+    id: savedReview.id,
+    type: "weekly_review",
+    fields: {
+      observed_result: parsed.data.observed_result, evidence: parsed.data.evidence,
+      learning: parsed.data.learning, next_week_focus: nextWeekFocus,
+    },
+  });
 
   const { error: draftDeleteError } = await supabase
     .from("weekly_review_drafts")

@@ -2,14 +2,16 @@ import {
   ValuePropositionSchema,
 } from "@/lib/ai/value-proposition-agent";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type { BusinessKnowledge } from "./business-knowledge-types";
 import type { BusinessKnowledge } from "./business-knowledge-types";
 
 export async function loadBusinessKnowledge(
   businessId: string,
+  client?: SupabaseClient,
 ): Promise<BusinessKnowledge> {
-  const supabase = await createClient();
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from("business_knowledge")
     .select("knowledge_type, content")

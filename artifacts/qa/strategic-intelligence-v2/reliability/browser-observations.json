@@ -1,0 +1,2519 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T02:11:14.609Z",
+  "scenarios": {
+    "mantenimiento": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Redactar una oferta simple y directa para reparaciones urgentes del hogar con un solo enfoque principal",
+              "reason": "La decisión crítica requiere una oferta comprensible antes de medir qué canal genera consultas; sin mensaje claro, la señal será confusa.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "build",
+                "requires": [],
+                "work_key": "offer_definition",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Es un prerrequisito independiente para poder probar la adquisición con una propuesta clara.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener un mensaje base suficientemente claro para probarlo en un canal accesible.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe definir el mensaje porque representa la oferta y conoce el servicio; delegarlo sin contexto debilitaría el aprendizaje.",
+              "capture_schema": {
+                "title": "Oferta simple para reparaciones urgentes",
+                "fields": [
+                  {
+                    "id": "customer_type",
+                    "type": "text",
+                    "label": "Tipo de cliente",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "Qué hogar o propietario busca esta oferta.",
+                    "placeholder": "Propietario de vivienda con urgencia de reparación"
+                  },
+                  {
+                    "id": "main_problem",
+                    "type": "textarea",
+                    "label": "Problema principal",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué dolor resuelve la oferta.",
+                    "placeholder": "Reparaciones urgentes en el hogar"
+                  },
+                  {
+                    "id": "service_promise",
+                    "type": "textarea",
+                    "label": "Promesa de servicio",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué resultado concreto se comunica.",
+                    "placeholder": "Atención rápida y solución del problema"
+                  },
+                  {
+                    "id": "final_version",
+                    "type": "textarea",
+                    "label": "Versión final",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Texto final que se usará en la prueba.",
+                    "placeholder": "Escribe el mensaje final"
+                  }
+                ],
+                "version": 1,
+                "description": "Captura la versión final de la oferta usada en la prueba semanal.",
+                "capture_type": "offer_definition",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Una oferta escrita y lista para usar, con el problema, el tipo de cliente y el resultado prometido claramente expresados.",
+              "estimated_hours": 2,
+              "expected_result": "Queda una hipótesis comercial mínima para probar y comparar respuestas.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Probar la oferta en un canal disponible y registrar el origen de cada respuesta",
+              "reason": "La decisión crítica se valida con respuestas reales, no con supuestos; esta acción permite aprender qué canal o contacto produce señal.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_outreach",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Primero se define una oferta simple; luego se prueba en un canal disponible para aprender qué genera consultas.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Identificar qué entrada comercial trae consultas reales.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe observar la respuesta real del mercado y registrar el origen porque eso define el siguiente paso estratégico.",
+              "capture_schema": {
+                "title": "Registro de respuestas a la prueba",
+                "fields": [
+                  {
+                    "id": "response_count",
+                    "max": 1000,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Cantidad de respuestas",
+                    "required": true,
+                    "description": "Número total de respuestas recibidas."
+                  },
+                  {
+                    "id": "response_source",
+                    "type": "repeatable_group",
+                    "label": "Origen de la respuesta",
+                    "fields": [
+                      {
+                        "id": "source_name",
+                        "type": "text",
+                        "label": "Nombre del origen",
+                        "required": true,
+                        "max_length": 120,
+                        "description": "Canal o fuente concreta.",
+                        "placeholder": "WhatsApp, contacto directo, anuncio, otro"
+                      },
+                      {
+                        "id": "problem_reported",
+                        "type": "textarea",
+                        "label": "Problema reportado",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué necesidad describió el cliente.",
+                        "placeholder": "Fuga, enchufe, pintura, otro"
+                      },
+                      {
+                        "id": "next_step",
+                        "type": "single_select",
+                        "label": "Siguiente paso",
+                        "options": [
+                          {
+                            "label": "Enviar cotización",
+                            "value": "quote"
+                          },
+                          {
+                            "label": "Llamar",
+                            "value": "call"
+                          },
+                          {
+                            "label": "Visita",
+                            "value": "visit"
+                          },
+                          {
+                            "label": "No encaja",
+                            "value": "no_fit"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Qué se hizo con esa respuesta."
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Canal o contacto de donde llegó."
+                  }
+                ],
+                "version": 1,
+                "description": "Registra las respuestas obtenidas y su origen.",
+                "capture_type": "response_tracking",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Registro de cada respuesta recibida con origen identificado y tipo de problema consultado.",
+              "estimated_hours": 2,
+              "expected_result": "Se obtiene evidencia sobre si existe tracción inicial y desde dónde llega.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Crear una plantilla mínima para registrar cotización, origen y resultado de cada consulta",
+              "reason": "Si llegan consultas, hace falta distinguir interés de venta; esta plantilla convierte respuestas en evidencia utilizable para decisiones futuras.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "lead_follow_up",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "El negocio necesita medir qué pasa después de la consulta para no confundir interés con ventas.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "No perder aprendizaje comercial después del contacto inicial.",
+              "action_type": "generic",
+              "role_reason": "El dueño es quien cotiza y necesita una herramienta simple para no perder trazabilidad; es una tarea corta y estratégica.",
+              "capture_schema": {
+                "title": "Plantilla de seguimiento de consultas",
+                "fields": [
+                  {
+                    "id": "lead_source",
+                    "type": "text",
+                    "label": "Fuente del lead",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "De dónde vino la consulta.",
+                    "placeholder": "WhatsApp, anuncio, referido, otro"
+                  },
+                  {
+                    "id": "service_requested",
+                    "type": "text",
+                    "label": "Servicio solicitado",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "Qué pidió el cliente.",
+                    "placeholder": "Electricidad, pintura, reparación"
+                  },
+                  {
+                    "id": "quote_status",
+                    "type": "single_select",
+                    "label": "Estado de cotización",
+                    "options": [
+                      {
+                        "label": "Pendiente",
+                        "value": "pending"
+                      },
+                      {
+                        "label": "Enviada",
+                        "value": "sent"
+                      },
+                      {
+                        "label": "Aceptada",
+                        "value": "accepted"
+                      },
+                      {
+                        "label": "Rechazada",
+                        "value": "rejected"
+                      }
+                    ],
+                    "required": true,
+                    "description": "En qué punto quedó la cotización."
+                  },
+                  {
+                    "id": "final_result",
+                    "type": "textarea",
+                    "label": "Resultado final",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué ocurrió al cierre.",
+                    "placeholder": "No respondió, aceptó, rechazó, agendó visita"
+                  }
+                ],
+                "version": 1,
+                "description": "Estructura mínima para registrar cada consulta y su estado.",
+                "capture_type": "lead_follow_up",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Plantilla lista para usar con campos de origen, tipo de trabajo, estado de cotización y resultado final.",
+              "estimated_hours": 1,
+              "expected_result": "La semana deja una base de seguimiento que evita confundir actividad con resultado.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene dedicar la semana a probar una oferta simple y registrar de forma fiable el origen de cada consulta para descubrir el primer canal útil?",
+            "rationale": "En un negocio local de cobro por trabajo, la decisión más valiosa ahora es aprender qué entrada genera consultas reales; sin esa señal no se puede construir una cartera de clientes fijos.",
+            "target_metric": "consultas entrantes calificadas",
+            "expected_outcome": "Obtener una primera lectura confiable de qué entrada comercial merece repetirse y empezar a ordenar el flujo de consultas.",
+            "recommended_direction": "Sí: concentrar la semana en una prueba mínima de adquisición y registro, usando un canal accesible o existente si está disponible."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "main_problem": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                "customer_type": "QA · Contacto de la zona habitual",
+                "final_version": "QA sintético: Hola. ¿Te interesa confirmar el servicio en tu zona y conversar sobre horarios?",
+                "service_promise": "QA: Visita de diagnóstico para una reparación urgente en el hogar."
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "response_count": 1,
+                "response_source": [
+                  {
+                    "next_step": "quote",
+                    "source_name": "QA · Contacto de la zona habitual",
+                    "problem_reported": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+                  }
+                ]
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "lead_source": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico.",
+                "final_result": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                "quote_status": "pending",
+                "service_requested": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico."
+              }
+            }
+          ],
+          "resourceFeedbackPersisted": true,
+          "review": {
+            "id": "f86d905e-f71e-420c-9801-34297b56f29d",
+            "outcome_status": "no_change",
+            "decision_learning": {
+              "evidence": [
+                "No disponemos de evidencia de mercado."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si se ejecuta una prueba simple de adquisición con registro de origen, aparecerá al menos una señal útil sobre qué canal o mensaje merece repetirse.",
+              "target_metric": "consultas entrantes calificadas",
+              "observed_result": "No se obtuvieron resultados empresariales. No tengo redes sociales.",
+              "expected_outcome": "Obtener una primera lectura confiable de qué entrada comercial merece repetirse y empezar a ordenar el flujo de consultas.",
+              "decision_question": "¿Conviene dedicar la semana a probar una oferta simple y registrar de forma fiable el origen de cada consulta para descubrir el primer canal útil?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: concentrar la semana en una prueba mínima de adquisición y registro, usando un canal accesible o existente si está disponible.",
+              "evidence_assessment_note": "La revisión indica que aún faltan resultados o evidencia para validar la hipótesis.",
+              "reported_hypothesis_status": "validated"
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-2-generation",
+      "retry": {
+        "week": 1,
+        "planId": "7b52f782-77d2-494b-9072-ea860f3b5a90",
+        "status": "recovered"
+      },
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "El plan de semana 2 quedó en estado failed."
+    },
+    "limpieza": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Definir y redactar un mensaje local corto para ofrecer limpieza a vecinos de los dos barrios objetivo.",
+              "reason": "La decisión crítica requiere una prueba rápida del canal disponible; sin un mensaje claro no hay validación útil.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts",
+                  "whatsapp"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Se necesita una oferta textual para activar el canal disponible y aprender del mercado local.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener un texto claro que pueda enviarse por WhatsApp a contactos existentes.",
+              "action_type": "generic",
+              "role_reason": "El dueño necesita decidir el ángulo y la forma de pedir respuesta; eso no conviene delegarlo ni automatizarlo.",
+              "capture_schema": {
+                "title": "Mensaje local enviado",
+                "fields": [
+                  {
+                    "id": "message_text",
+                    "type": "textarea",
+                    "label": "Texto del mensaje",
+                    "required": true,
+                    "max_length": 800,
+                    "description": "Copiar el mensaje final enviado o listo para enviar.",
+                    "placeholder": "Escribe el texto exacto"
+                  },
+                  {
+                    "id": "target_barrio",
+                    "type": "text",
+                    "label": "Barrio objetivo",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "A qué barrio o zona se dirigió el mensaje.",
+                    "placeholder": "Barrio 1 / Barrio 2"
+                  },
+                  {
+                    "id": "response_count",
+                    "max": 999,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Número de respuestas",
+                    "required": true,
+                    "description": "Cuántas respuestas útiles recibió ese mensaje."
+                  },
+                  {
+                    "id": "response_pattern",
+                    "type": "textarea",
+                    "label": "Patrón observado",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Qué tipo de respuesta apareció con más frecuencia.",
+                    "placeholder": "Precio, confianza, interés, silencio, etc."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar el texto base usado y las señales de respuesta obtenidas.",
+                "capture_type": "local_offer_message",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Un mensaje listo para enviar, con propuesta entendible y llamada a respuesta.",
+              "estimated_hours": 1,
+              "expected_result": "Una oferta simple que permita medir interés real sin ruido.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Enviar el mensaje a un pequeño grupo de contactos cercanos y registrar qué respuesta concreta aparece.",
+              "reason": "La prioridad es validar demanda, no crear un sistema complejo; este contacto directo es la prueba más barata.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "existing_contacts",
+                  "whatsapp"
+                ],
+                "work_key": "commercial_outreach",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La validación del mensaje necesita exposición real a contactos locales para producir aprendizaje verificable.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Obtener señales reales de demanda en los barrios objetivo.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe manejar el contacto y detectar objeciones reales; eso requiere criterio comercial directo.",
+              "capture_schema": {
+                "title": "Respuestas de WhatsApp",
+                "fields": [
+                  {
+                    "id": "contact_type",
+                    "type": "single_select",
+                    "label": "Tipo de contacto",
+                    "options": [
+                      {
+                        "label": "Contacto existente",
+                        "value": "existing_contact"
+                      },
+                      {
+                        "label": "Vecino",
+                        "value": "neighbor"
+                      },
+                      {
+                        "label": "Referido",
+                        "value": "referral"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Relación con el contacto al que se escribió."
+                  },
+                  {
+                    "id": "messages_sent",
+                    "max": 999,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Mensajes enviados",
+                    "required": true,
+                    "description": "Cantidad de mensajes enviados en esta ronda."
+                  },
+                  {
+                    "id": "responses",
+                    "type": "repeatable_group",
+                    "label": "Respuestas recibidas",
+                    "fields": [
+                      {
+                        "id": "response_type",
+                        "type": "single_select",
+                        "label": "Tipo de respuesta",
+                        "options": [
+                          {
+                            "label": "Interesado",
+                            "value": "interested"
+                          },
+                          {
+                            "label": "Pidió precio",
+                            "value": "asked_price"
+                          },
+                          {
+                            "label": "Pidió agenda",
+                            "value": "asked_schedule"
+                          },
+                          {
+                            "label": "No interesado",
+                            "value": "not_interested"
+                          },
+                          {
+                            "label": "Sin respuesta",
+                            "value": "no_reply"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Qué respondió la persona."
+                      },
+                      {
+                        "id": "response_summary",
+                        "type": "textarea",
+                        "label": "Resumen",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué dijo o hizo concretamente.",
+                        "placeholder": "Resumen breve"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Lista breve de respuestas útiles obtenidas."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar a quién se escribió y qué respondió.",
+                "capture_type": "whatsapp_outreach",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Respuestas registradas de contactos reales, aunque sean pocas.",
+              "estimated_hours": 2,
+              "expected_result": "Evidencia sobre si el problema es falta de interés, falta de claridad o falta de confianza.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Revisar las respuestas y decidir si el canal WhatsApp merece una segunda iteración o si hay que cambiar el ángulo comercial.",
+              "reason": "La evidencia importa solo si cambia una decisión; esta revisión evita repetir actividad sin aprendizaje.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [
+                  "existing_contacts",
+                  "whatsapp"
+                ],
+                "work_key": "commercial_outreach",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La revisión transforma respuestas reales en una decisión estratégica sobre el siguiente movimiento.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Convertir respuestas en una decisión sobre la dirección comercial siguiente.",
+              "action_type": "generic",
+              "role_reason": "La decisión depende de interpretar objeciones reales y del criterio del dueño sobre su capacidad comercial.",
+              "capture_schema": {
+                "title": "Decisión sobre el canal",
+                "fields": [
+                  {
+                    "id": "observed_signal",
+                    "type": "textarea",
+                    "label": "Señal observada",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Qué patrón de respuesta apareció.",
+                    "placeholder": "Interés, precio, silencio, objeciones"
+                  },
+                  {
+                    "id": "decision_type",
+                    "type": "single_select",
+                    "label": "Tipo de decisión",
+                    "options": [
+                      {
+                        "label": "Continuar",
+                        "value": "continue"
+                      },
+                      {
+                        "label": "Ajustar",
+                        "value": "adjust"
+                      },
+                      {
+                        "label": "Cambiar",
+                        "value": "change"
+                      },
+                      {
+                        "label": "Pausar",
+                        "value": "pause"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué se decidió hacer con el canal."
+                  },
+                  {
+                    "id": "reason_for_decision",
+                    "type": "textarea",
+                    "label": "Razón de la decisión",
+                    "required": true,
+                    "max_length": 600,
+                    "description": "Por qué esa señal justificó la decisión.",
+                    "placeholder": "Explica el criterio"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué se observó y qué decisión se tomó.",
+                "capture_type": "decision_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Una decisión explícita basada en las respuestas observadas.",
+              "estimated_hours": 1,
+              "expected_result": "Claridad sobre si continuar, ajustar o abandonar el mensaje actual.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos enfocarnos esta semana en probar un mensaje/oferta local muy simple por WhatsApp a contactos existentes, o en construir otro canal antes de validar demanda?",
+            "rationale": "Es el canal disponible, el de menor costo y el más alineado con un negocio local de baja capacidad administrativa. Permite aprender rápido si hay interés real sin dispersar tiempo en canales que hoy no están disponibles.",
+            "target_metric": "Consultas calificadas o respuestas útiles provenientes de contactos/WhatsApp.",
+            "expected_outcome": "Obtener señales reales de interés local: consultas, respuestas o pedidos de cotización que indiquen si el mercado responde al servicio en los dos barrios.",
+            "recommended_direction": "Probar primero un mensaje/oferta local simple por WhatsApp con contactos existentes."
+          },
+          "continuity": null,
+          "executions": []
+        }
+      ],
+      "stage": "week-1-action-1",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "locator.waitFor: Error: strict mode violation: locator('dialog').filter({ hasText: 'Resultado de la acción' }) resolved to 2 elements:"
+    },
+    "cafe-horizonte": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Mapear los cobros y pagos que vencen en los próximos días y decidir cuáles se atienden primero.",
+              "reason": "La decisión crítica exige saber qué entra y qué sale antes de seguir operando igual.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp"
+                ],
+                "work_key": "collections",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Antes de vender más o cambiar la oferta, el negocio necesita saber exactamente qué pagos y cobros sostienen la caja.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener una lista operativa de caja para evitar decisiones improvisadas.",
+              "action_type": "generic",
+              "role_reason": "Solo el dueño puede validar prioridades de pago y negociar compromisos sensibles.",
+              "capture_schema": {
+                "title": "Mapa de caja semanal",
+                "fields": [
+                  {
+                    "id": "critical_payments",
+                    "type": "repeatable_group",
+                    "label": "Pagos críticos identificados",
+                    "fields": [
+                      {
+                        "id": "payment_name",
+                        "type": "text",
+                        "label": "Nombre del pago",
+                        "required": true,
+                        "max_length": 120,
+                        "placeholder": "Alquiler, proveedor, nómina"
+                      },
+                      {
+                        "id": "due_date",
+                        "type": "text",
+                        "label": "Fecha de vencimiento",
+                        "required": true,
+                        "max_length": 40,
+                        "placeholder": "Día/fecha"
+                      },
+                      {
+                        "id": "amount",
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto",
+                        "required": true
+                      },
+                      {
+                        "id": "decision",
+                        "type": "single_select",
+                        "label": "Decisión tomada",
+                        "options": [
+                          {
+                            "label": "Pagar ahora",
+                            "value": "pay_now"
+                          },
+                          {
+                            "label": "Diferir",
+                            "value": "delay"
+                          },
+                          {
+                            "label": "Negociar",
+                            "value": "negotiate"
+                          }
+                        ],
+                        "required": true
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Lista de pagos que vencen y su monto."
+                  },
+                  {
+                    "id": "critical_receivables",
+                    "type": "repeatable_group",
+                    "label": "Cobros críticos identificados",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "text",
+                        "label": "Tipo de cliente",
+                        "required": true,
+                        "max_length": 80,
+                        "placeholder": "Empresa, vecino, comercio"
+                      },
+                      {
+                        "id": "amount",
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto esperado",
+                        "required": true
+                      },
+                      {
+                        "id": "expected_date",
+                        "type": "text",
+                        "label": "Fecha esperada",
+                        "required": true,
+                        "max_length": 40,
+                        "placeholder": "Día/fecha"
+                      },
+                      {
+                        "id": "collection_status",
+                        "type": "single_select",
+                        "label": "Estado de cobro",
+                        "options": [
+                          {
+                            "label": "Confirmado",
+                            "value": "confirmed"
+                          },
+                          {
+                            "label": "Probable",
+                            "value": "probable"
+                          },
+                          {
+                            "label": "Incierto",
+                            "value": "uncertain"
+                          }
+                        ],
+                        "required": true
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Cobros esperados y probabilidad de cobro."
+                  },
+                  {
+                    "id": "cash_shortfall",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Brecha de caja estimada",
+                    "required": true,
+                    "description": "Diferencia entre caja disponible y pagos urgentes."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar lo que vence y la decisión tomada sobre cada compromiso.",
+                "capture_type": "cashflow_prioritization",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Lista priorizada de cobros y pagos críticos con decisión explícita sobre cada uno.",
+              "estimated_hours": 2,
+              "expected_result": "Mayor control del efectivo y menor probabilidad de sorpresa de caja.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Contactar por WhatsApp a los clientes o empresas con cobros pendientes para adelantar efectivo o confirmar fecha exacta de pago.",
+              "reason": "WhatsApp está disponible y es el canal más rápido para convertir cuentas por cobrar en liquidez.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "lead_follow_up",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La caja mejora si al menos parte de los cobros pendientes se convierte en compromiso verificable de pago.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Transformar ventas pendientes en caja más rápida.",
+              "action_type": "generic",
+              "role_reason": "La negociación de cobro requiere criterio del dueño y puede destrabar caja de inmediato.",
+              "capture_schema": {
+                "title": "Seguimiento de cobros por WhatsApp",
+                "fields": [
+                  {
+                    "id": "contacts",
+                    "type": "repeatable_group",
+                    "label": "Cobros contactados",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "text",
+                        "label": "Tipo de cliente",
+                        "required": true,
+                        "max_length": 80,
+                        "placeholder": "Empresa, comercio, cliente recurrente"
+                      },
+                      {
+                        "id": "amount",
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto pendiente",
+                        "required": true
+                      },
+                      {
+                        "id": "response",
+                        "type": "textarea",
+                        "label": "Respuesta obtenida",
+                        "required": true,
+                        "max_length": 500,
+                        "placeholder": "Prometió pago, pidió plazo, no respondió"
+                      },
+                      {
+                        "id": "next_step",
+                        "type": "single_select",
+                        "label": "Siguiente paso",
+                        "options": [
+                          {
+                            "label": "Esperar",
+                            "value": "wait"
+                          },
+                          {
+                            "label": "Hacer nuevo seguimiento",
+                            "value": "follow_up"
+                          },
+                          {
+                            "label": "Confirmar pago",
+                            "value": "confirm_payment"
+                          },
+                          {
+                            "label": "Escalar o renegociar",
+                            "value": "escalate"
+                          }
+                        ],
+                        "required": true
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 3,
+                    "description": "Cada cobro pendiente con su resultado."
+                  },
+                  {
+                    "id": "confirmed_amount",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Monto confirmado para esta semana",
+                    "required": true,
+                    "description": "Suma de pagos con fecha o compromiso concreto."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar el resultado real de cada contacto de cobro.",
+                "capture_type": "collections_followup",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Cobros contactados, respuesta obtenida y fecha o monto de pago confirmado por cada caso.",
+              "estimated_hours": 3,
+              "expected_result": "Señal clara de qué ingresos pueden entrar esta semana y cuáles no.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Redactar dos mensajes de WhatsApp distintos para pedir pago y acelerar respuesta sin sonar genérico.",
+              "reason": "Un mensaje mejor diseñado puede mejorar cobro sin costo y con poco tiempo del dueño.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "build",
+                "requires": [
+                  "whatsapp"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": "commercial_messages",
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Para cobrar rápido, hace falta un texto claro y usable que apoye la negociación de liquidez.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Aumentar la probabilidad de cobro rápido con mensajes más claros y directos.",
+              "action_type": "commercial_messages",
+              "role_reason": "El dueño debe validar el tono y la prioridad comercial antes de enviarlos.",
+              "capture_schema": {
+                "title": "Mensajes de cobro listos",
+                "fields": [
+                  {
+                    "id": "message_variants",
+                    "type": "repeatable_group",
+                    "label": "Variantes del mensaje",
+                    "fields": [
+                      {
+                        "id": "message_angle",
+                        "type": "single_select",
+                        "label": "Ángulo del mensaje",
+                        "options": [
+                          {
+                            "label": "Recordatorio cordial",
+                            "value": "friendly_reminder"
+                          },
+                          {
+                            "label": "Pedido directo de pago",
+                            "value": "direct_request"
+                          },
+                          {
+                            "label": "Confirmación de fecha de pago",
+                            "value": "confirm_date"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "message_text",
+                        "type": "textarea",
+                        "label": "Texto del mensaje",
+                        "required": true,
+                        "max_length": 1200,
+                        "placeholder": "Escribe el mensaje completo"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 2,
+                    "min_items": 2,
+                    "description": "Dos mensajes distintos preparados para enviar."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar dos variantes de mensaje para uso inmediato.",
+                "capture_type": "payment_messages",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "ai_assisted",
+              "success_metric": "Dos versiones listas para enviar, cada una con un ángulo distinto de cobro y una llamada a acción clara.",
+              "estimated_hours": 1,
+              "expected_result": "Mayor tasa de respuesta y más fechas de pago confirmadas.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos concentrar la gestión semanal en acelerar cobros y priorizar pagos críticos, o en cambiar la estructura comercial antes de seguir operando igual?",
+            "rationale": "Con caja mínima y pagos próximos, la decisión útil es estabilizar el flujo antes de tocar la oferta o expandir. Es la forma más directa de reducir riesgo de incumplimiento.",
+            "target_metric": "caja disponible frente a pagos próximos",
+            "expected_outcome": "Mayor visibilidad de cobros próximos y una base mínima para enfrentar vencimientos sin improvisar.",
+            "recommended_direction": "Concentrar esta semana en recuperar liquidez: cobrar más rápido, ordenar vencimientos y proteger caja."
+          },
+          "continuity": null,
+          "executions": []
+        }
+      ],
+      "stage": "week-1-action-1",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "locator.waitFor: Error: strict mode violation: locator('dialog').filter({ hasText: 'Resultado de la acción' }) resolved to 2 elements:"
+    },
+    "nova-studio": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Redactar una propuesta de valor breve y específica para el estudio, enfocada en el problema que resuelve y para quién.",
+              "reason": "Sin un mensaje claro no se puede validar la demanda ni mejorar el seguimiento con coherencia.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "build",
+                "requires": [],
+                "work_key": "offer_definition",
+                "deliverable": "value_proposition",
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Es el prerrequisito lógico para cualquier validación comercial posterior.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Aterrizar un posicionamiento comercial usable.",
+              "action_type": "value_proposition",
+              "role_reason": "El propietario debe hacerlo porque define la venta y el criterio comercial; no es delegable sin perder aprendizaje.",
+              "capture_schema": {
+                "title": "Propuesta de valor operativa",
+                "fields": [
+                  {
+                    "id": "target_customer",
+                    "type": "text",
+                    "label": "Cliente objetivo",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "Tipo de cliente al que se dirige la propuesta.",
+                    "placeholder": "Pequeñas empresas de servicios..."
+                  },
+                  {
+                    "id": "problem_solved",
+                    "type": "textarea",
+                    "label": "Problema principal que resuelve",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Dolor concreto que la oferta aborda.",
+                    "placeholder": "..."
+                  },
+                  {
+                    "id": "value_statement",
+                    "type": "textarea",
+                    "label": "Propuesta de valor",
+                    "required": true,
+                    "max_length": 400,
+                    "description": "Frase breve que se usará con contactos.",
+                    "placeholder": "..."
+                  },
+                  {
+                    "id": "differentiator",
+                    "type": "textarea",
+                    "label": "Diferenciador",
+                    "required": true,
+                    "max_length": 250,
+                    "description": "Qué hace distinta esta propuesta frente a alternativas comunes.",
+                    "placeholder": "..."
+                  }
+                ],
+                "version": 1,
+                "description": "Captura la versión final usada para la prueba comercial.",
+                "capture_type": "value_proposition_definition",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "ai_assisted",
+              "success_metric": "Una versión escrita de la propuesta de valor lista para usar en conversación y seguimiento.",
+              "estimated_hours": 2,
+              "expected_result": "Queda una base concreta para probar el mercado sin seguir cambiando mensajes al azar.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Probar el mensaje con contactos existentes y registrar la reacción recibida.",
+              "reason": "Con el canal de recomendaciones y la base de contactos disponible, esta es la validación más barata y rápida del mensaje.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La prueba necesita la propuesta ya definida y contactos disponibles para validar respuesta real.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Obtener una señal real de interés comercial.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe observar directamente la reacción del mercado para aprender; no conviene delegar esa lectura.",
+              "capture_schema": {
+                "title": "Prueba comercial con contactos existentes",
+                "fields": [
+                  {
+                    "id": "contacted_count",
+                    "max": 1000,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos contactados",
+                    "required": true,
+                    "description": "Número de contactos realmente contactados."
+                  },
+                  {
+                    "id": "responses",
+                    "type": "repeatable_group",
+                    "label": "Respuestas recibidas",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "text",
+                        "label": "Tipo de contacto",
+                        "required": true,
+                        "max_length": 120,
+                        "description": "Perfil del contacto que respondió.",
+                        "placeholder": "cliente anterior, referido, prospecto activo"
+                      },
+                      {
+                        "id": "response",
+                        "type": "textarea",
+                        "label": "Respuesta observada",
+                        "required": true,
+                        "max_length": 400,
+                        "description": "Qué respondió o qué hizo el contacto.",
+                        "placeholder": "..."
+                      },
+                      {
+                        "id": "interest_level",
+                        "type": "single_select",
+                        "label": "Nivel de interés",
+                        "options": [
+                          {
+                            "label": "Alto",
+                            "value": "high"
+                          },
+                          {
+                            "label": "Medio",
+                            "value": "medium"
+                          },
+                          {
+                            "label": "Bajo",
+                            "value": "low"
+                          },
+                          {
+                            "label": "Nulo",
+                            "value": "none"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Cómo calificas la reacción."
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 5,
+                    "min_items": 1,
+                    "description": "Muestra de respuestas relevantes observadas."
+                  },
+                  {
+                    "id": "best_message_signal",
+                    "type": "textarea",
+                    "label": "Señal del mejor mensaje",
+                    "required": true,
+                    "max_length": 250,
+                    "description": "Qué versión generó la mejor reacción, si aplica.",
+                    "placeholder": "..."
+                  }
+                ],
+                "version": 1,
+                "description": "Registra la evidencia de respuesta del mercado.",
+                "capture_type": "commercial_test",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Registro de contactos contactados, respuestas obtenidas y cuál versión generó mejor interés.",
+              "estimated_hours": 3,
+              "expected_result": "Sabremos si el mensaje mejora la conversación o si sigue siendo demasiado genérico.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Tomar una decisión comercial sobre mantener, ajustar o simplificar el mensaje según la reacción observada.",
+              "reason": "Sin una decisión explícita, el negocio vuelve a cambiar mensajes sin aprender.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La decisión debe basarse en la reacción observada, no en intuición aislada.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Cerrar la semana con una decisión basada en evidencia.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe decidir porque la lectura de mercado define la estrategia comercial.",
+              "capture_schema": {
+                "title": "Decisión comercial de la semana",
+                "fields": [
+                  {
+                    "id": "decision_type",
+                    "type": "single_select",
+                    "label": "Tipo de decisión",
+                    "options": [
+                      {
+                        "label": "Mantener",
+                        "value": "maintain"
+                      },
+                      {
+                        "label": "Ajustar",
+                        "value": "adjust"
+                      },
+                      {
+                        "label": "Simplificar",
+                        "value": "simplify"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué se decidió hacer con el mensaje."
+                  },
+                  {
+                    "id": "decision_reason",
+                    "type": "textarea",
+                    "label": "Razón de la decisión",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Por qué se tomó esa decisión.",
+                    "placeholder": "..."
+                  },
+                  {
+                    "id": "evidence_used",
+                    "type": "textarea",
+                    "label": "Evidencia usada",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Qué respuestas o señales sostuvieron la decisión.",
+                    "placeholder": "..."
+                  }
+                ],
+                "version": 1,
+                "description": "Registra la decisión tomada después de la prueba.",
+                "capture_type": "decision_log",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Decisión escrita con la dirección comercial siguiente y la razón basada en la evidencia observada.",
+              "estimated_hours": 1,
+              "expected_result": "Se reduce la incertidumbre sobre el posicionamiento y se evita repetir pruebas débiles.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos priorizar esta semana una prueba comercial simple con contactos existentes para medir qué versión del mensaje genera interés, o enfocarnos primero en revisar el seguimiento?",
+            "rationale": "El negocio tiene poca demanda y un canal disponible sin coste adicional relevante; con poco tiempo del dueño, la forma más rápida de aprender es observar respuesta real al mensaje, no seguir reescribiéndolo en abstracto.",
+            "target_metric": "Respuestas cualificadas de contactos existentes y señal clara sobre qué mensaje genera más interés.",
+            "expected_outcome": "Aparecerá una señal inicial sobre si una propuesta más clara mejora el interés y ayuda a definir el siguiente ajuste comercial.",
+            "recommended_direction": "Probar un mensaje comercial más claro con contactos existentes y registrar la reacción real antes de cambiar más variables."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "ai_assisted",
+              "completionData": {
+                "differentiator": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre.",
+                "problem_solved": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre.",
+                "target_customer": "QA · Contacto de la zona habitual",
+                "value_statement": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre."
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "responses": [
+                  {
+                    "response": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre.",
+                    "customer_type": "QA · Contacto de la zona habitual",
+                    "interest_level": "high"
+                  }
+                ],
+                "contacted_count": 1,
+                "best_message_signal": "QA sintético: Hola. ¿Te interesa confirmar el servicio en tu zona y conversar sobre horarios?"
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "decision_type": "maintain",
+                "evidence_used": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre.",
+                "decision_reason": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre."
+              }
+            }
+          ],
+          "review": {
+            "id": "bc94f4c8-49fc-4d07-b841-96b9663fce44",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: tres contactos, dos respuestas y una llamada solicitada. La muestra es insuficiente para inferir conversión estable."
+              ],
+              "learning": "QA sintético: describir el resultado esperado generó mejores respuestas que enumerar herramientas. Conviene validar la señal con prospectos fuera de las recomendaciones.",
+              "hypothesis": "Si usamos un mensaje comercial más claro con contactos existentes, deberíamos ver respuestas más útiles para decidir si el posicionamiento va en la dirección correcta.",
+              "target_metric": "Respuestas cualificadas de contactos existentes y señal clara sobre qué mensaje genera más interés.",
+              "observed_result": "QA sintético: probamos una propuesta centrada en resultados con tres empresas de servicios. Dos respondieron y una pidió una llamada; todavía no hubo cierre.",
+              "expected_outcome": "Aparecerá una señal inicial sobre si una propuesta más clara mejora el interés y ayuda a definir el siguiente ajuste comercial.",
+              "decision_question": "¿Debemos priorizar esta semana una prueba comercial simple con contactos existentes para medir qué versión del mensaje genera interés, o enfocarnos primero en revisar el seguimiento?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Probar un mensaje comercial más claro con contactos existentes y registrar la reacción real antes de cambiar más variables."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-2-generation",
+      "retry": {
+        "week": 1,
+        "planId": "feb7104e-f88e-4d34-b117-4c039fb9f536",
+        "status": "recovered"
+      },
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "El plan de semana 2 quedó en estado failed."
+    },
+    "taller-andino": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Definir el listado mínimo de decisiones que el equipo puede tomar sin aprobación del dueño y las que siguen escalándose.",
+              "reason": "La dependencia del propietario es la restricción central; primero hay que separar decisiones repetitivas de decisiones críticas.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "delegate"
+                ],
+                "work_key": "owner_delegation",
+                "deliverable": null,
+                "period_week": null,
+                "progression": "new",
+                "justification": "El cuello de botella es la centralización del dueño; esta acción crea la base para resolverlo.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Crear un marco simple de delegación para quitar el cuello de botella principal.",
+              "action_type": "generic",
+              "role_reason": "Requiere criterio del dueño para decidir qué nivel de riesgo puede delegarse.",
+              "capture_schema": {
+                "title": "Reglas mínimas de delegación",
+                "fields": [
+                  {
+                    "id": "delegable_decisions",
+                    "type": "textarea",
+                    "label": "Decisiones delegables",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Lista breve de decisiones que el equipo puede tomar sin aprobación.",
+                    "placeholder": "Ej. compras menores, ajustes de secuencia, confirmaciones simples"
+                  },
+                  {
+                    "id": "reserved_decisions",
+                    "type": "textarea",
+                    "label": "Decisiones reservadas",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Lista breve de decisiones que siguen requiriendo al dueño.",
+                    "placeholder": "Ej. cotizaciones especiales, descuentos, compras excepcionales"
+                  },
+                  {
+                    "id": "risk_rule",
+                    "type": "text",
+                    "label": "Regla de escalamiento",
+                    "required": true,
+                    "max_length": 200,
+                    "description": "Criterio para decidir cuándo escalar un caso.",
+                    "placeholder": "Ej. si supera cierto monto o afecta fecha crítica"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué decisiones se delegan y cuáles no.",
+                "capture_type": "delegation_rules",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Lista escrita con decisiones delegables y decisiones reservadas, validada internamente.",
+              "estimated_hours": 2,
+              "expected_result": "El equipo gana claridad sobre qué puede resolver solo y cuándo escalar.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Redactar una regla simple de cotización y programación para pedidos estándar.",
+              "reason": "La cotización y la programación son parte del bloqueo operativo y afectan el ciclo del pedido.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [],
+                "work_key": "operations_measure",
+                "deliverable": null,
+                "period_week": null,
+                "progression": "new",
+                "justification": "La cotización y programación son parte del cuello de botella operativo y necesitan reglas mínimas.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Reducir el tiempo de respuesta y evitar que cada pedido dependa de una decisión improvisada.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe definir el umbral de decisión y qué casos se vuelven automáticos o delegables.",
+              "capture_schema": {
+                "title": "Regla básica de cotización y programación",
+                "fields": [
+                  {
+                    "id": "standard_order_criteria",
+                    "type": "textarea",
+                    "label": "Criterios de pedido estándar",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Qué condiciones hacen que un pedido siga la regla normal.",
+                    "placeholder": "Tipo de pedido, rango de tamaño, acabado simple, etc."
+                  },
+                  {
+                    "id": "pricing_inputs",
+                    "type": "textarea",
+                    "label": "Inputs de precio",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Variables mínimas que se usarán para cotizar.",
+                    "placeholder": "Materiales, acabado, tiempo estimado, instalación"
+                  },
+                  {
+                    "id": "scheduling_rule",
+                    "type": "text",
+                    "label": "Regla de programación",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Cómo se asigna fecha o secuencia de producción.",
+                    "placeholder": "Ej. se programa según capacidad semanal y prioridad comercial"
+                  }
+                ],
+                "version": 1,
+                "description": "Definir cómo se maneja un pedido estándar.",
+                "capture_type": "quotation_scheduling_rule",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Regla escrita con criterios básicos para cotizar y programar pedidos estándar.",
+              "estimated_hours": 2,
+              "expected_result": "Menos esperas para cotizar y más consistencia en el flujo de pedidos.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Probar durante la semana una sola decisión operativa delegada y registrar qué pasó.",
+              "reason": "La hipótesis debe probarse con evidencia real, no solo con documentos.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "delegate"
+                ],
+                "work_key": "owner_delegation",
+                "deliverable": null,
+                "period_week": null,
+                "progression": "new",
+                "justification": "La delegación solo vale si funciona en un caso real; esta prueba valida la hipótesis.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Validar si el equipo puede ejecutar sin el dueño en un caso real.",
+              "action_type": "generic",
+              "role_reason": "La validación requiere observar el comportamiento real del equipo y del negocio.",
+              "capture_schema": {
+                "title": "Prueba de decisión delegada",
+                "fields": [
+                  {
+                    "id": "case_description",
+                    "type": "textarea",
+                    "label": "Descripción del caso",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Qué decisión se delegó.",
+                    "placeholder": "Describe el pedido o situación"
+                  },
+                  {
+                    "id": "decision_taken",
+                    "type": "textarea",
+                    "label": "Decisión tomada",
+                    "required": true,
+                    "max_length": 2000,
+                    "description": "Qué resolvió el equipo sin el dueño.",
+                    "placeholder": "Qué se hizo exactamente"
+                  },
+                  {
+                    "id": "result_observed",
+                    "type": "single_select",
+                    "label": "Resultado observado",
+                    "options": [
+                      {
+                        "label": "Funcionó",
+                        "value": "worked"
+                      },
+                      {
+                        "label": "Funcionó parcialmente",
+                        "value": "partially_worked"
+                      },
+                      {
+                        "label": "No funcionó",
+                        "value": "did_not_work"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué ocurrió después de la decisión."
+                  },
+                  {
+                    "id": "owner_intervention_needed",
+                    "type": "single_select",
+                    "label": "¿Se necesitó intervención del dueño?",
+                    "options": [
+                      {
+                        "label": "No",
+                        "value": "no"
+                      },
+                      {
+                        "label": "Sí",
+                        "value": "yes"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Indica si el dueño tuvo que intervenir."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar un caso real y su resultado.",
+                "capture_type": "delegated_case_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Al menos un caso real resuelto sin intervención directa del dueño, con resultado registrado.",
+              "estimated_hours": 1.5,
+              "expected_result": "Se obtiene una señal concreta sobre autonomía operativa real.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene construir esta semana un esquema mínimo de delegación y reglas operativas para que el equipo tome decisiones repetitivas sin esperar al propietario?",
+            "rationale": "El negocio ya vende, pero su crecimiento está limitado por la intervención obligatoria del dueño. Si se reduce esa dependencia ahora, mejora el flujo de pedidos y se protege el cumplimiento de entregas.",
+            "target_metric": "Menor necesidad de aprobación del propietario en las decisiones rutinarias del taller.",
+            "expected_outcome": "Menos bloqueos por ausencia del dueño y mayor continuidad operativa en compras, cotización y programación.",
+            "recommended_direction": "Sí; simplificar y delegar decisiones rutinarias antes de intentar aceptar más pedidos."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "risk_rule": "2026-11-27",
+                "reserved_decisions": "QA sintético: se midieron cinco pedidos. Tres se detuvieron esperando aprobación de materiales. El equipo liberó una compra estándar con un límite aprobado.",
+                "delegable_decisions": "QA sintético: se midieron cinco pedidos. Tres se detuvieron esperando aprobación de materiales. El equipo liberó una compra estándar con un límite aprobado."
+              }
+            }
+          ]
+        }
+      ],
+      "stage": "week-1-action-2",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 325,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 335,
+              "bottom": 691,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 632,
+              "bottom": 676,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 720,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 325,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 335,
+              "bottom": 691,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 632,
+              "bottom": 676,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 368,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 380,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 368,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 380,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "locator.waitFor: Error: strict mode violation: locator('dialog').filter({ hasText: 'Resultado de la acción' }) resolved to 2 elements:"
+    }
+  },
+  "finishedAt": "2026-11-25T02:12:53.390Z"
+}

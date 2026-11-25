@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v6-strategic-intelligence";
+const PROMPT_VERSION = "v7-strategic-reliability";
 
 const EVIDENCE_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
@@ -461,10 +461,12 @@ if (latestPlan?.status === "generating") {
    */
 
   let generatedPlanOutput: CEOPlan | null = null;
+  let phase = "context";
 
   try {
 
     let previousWeek: GenerateCEOPlanInput["previousWeek"] = null;
+    let previousFeedback: Parameters<typeof loadStrategicContext>[5];
 
   if (contextPlanId) {
     const {
@@ -550,6 +552,8 @@ if (latestPlan?.status === "generating") {
       .from("weekly_reviews")
       .select(
         `
+          id,
+          created_at,
           what_worked,
           what_didnt_work,
           business_changes,
@@ -580,6 +584,15 @@ if (latestPlan?.status === "generating") {
         "La semana anterior no tiene una revisión válida.",
       );
     }
+    previousFeedback = {
+      id: contextReview.id, type: "weekly_review", observedAt: contextReview.created_at,
+      fields: {
+        observed_result: contextReview.outcome_summary, what_worked: contextReview.what_worked,
+        difficulty: contextReview.what_didnt_work, changes: contextReview.business_changes,
+        next_week_focus: contextReview.next_week_focus,
+        evidence: contextReview.decision_learning?.evidence, learning: contextReview.decision_learning?.learning,
+      },
+    };
 
     const previousDecisionLearning =
       contextReview.decision_learning === null
@@ -780,8 +793,10 @@ if (latestPlan?.status === "generating") {
     const { knowledge: businessKnowledge, context: strategicContext } = await loadStrategicContext(
       supabase, business.id, weekNumber, businessEvidence ?? [],
       [business.description, diagnostic.main_challenge, diagnostic.sales_process].filter(Boolean).join(". "),
+      previousFeedback,
     );
 
+    phase = "generation";
     const output = await generateCEOPlan({
       business: {
         name: business.name,
@@ -827,9 +842,13 @@ if (latestPlan?.status === "generating") {
       previousWeek,
       businessKnowledge,
       strategicContext,
-    });
+    }, undefined, ({ issues, ...attempt }) => console.info("CEO_PLAN_ATTEMPT " + JSON.stringify({
+      week: weekNumber, promptVersion: PROMPT_VERSION, ...attempt,
+      issues: issues.map(({ category, path }) => ({ category, path })),
+    })));
 
     generatedPlanOutput = output;
+    phase = "persistence";
 
     const { error: completePlanError } =
       await supabase.rpc("complete_ceo_plan", {
@@ -850,11 +869,18 @@ if (latestPlan?.status === "generating") {
         "persistence",
         "CEO_PLAN_PERSISTENCE_ERROR",
         "No se pudo guardar el plan completo.",
+        [completePlanError.code ?? "database"],
+        [completePlanError.hint ?? "Verifica el contrato de persistencia."],
       );
     }
   } catch (error) {
-    const safeError = safeCEOPlanLog(error);
-    console.error("CEO_PLAN_GENERATION_ERROR", safeError);
+    const safeError = safeCEOPlanLog(phase === "context" && !(error instanceof CEOPlanError)
+      ? new CEOPlanError("context", "CEO_PLAN_CONTEXT_LOAD_FAILED", "No se pudo cargar el contexto estratégico.")
+      : error);
+    console.error("CEO_PLAN_GENERATION_ERROR " + JSON.stringify({
+      week: weekNumber, phase, code: safeError.code, kind: safeError.kind,
+      categories: safeError.categories, paths: safeError.issuePaths,
+    }));
     if (safeError.code === "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID") {
       console.error("CEO_PLAN_STRUCTURAL_OUTPUT_INVALID", {
         issue_paths: safeError.issuePaths,
@@ -880,7 +906,9 @@ if (latestPlan?.status === "generating") {
 
     redirect(
       dashboardError(
-        "No pudimos generar el plan. Puedes intentarlo nuevamente.",
+        weekNumber > 1
+          ? "Tu revisión sigue guardada. No pudimos preparar el siguiente plan. Puedes intentarlo nuevamente."
+          : "No pudimos preparar un plan válido. Puedes intentarlo nuevamente.",
       ),
     );
   }

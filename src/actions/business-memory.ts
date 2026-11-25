@@ -30,14 +30,21 @@ export async function saveBusinessResource(formData: FormData) {
   if (businessError || !business) redirect("/business-context?status=error");
 
   const { resource, availability, detail } = parsed.data;
+  const feedback = await supabase.rpc("business_memory_as_of", { p_business_id: business.id })
+    .eq("memory_key", "feedback." + resource).maybeSingle();
+  if (feedback.error) redirect("/business-context?status=error");
+  const feedbackId = z.object({ id: z.uuid() }).safeParse(feedback.data).data?.id;
   const category = availability === "unavailable" ? "constraint"
     : availability === "unknown" ? "fact" : resource === "delegate" ? "capability" : "asset";
   const { error } = await supabase.rpc("record_business_memory", {
     p_business_id: business.id,
     p_memory_key: resource,
     p_category: category,
-    p_content: { label: resourceLabels[resource], availability, detail },
-    p_confirmation: "declared",
+    p_content: {
+      label: resourceLabels[resource], availability, detail,
+      ...(feedbackId ? { acknowledged_feedback_id: feedbackId } : {}),
+    },
+    p_confirmation: feedbackId && availability !== "unknown" ? "confirmed" : "declared",
   });
   if (error) redirect("/business-context?status=error");
 

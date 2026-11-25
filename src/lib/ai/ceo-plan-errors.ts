@@ -4,8 +4,15 @@ export type CEOPlanErrorKind =
   | "configuration"
   | "structural"
   | "semantic"
+  | "context"
   | "transient"
   | "persistence";
+
+export type PlanIssue = {
+  category: "structure" | "reference" | "feasibility" | "progression" | "capacity" | "coherence" | "capture" | "deliverable" | "provider";
+  path: string;
+  message: string;
+};
 
 export class CEOPlanError extends Error {
   constructor(
@@ -14,6 +21,7 @@ export class CEOPlanError extends Error {
     message: string,
     public readonly issuePaths: string[] = [],
     public readonly issueMessages: string[] = [],
+    public readonly issues: PlanIssue[] = [],
   ) {
     super(message);
     this.name = "CEOPlanError";
@@ -44,6 +52,10 @@ export function toSafeCEOPlanError(
       "El output del CEO IA no coincide con el contrato estructural.",
       validationDetails.issuePaths,
       validationDetails.issueMessages,
+      validationDetails.issuePaths.map((path, index) => ({
+        path, category: path.includes("capture_schema") ? "capture" : "structure",
+        message: validationDetails.issueMessages[index],
+      })),
     );
   }
 
@@ -51,6 +63,7 @@ export function toSafeCEOPlanError(
     "transient",
     "CEO_PLAN_MODEL_REQUEST_FAILED",
     "Falló la solicitud al modelo del CEO IA.",
+    [], [], [{ category: "provider", path: "provider", message: "La solicitud al proveedor no produjo un plan evaluable." }],
   );
 }
 
@@ -86,5 +99,6 @@ export function safeCEOPlanLog(error: unknown) {
     kind: normalized.kind,
     issuePaths: normalized.issuePaths,
     issueMessages: normalized.issueMessages,
+    categories: [...new Set(normalized.issues.map((issue) => issue.category))],
   };
 }

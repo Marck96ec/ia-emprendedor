@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { saveBusinessResource } from "@/actions/business-memory";
-import { resourceLabels, type Availability } from "@/lib/business-memory";
+import { OperationalResourceSchema, resourceLabels, resourceObservation, type Availability } from "@/lib/business-memory";
 import { loadBusinessMemory } from "@/lib/strategic-context-server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,17 +37,24 @@ export default async function BusinessContextPage({ searchParams }: {
       {status === "saved" && <p role="status" className="success-box">Disponibilidad guardada.</p>}
       {(status === "error" || status === "invalid") && <p role="alert" className="alert-box">Revisa la disponibilidad y vuelve a guardar.</p>}
       <div className="grid gap-3 sm:grid-cols-2">
-        {Object.entries(resourceLabels).map(([key, label]) => {
-          const entry = memory.find((item) => item.memory_key === key);
+        {OperationalResourceSchema.options.map((key) => {
+          const label = resourceLabels[key];
+          const { declared, feedback, availability, needsConfirmation } = resourceObservation(memory, key);
           return (
             <form key={key} action={saveBusinessResource} className="command-card flex flex-col gap-2 p-4">
               <input type="hidden" name="resource" value={key} />
               <label className="text-sm font-semibold text-[var(--executive-blue)]" htmlFor={key}>{label}</label>
-              <select id={key} name="availability" className="form-field" defaultValue={entry?.content.availability ?? "unknown"}>
+              {feedback?.content.feedback && (
+                <p className="text-sm text-slate-700">
+                  {needsConfirmation ? "Confirma si este recurso está disponible." : "Lo indicaste en un resultado o en tu revisión."}
+                  {" "}<q>{feedback.content.feedback.quote}</q>
+                </p>
+              )}
+              <select id={key} name="availability" className="form-field" defaultValue={needsConfirmation ? "unknown" : availability}>
                 {Object.entries(labels).map(([value, title]) => <option key={value} value={value}>{title}</option>)}
               </select>
               <label htmlFor={key + "-detail"} className="text-xs text-slate-700">Detalle opcional</label>
-              <input id={key + "-detail"} name="detail" maxLength={400} className="form-field" defaultValue={entry?.content.detail ?? ""} />
+              <input id={key + "-detail"} name="detail" maxLength={400} className="form-field" defaultValue={declared?.content.detail ?? ""} />
               <button type="submit" className="secondary-button mt-1 min-h-11 w-fit text-sm">Guardar disponibilidad</button>
             </form>
           );

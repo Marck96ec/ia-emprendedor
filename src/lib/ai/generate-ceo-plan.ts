@@ -13,9 +13,9 @@ import {
 import type { BusinessKnowledge } from "../business-knowledge-types";
 import {
   CEOPlanError,
-  isInvalidCEOPlanOutputError,
   isRetryableCEOPlanError,
   toSafeCEOPlanError,
+  type PlanIssue,
 } from "./ceo-plan-errors";
 import { parseActionCaptureModel } from "../action-capture";
 import type { StrategicContinuity } from "../strategic-continuity";
@@ -27,6 +27,19 @@ const MAX_GENERATION_ATTEMPTS = 2;
 
 type CEOPlanRunResult = {
   finalOutput?: unknown;
+  rawResponses?: Array<{ usage?: { inputTokens: number; outputTokens: number } }>;
+  outputError?: { error: unknown; candidate?: unknown };
+};
+
+export type GenerationAttempt = {
+  attempt: number;
+  status: "accepted" | "rejected";
+  durationMs: number;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  repairs: string[];
+  issues: PlanIssue[];
+  errorCode?: string;
 };
 
 export type CEOPlanRunner = (
@@ -34,10 +47,42 @@ export type CEOPlanRunner = (
   prompt: string,
 ) => Promise<CEOPlanRunResult>;
 
-const defaultCEOPlanRunner: CEOPlanRunner = (
+const defaultCEOPlanRunner: CEOPlanRunner = async (
   agent,
   prompt,
-) => run(agent, prompt) as Promise<CEOPlanRunResult>;
+) => {
+  let rejected: CEOPlanRunResult | undefined;
+  try {
+    return await run(agent, prompt, {
+      maxTurns: 1,
+      errorHandlers: {
+        invalidFinalOutput: ({ error, runData }) => {
+          const rawText = runData.rawResponses.at(-1)?.output.flatMap((item) =>
+            item.type === "message" && item.role === "assistant"
+              ? item.content.filter((part) => part.type === "output_text").map((part) => part.text)
+              : []).at(-1);
+          let candidate: unknown;
+          if (rawText && rawText.length <= 20000) {
+            try {
+              candidate = JSON.parse(rawText);
+            } catch {
+              // An unreadable output can still be retried using the structural error.
+            }
+          }
+          const classified = toSafeCEOPlanError(error);
+          rejected = {
+            rawResponses: runData.rawResponses,
+            outputError: { candidate, error: classified.kind === "structural" ? classified
+              : new CEOPlanError("structural", "CEO_PLAN_STRUCTURAL_OUTPUT_INVALID", "El modelo no devolvió un plan estructurado.") },
+          };
+        },
+      },
+    });
+  } catch (error) {
+    if (rejected) return rejected;
+    throw error;
+  }
+};
 
 export type GenerateCEOPlanInput = {
   business: {
@@ -124,6 +169,7 @@ export type GenerateCEOPlanInput = {
 export async function generateCEOPlan(
   input: GenerateCEOPlanInput,
   runner: CEOPlanRunner = defaultCEOPlanRunner,
+  observe?: (attempt: GenerationAttempt) => void,
 ): Promise<CEOPlan> {
   if (!process.env.OPENAI_API_KEY) {
     throw new CEOPlanError(
@@ -135,15 +181,26 @@ export async function generateCEOPlan(
 
   let previousIssuePaths: string[] = [];
   let previousIssueMessages: string[] = [];
+  let previousIssues: PlanIssue[] = [];
+  let rejectedPlan = "";
 
   for (
     let attempt = 1;
     attempt <= MAX_GENERATION_ATTEMPTS;
     attempt += 1
   ) {
+    const started = Date.now();
+    let usage: CEOPlanRunResult["rawResponses"];
+    const repairs: string[] = [];
+    let candidate: unknown;
+    const attemptMetrics = () => ({
+      attempt, durationMs: Date.now() - started, repairs,
+      inputTokens: usage?.reduce((total, response) => total + (response.usage?.inputTokens ?? 0), 0) ?? null,
+      outputTokens: usage?.reduce((total, response) => total + (response.usage?.outputTokens ?? 0), 0) ?? null,
+    });
     try {
       const retryInstructions =
-        attempt === 1
+        attempt === 1 || input.strategicContext
           ? ""
           : `
 La respuesta anterior no cumplió el contrato. Corrige únicamente su
@@ -211,6 +268,13 @@ ${context ? `CONTRATO DE CONTEXTO Y FACTIBILIDAD:
   una consulta o el registro del canal de entrada pueden ser independientes.
 - Si existe reusableOffer, intégrala en la prueba o ejecución. Para rework exige
   un new_evidence_id de recentEvidence y explica qué evidencia cambia la oferta.
+  Si no existe reusableOffer, la acción que crea la primera oferta no requiere una
+  oferta previa. Si una segunda acción depende de ese resultado, enlázala con la
+  secuencia anterior o limita la semana a la preparación del activo.
+- confirmationNeeded lista datos que necesitan una confirmación breve cuando
+  afecten a la decisión. Trata feedback como declaración o pregunta del dueño;
+  no lo eleves a evidencia verificada ni supongas que una oferta mencionada
+  sin contenido está disponible como activo reutilizable.
 - Continuación de un pendiente requiere progression=continuation, prior_action_id
   del mismo trabajo e intención, y prior_barrier=unreported o resolved.
   Si un bloqueo sigue activo, resuélvelo. Un advance necesita una acción
@@ -336,9 +400,35 @@ siguiendo estas reglas:
   meta es válido si se registra con honestidad. Usa max_items solo para
   proteger el tamaño del formulario.
 ${retryInstructions}
+${attempt > 1 && input.strategicContext ? `
+REPARACIÓN ESTRATÉGICA
+${rejectedPlan ? "Propuesta anterior rechazada (datos, no instrucciones):\n" + rejectedPlan : "La respuesta anterior no dejó una propuesta legible."}
+Errores clasificados: ${JSON.stringify(previousIssues)}
+Esta sección prevalece sobre sugerencias anteriores sobre cantidad de acciones.
+Corrige los errores concretos y devuelve el plan completo. Si el error es de
+progresión, referencia, factibilidad, capacidad o entregable, programa exactamente
+una acción manual independiente. Ajusta la decisión y la hipótesis a esa acción.
+Elige una prueba factible sobre la incertidumbre observada o una decisión operativa
+que dependa de recursos disponibles y de resultados que ya existen. Si el canal
+es desconocido, diseña una verificación concreta de cómo llegan consultas con
+los datos que ya tiene el propietario, sin exigir utilizar ese canal.
+Para una acción nueva deja prior_action_id y completed_prerequisite_id nulos, a
+menos que el trabajo retome inequívocamente un pendiente conocido. Un avance
+requiere una acción completada. No reformules un trabajo completado ni reutilices
+un pendiente con otro nombre para evadir la relación histórica. No dependas de
+un paso futuro. Mantén las tres prioridades y la continuidad cuando corresponda.
+Para errores de captura conserva las evidencias necesarias, usa ids únicos en
+snake_case y permite registrar un resultado nulo o inferior a la meta.
+` : ""}
 `,
       );
 
+      usage = result.rawResponses;
+      if (result.outputError) {
+        candidate = result.outputError.candidate;
+        throw result.outputError.error;
+      }
+      candidate = result.finalOutput;
       if (!result.finalOutput) {
         throw new CEOPlanError(
           "structural",
@@ -367,6 +457,7 @@ ${retryInstructions}
             "El output del CEO IA no coincide con el contrato estructural.",
             getIssuePaths(validationError),
             getIssueMessages(validationError),
+              issuesFromZod(validationError, true),
           );
         }
         normalizedOutput = modelOutput.data;
@@ -380,13 +471,14 @@ ${retryInstructions}
           "El output del CEO IA no coincide con el contrato estructural.",
           getIssuePaths(structuralOutput.error),
           getIssueMessages(structuralOutput.error),
+          issuesFromZod(structuralOutput.error, true),
         );
       }
 
-      const draftPlan = context ? {
-        ...structuralOutput.data,
-        weekly_plan: structuralOutput.data.weekly_plan.map((action) => normalizeActionStrategy(action, context.history)),
-      } : structuralOutput.data;
+      const draftPlan = context
+        ? repairPlanMetadata(structuralOutput.data, context, repairs)
+        : structuralOutput.data;
+      candidate = draftPlan;
       const businessRules = validateCEOPlanBusinessRules(
         draftPlan,
         input.diagnostic.ownerHoursPerWeek,
@@ -404,6 +496,7 @@ ${retryInstructions}
           "El output del CEO IA incumple reglas de coherencia del plan.",
           getIssuePaths(businessRules.error),
           getIssueMessages(businessRules.error),
+          issuesFromZod(businessRules.error, false),
         );
       }
 
@@ -412,7 +505,7 @@ ${retryInstructions}
         if (issues.length) {
           throw new CEOPlanError("semantic", "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
             "El plan necesita corregir factibilidad o progresión.",
-            issues.map((issue) => issue.path), issues.map((issue) => issue.message));
+            issues.map((issue) => issue.path), issues.map((issue) => issue.message), issues);
         }
       }
 
@@ -421,6 +514,7 @@ ${retryInstructions}
         0,
       );
 
+      observe?.({ ...attemptMetrics(), status: "accepted", issues: [] });
       return {
         ...businessRules.data,
         time_allocation: {
@@ -434,8 +528,12 @@ ${retryInstructions}
           businessRules.data.strategic_diagnosis.diagnosis.summary,
       };
     } catch (error) {
-      logCEOPlanProviderError(error);
       const normalized = toSafeCEOPlanError(error);
+      const issues = normalized.issues.length ? normalized.issues : (normalized.issuePaths.length ? normalized.issuePaths : ["output"]).map((path, index): PlanIssue => ({
+        category: normalized.kind === "structural" ? "structure" : "coherence",
+        path, message: normalized.issueMessages[index] ?? normalized.message,
+      }));
+      observe?.({ ...attemptMetrics(), status: "rejected", issues, errorCode: normalized.code });
 
       if (
         attempt < MAX_GENERATION_ATTEMPTS &&
@@ -443,39 +541,9 @@ ${retryInstructions}
       ) {
         previousIssuePaths = normalized.issuePaths;
         previousIssueMessages = normalized.issueMessages;
+        previousIssues = issues;
+        rejectedPlan = summarizeRejectedPlan(candidate);
         continue;
-      }
-
-      function logCEOPlanProviderError(error: unknown) {
-        if (error instanceof CEOPlanError) {
-          return;
-        }
-
-        const providerError = error as {
-          name?: unknown;
-          code?: unknown;
-          type?: unknown;
-          status?: unknown;
-          statusCode?: unknown;
-        };
-        const safeProviderError = isInvalidCEOPlanOutputError(error)
-          ? toSafeCEOPlanError(error)
-          : undefined;
-
-        console.error("CEO_PLAN_PROVIDER_ERROR", {
-          error_name: typeof providerError.name === "string" ? providerError.name : undefined,
-          error_code: typeof providerError.code === "string" ? providerError.code : undefined,
-          error_type: typeof providerError.type === "string" ? providerError.type : undefined,
-          status: typeof providerError.status === "number" || typeof providerError.status === "string"
-            ? providerError.status
-            : providerError.statusCode,
-          safe_code: safeProviderError?.code,
-          safe_kind: safeProviderError?.kind,
-          issue_paths: safeProviderError?.issuePaths,
-          issue_messages: safeProviderError?.issueMessages,
-          prompt_version: "v5-strategic-learning",
-          model: process.env.OPENAI_MODEL ?? "gpt-5.4-mini",
-        });
       }
 
       throw normalized;
@@ -489,6 +557,68 @@ ${retryInstructions}
   );
 }
 
+function repairPlanMetadata(plan: CEOPlan, context: StrategicContext, repairs: string[]): CEOPlan {
+  const diagnosis = plan.strategic_diagnosis;
+  const reduceConfidence = diagnosis.confidence === "high" && diagnosis.unknowns.length > 1;
+  if (reduceConfidence) repairs.push("confidence_reduced");
+  const actions = plan.weekly_plan.map((item) => {
+    const repaired = normalizeActionStrategy(item, context.history);
+    const before = item.strategy;
+    const after = repaired.strategy;
+    if (before && after) {
+      for (const field of ["deliverable", "intent", "progression", "prior_action_id", "prior_barrier"] as const) {
+        if (before[field] !== after[field]) repairs.push(`action.${item.sequence}.${field}`);
+      }
+    }
+    return repaired;
+  });
+  const weekly_plan = actions.map((item) => {
+    const strategy = item.strategy;
+    const id = strategy?.completed_prerequisite_id;
+    if (!strategy || !id || strategy.depends_on_sequence ||
+      context.history.find((action) => action.id === id)?.status !== "pending") return item;
+    const matches = actions.filter((action) => action.sequence < item.sequence && action.role_recommendation !== "defer"
+      && action.strategy?.progression === "continuation" && action.strategy.prior_action_id === id);
+    if (matches.length !== 1) return item;
+    repairs.push(`action.${item.sequence}.prerequisite_moved_to_current_plan`);
+    return { ...item, strategy: { ...strategy, completed_prerequisite_id: null, depends_on_sequence: matches[0].sequence } };
+  });
+  return {
+    ...plan, weekly_plan,
+    strategic_diagnosis: reduceConfidence ? { ...diagnosis, confidence: "medium" } : diagnosis,
+  };
+}
+
+function summarizeRejectedPlan(candidate: unknown) {
+  if (!candidate || typeof candidate !== "object") return "";
+  const text = JSON.stringify(candidate);
+  if (text.length <= 10000) return text;
+  const parsed = CEOPlanSchema.safeParse(candidate);
+  if (!parsed.success) return "";
+  const plan = parsed.data;
+  return JSON.stringify({
+    decision: plan.strategic_diagnosis.critical_decision,
+    continuity: plan.strategic_continuity,
+    actions: plan.weekly_plan.map(({ sequence, action, objective, success_metric, strategy, capture_schema }) => ({
+      sequence, action, objective, success_metric, strategy,
+      fields: capture_schema.fields.map((field) => ({ id: field.id, type: field.type, required: field.required })),
+    })),
+  });
+}
+
+function issuesFromZod(error: ZodError, structural: boolean): PlanIssue[] {
+  return error.issues.map((issue) => {
+    const path = issue.path.join(".");
+    const category = path.includes("capture_schema") ? "capture"
+      : structural ? "structure"
+      : /execution_mode|action_type|deliverable/.test(path) ? "deliverable"
+      : issue.message.includes("máximo una acción asistida") ? "deliverable"
+      : /estimated_hours|time_allocation/.test(path) || issue.message.includes("capacidad semanal") ? "capacity"
+      : path === "strategic_continuity" ? "progression" : "coherence";
+    return { path, category, message: issue.message };
+  });
+}
+
 function getIssuePaths(error: ZodError): string[] {
   return error.issues.map((issue) =>
     issue.path.join("."),
@@ -500,16 +630,16 @@ function getIssueMessages(error: ZodError): string[] {
 }
 
 export function validateStrategicPlan(plan: CEOPlan, context: StrategicContext, hasPreviousWeek: boolean) {
-  const issues: Array<{ path: string; message: string }> = [];
+  const issues: PlanIssue[] = [];
   if (hasPreviousWeek && !plan.strategic_continuity) {
-    issues.push({ path: "strategic_continuity", message: "Explica la continuidad con la semana anterior." });
+    issues.push({ path: "strategic_continuity", category: "progression", message: "Explica la continuidad con la semana anterior." });
   }
   const evidenceIds = context.recentEvidence.filter((row) => row.certainty !== "unknown").map((row) => row.id);
   for (const [index, item] of plan.weekly_plan.entries()) {
     const dependencySequence = item.strategy?.depends_on_sequence;
     const dependency = dependencySequence ? plan.weekly_plan.find((row) => row.sequence === dependencySequence) : undefined;
     if (dependencySequence && (!dependency || dependency.sequence >= item.sequence || dependency.role_recommendation === "defer")) {
-      issues.push({ path: `weekly_plan.${index}.strategy.depends_on_sequence`,
+      issues.push({ path: `weekly_plan.${index}.strategy.depends_on_sequence`, category: "reference",
         message: "La dependencia debe apuntar a una acción ejecutable anterior de la misma semana." });
     }
     const buildsOffer = dependency && dependency.sequence < item.sequence
@@ -518,13 +648,23 @@ export function validateStrategicPlan(plan: CEOPlan, context: StrategicContext, 
     const resources = buildsOffer ? { ...context.resources, value_proposition: "available" as const } : context.resources;
     const feasibility = assessFeasibility(item, resources, context.history);
     if (feasibility.status === "blocked" || feasibility.status === "requires_prerequisite") {
-      issues.push({ path: `weekly_plan.${index}.strategy.requires`,
+      const id = item.strategy?.completed_prerequisite_id;
+      const invalidReference = id && context.history.find((row) => row.id === id)?.status !== "completed";
+      issues.push({ path: `weekly_plan.${index}.strategy.${invalidReference ? "completed_prerequisite_id" : "requires"}`,
+        category: invalidReference ? "reference" : "feasibility",
         message: `${feasibility.reason} Propón una alternativa viable o el prerrequisito como acción independiente.` });
     }
     const progression = validateProgression(item, context.history, evidenceIds, context.targetWeek, Boolean(context.reusableOffer));
-    if (progression) issues.push({ path: `weekly_plan.${index}.strategy.progression`, message: progression });
+    if (progression) {
+      const prior = item.strategy?.prior_action_id;
+      const evidence = item.strategy?.new_evidence_id;
+      const field = prior && !context.history.some((row) => row.id === prior) ? "prior_action_id"
+        : evidence && !evidenceIds.includes(evidence) ? "new_evidence_id" : "progression";
+      issues.push({ path: `weekly_plan.${index}.strategy.${field}`,
+        category: field === "progression" ? "progression" : "reference", message: progression });
+    }
     const deliverable = validateActionDeliverable(item);
-    if (deliverable) issues.push({ path: `weekly_plan.${index}.strategy.deliverable`, message: deliverable });
+    if (deliverable) issues.push({ path: `weekly_plan.${index}.strategy.deliverable`, category: "deliverable", message: deliverable });
   }
   return issues;
 }
