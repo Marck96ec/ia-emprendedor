@@ -218,6 +218,18 @@ ${
 }`;
 
       const context = input.strategicContext;
+      const hasReferenceErrors = previousIssues.some((issue) => issue.category === "reference");
+      const validHistoryRef = hasReferenceErrors && context
+        ? context.history.slice(0, 20).map((a) =>
+            `${a.id} w${a.week} ${a.status} "${a.action.slice(0, 80)}"`,
+          ).join("\n")
+        : null;
+      const validEvidenceRef = hasReferenceErrors && context
+        ? context.recentEvidence
+            .filter((e) => e.certainty !== "unknown")
+            .map((e) => e.id)
+            .join(", ") || null
+        : null;
       const previousWeek = input.previousWeek;
       const promptInput = context ? {
         ...input,
@@ -419,6 +431,7 @@ un pendiente con otro nombre para evadir la relación histórica. No dependas de
 un paso futuro. Mantén las tres prioridades y la continuidad cuando corresponda.
 Para errores de captura conserva las evidencias necesarias, usa ids únicos en
 snake_case y permite registrar un resultado nulo o inferior a la meta.
+${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente uno de estos si necesitas prior_action_id o completed_prerequisite_id):\n${validHistoryRef}` : ""}${validEvidenceRef ? `\nIDs válidos para new_evidence_id (certainty != unknown): ${validEvidenceRef}` : ""}
 ` : ""}
 `,
       );

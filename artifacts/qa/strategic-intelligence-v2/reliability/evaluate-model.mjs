@@ -11,6 +11,7 @@ const load = createRequire(import.meta.url);
 const { generateCEOPlan } = load(dist("lib/ai/generate-ceo-plan"));
 const { buildStrategicContext } = load(dist("lib/strategic-context"));
 const { assessFeasibility, sameWork } = load(dist("lib/strategic-action"));
+const { buildBusinessAssessment } = load(dist("lib/business-assessment-adapter"));
 
 assert.equal(new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname, "127.0.0.1");
 assert.ok(process.env.OPENAI_API_KEY, "Falta el proveedor para la evaluación real.");
@@ -27,8 +28,14 @@ const actionRows = [
   { action: "Registrar respuestas y clasificar dudas e intereses",
     objective: "Detectar interés real", state: "pending" },
 ];
+// Use UUID-like IDs to replicate real pipeline conditions (not predictable synthetic IDs)
+const historyIds = [
+  "a1b2c3d4-e5f6-7001-8abc-def012345671",
+  "a1b2c3d4-e5f6-7001-8abc-def012345672",
+  "a1b2c3d4-e5f6-7001-8abc-def012345673",
+];
 const history = actionRows.map((row, i) => ({
-  id: "00000000-0000-4000-8000-00000000000" + (i + 1), week: 1,
+  id: historyIds[i], week: 1,
   action: row.action, objective: row.objective, status: row.state, strategy: null,
   result: row.result ? JSON.stringify(row.result) : null,
 }));
@@ -104,7 +111,7 @@ const cases = [
 
 const cleaning = cases[1];
 const preparedOffer = {
-  id: "00000000-0000-4000-8000-000000000201", week: 1,
+  id: "b2c3d4e5-f601-7002-8bcd-ef1234567801", week: 1,
   action: "Definir la oferta principal para limpieza de muebles en dos barrios",
   objective: "Acotar la captación a los barrios que podemos atender", status: "completed", strategy: null,
   result: "Limpieza de sofás y colchones a domicilio en dos barrios contiguos, precio por pieza y traslado local.",
@@ -143,11 +150,20 @@ async function worker() {
     previousWeek.review.decisionLearning.hypothesisStatus = "inconclusive";
     const strategicContext = buildStrategicContext({ targetWeek: 2, memory: entry.memory, history,
       evidence: [], knowledge: entry.input.businessKnowledge, declaredContext: entry.input.diagnostic.salesProcess });
+    // Build assessment to match real pipeline conditions
+    const assessment = buildBusinessAssessment({
+      diagnostic: entry.input.diagnostic,
+      evidence: [],
+      completedActions: previousWeek?.review?.completedActions ?? 1,
+      totalActions: previousWeek?.review?.totalActions ?? 3,
+      latestReview: previousWeek ? { outcome_status: previousWeek.review.outcomeStatus } : null,
+      reviewedWeeks: previousWeek ? 1 : 0,
+    });
     const started = Date.now();
     const attempts = [];
     const record = { scenario: entry.name, sample, targetWeek: 2, attempts };
     try {
-      const plan = await generateCEOPlan({ ...entry.input, previousWeek, strategicContext }, undefined, (attempt) => attempts.push(attempt));
+      const plan = await generateCEOPlan({ ...entry.input, previousWeek, strategicContext, assessment }, undefined, (attempt) => attempts.push(attempt));
       record.status = "PASS";
       record.decision = plan.strategic_diagnosis.critical_decision;
       record.continuity = plan.strategic_continuity;

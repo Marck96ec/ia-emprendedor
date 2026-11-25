@@ -1,0 +1,104 @@
+{
+  "audit_version": "v2.2",
+  "date": "2026-11-24",
+  "branch": "feature/strategic-intelligence-v2",
+  "auditor": "Claude Sonnet 4.6 (independent)",
+
+  "static_validation": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "build": "NOT_RUN",
+    "notes": "typecheck and lint confirmed clean post-fix. Build not run to avoid side effects."
+  },
+
+  "isolated_evaluator": {
+    "version": "v7-strategic-reliability",
+    "source": "artifacts/qa/strategic-intelligence-v2/reliability/MODEL-EVALUATION.json",
+    "total_scenarios": 10,
+    "passed": 10,
+    "failed": 0,
+    "needed_2_attempts": 5,
+    "conditions": "synthetic_ids_no_assessment",
+    "verdict": "FALSE_POSITIVE_PARTIAL",
+    "reason": "IDs sintéticos ocultan el problema C1. Evaluador actualizado en este audit para usar IDs UUID-like y assessment real."
+  },
+
+  "e2e_real_pipeline": {
+    "source": "artifacts/qa/strategic-intelligence-v2/reliability/browser-observations-final.json",
+    "businesses_tested": 5,
+    "businesses_completed_4_weeks": 1,
+    "businesses_blocked": 4,
+    "total_cycles_planned": 20,
+    "total_cycles_completed": 10,
+    "completion_rate": "50%",
+    "blocks": [
+      {
+        "business": "mantenimiento",
+        "blocked_at_week": 2,
+        "plan_id": "085045a8-53cd-4044-a46a-cc7b0c1ec03f",
+        "root_cause": "C1"
+      },
+      {
+        "business": "limpieza",
+        "blocked_at_week": 4,
+        "plan_id": null,
+        "root_cause": "C3_and_or_C1"
+      },
+      {
+        "business": "cafe_horizonte",
+        "blocked_at_week": 2,
+        "plan_id": null,
+        "root_cause": "C1"
+      },
+      {
+        "business": "taller_andino",
+        "blocked_at_week": 2,
+        "plan_id": null,
+        "root_cause": "C1"
+      }
+    ]
+  },
+
+  "fixes_implemented": [
+    {
+      "id": "FIX-1",
+      "file": "src/lib/ai/generate-ceo-plan.ts",
+      "lines": "221-232, 434",
+      "description": "Inject valid history/evidence IDs into repair prompt when attempt 2 has reference errors",
+      "addresses_causes": ["C1", "C2"],
+      "validation": "typecheck PASS, lint PASS",
+      "e2e_validation": "BLOCKED_NO_BUDGET"
+    },
+    {
+      "id": "FIX-2",
+      "file": "artifacts/qa/strategic-intelligence-v2/reliability/evaluate-model.mjs",
+      "description": "Update evaluator with UUID-like IDs and assessment to reduce false positives",
+      "addresses_causes": ["A2"],
+      "validation": "code review PASS",
+      "e2e_validation": "NOT_RUN"
+    }
+  ],
+
+  "causes_addressed": {
+    "C1": { "status": "FIX_IMPLEMENTED_NOT_VALIDATED_E2E", "confidence": "HIGH" },
+    "C2": { "status": "FIX_IMPLEMENTED_NOT_VALIDATED_E2E", "confidence": "MEDIUM" },
+    "C3": { "status": "PARTIAL_MITIGATION_ONLY", "confidence": "LOW" },
+    "C4": { "status": "NOT_ADDRESSED", "confidence": "LOW_PRIORITY" }
+  },
+
+  "architecture_findings": {
+    "A1": { "status": "FIXED_BY_FIX1", "severity": "CRITICAL" },
+    "A2": { "status": "FIXED_BY_FIX2", "severity": "HIGH" },
+    "A3": { "status": "DOCUMENTED_INTENTIONAL", "severity": "MEDIUM" },
+    "A4": { "status": "NOT_ADDRESSED_LOW_PRIORITY", "severity": "LOW" },
+    "A5": { "status": "NOT_ADDRESSED_LOW_PRIORITY", "severity": "LOW" }
+  },
+
+  "budget_blocks": [
+    {
+      "blocked_test": "E2E 5 businesses x 4 weeks post-fix",
+      "reason": "Requires up to 40 OpenAI API calls. No explicit budget authorization in audit spec.",
+      "action_required": "Authorize provider call budget and run evaluate-model.mjs with extended scenarios"
+    }
+  ]
+}
