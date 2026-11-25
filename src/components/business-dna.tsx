@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+import { CommandCenterIcon } from "@/components/command-center-icon";
 import type {
   AssessmentDimension,
   BusinessAssessment,
@@ -20,21 +21,13 @@ const statusLabels: Record<BusinessHealthStatus, string> = {
   unknown: "Sin evaluar",
 };
 
-const statusStyles: Record<BusinessHealthStatus, string> = {
-  favorable: "border-[var(--status-favorable)] bg-[var(--status-favorable-soft)]",
-  fragile: "border-[var(--status-attention)] bg-[var(--status-attention-soft)]",
-  critical: "border-[var(--status-critical)] bg-[var(--status-critical-soft)]",
-  mixed: "border-[var(--status-attention)] bg-[var(--status-attention-soft)]",
-  unknown: "border-[var(--status-unevaluated)] bg-[var(--status-unevaluated-soft)]",
-};
-
 function DimensionStatus({
   status,
 }: {
   status: BusinessHealthStatus;
 }) {
   return (
-    <span className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+    <span className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
       <span
         className={`h-2 w-2 rounded-full ${
           status === "favorable"
@@ -65,7 +58,7 @@ function DimensionDetails({
       </section>
 
       <section className="border-t border-slate-100 pt-4">
-        <p className="eyebrow">Reglas aplicadas</p>
+        <p className="eyebrow">Cómo se evaluó</p>
         {dimension.appliedRules.length > 0 ? (
           <ul className="mt-2 list-disc space-y-1 pl-5 leading-6 text-slate-700">
             {dimension.appliedRules.map((rule) => (
@@ -74,7 +67,7 @@ function DimensionDetails({
           </ul>
         ) : (
           <p className="mt-2 leading-6 text-slate-600">
-            Todavía no hay una regla que permita clasificar esta dimensión.
+            Todavía falta información para evaluar esta área.
           </p>
         )}
       </section>
@@ -100,7 +93,7 @@ function DimensionDetails({
           {dimension.evidenceIds.length > 0
             ? `${dimension.evidenceIds.length} evidencia${
                 dimension.evidenceIds.length === 1 ? "" : "s"
-              } documentada${dimension.evidenceIds.length === 1 ? "" : "s"}.`
+              } asociada${dimension.evidenceIds.length === 1 ? "" : "s"}.`
             : "No hay evidencias asociadas a esta dimensión."}
         </p>
         {dimension.lastEvaluatedAt && (
@@ -136,35 +129,33 @@ export function BusinessDNA({ assessment }: BusinessDNAProps) {
   return (
     <>
       <section
-        className="surface-card rounded-2xl p-4 sm:p-5"
+        className="command-card p-4 sm:px-5"
         aria-labelledby="business-dna-title"
       >
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="eyebrow">Capacidades empresariales</p>
-            <h2
-              id="business-dna-title"
-              className="mt-1 text-lg font-semibold tracking-tight text-slate-950"
-            >
-              ADN Empresarial
-            </h2>
-          </div>
-          <p className="text-xs text-slate-500">Selecciona para entender</p>
-        </div>
+        <h2
+          id="business-dna-title"
+          className="text-base font-semibold tracking-tight text-[var(--executive-blue)]"
+        >
+          ADN Empresarial
+        </h2>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {assessment.dimensions.map((dimension) => (
             <button
               key={dimension.key}
               type="button"
+              aria-haspopup="dialog"
               onClick={() => setSelectedKey(dimension.key)}
-              className={`min-h-20 rounded-xl border p-3 text-left transition-colors hover:border-slate-400 focus-visible:outline-3 focus-visible:outline-[var(--executive-blue)]/30 ${statusStyles[dimension.status]}`}
+              className="flex min-h-13 min-w-0 items-center gap-2 rounded-lg border border-slate-200 bg-[var(--surface-neutral)] px-2 py-1.5 text-left hover:border-slate-400 sm:gap-2.5 sm:px-2.5"
               aria-label={`Ver detalle de ${dimension.label}: ${statusLabels[dimension.status]}`}
             >
-              <span className="block text-sm font-semibold text-slate-950">
-                {dimension.label}
+              <span className="grid size-7 shrink-0 place-items-center rounded-md bg-[var(--executive-blue-soft)] text-[var(--executive-blue)]">
+                <CommandCenterIcon name={dimension.key} className="size-4" />
               </span>
-              <DimensionStatus status={dimension.status} />
+              <span className="min-w-0">
+                <span className="block text-sm leading-tight font-semibold text-slate-950">{dimension.label}</span>
+                <DimensionStatus status={dimension.status} />
+              </span>
             </button>
           ))}
         </div>

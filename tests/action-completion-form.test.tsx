@@ -46,7 +46,7 @@ function submitButton() {
 }
 
 function fillContacts() {
-  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  const addContact = screen.getByRole("button", { name: "Agregar contacto" });
   while (screen.queryAllByLabelText(/Nombre del cliente/).length < 3) {
     fireEvent.click(addContact);
   }
@@ -76,10 +76,10 @@ test("every field inside a repeatable group has its own visible, associated labe
   const ids = [...document.querySelectorAll("[id]")].map((element) => element.id);
   assert.equal(new Set(ids).size, ids.length, "Los IDs deben ser únicos");
 
-  const group = screen.getByRole("group", { name: /Contacto\s*\(obligatorio\)/ });
+  const group = screen.getByRole("group", { name: /^Contacto$/ });
   assert.match(group.getAttribute("aria-describedby") ?? "", /\S/);
   const hintId = group.getAttribute("aria-describedby")!.split(" ")[0];
-  assert.equal(document.getElementById(hintId)?.textContent, "Agrega los elementos que realmente ocurrieron (máximo 3). Puedes registrar cero.");
+  assert.equal(document.getElementById(hintId)?.textContent, "Puedes dejar la lista vacía o registrar hasta 3 elementos.");
   assert.ok(screen.getByRole("group", { name: "Contacto 2" }));
   assert.equal(names[0].getAttribute("aria-required"), "true");
   assert.equal(notes[0].getAttribute("aria-required"), null);
@@ -101,7 +101,7 @@ test("multi_select options are grouped under a legend and numbers accept decimal
 test("client validation blocks the submit, explains each error and keeps what was typed", async () => {
   const server = deferredAction();
   render(<DynamicActionCompletionForm captureSchema={contactsSchema} actionId="a1" action={server.action} />);
-  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  const addContact = screen.getByRole("button", { name: "Agregar contacto" });
   fireEvent.click(addContact);
   fireEvent.click(addContact);
 
@@ -178,7 +178,7 @@ test("the completion dialog opens as a modal, closes with Escape and stays open 
   const dialog = document.querySelector("dialog")!;
   assert.equal(dialog.open, true);
   assert.ok(screen.getByRole("dialog", { name: contactsSchema.title }));
-  const addContact = screen.getByRole("button", { name: /agregar.*contacto.*otro/i });
+  const addContact = screen.getByRole("button", { name: "Agregar contacto" });
   fireEvent.click(addContact);
   await waitFor(() => assert.equal(document.activeElement, screen.getAllByLabelText(/Nombre del cliente/)[0], "El foco inicial va al primer campo"));
 

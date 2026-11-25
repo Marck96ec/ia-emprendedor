@@ -65,8 +65,8 @@ function fieldHint(field: ActionCaptureField): string | undefined {
   if (field.type === "single_select") return undefined;
   if (field.type === "repeatable_group") {
     return field.max_items !== undefined
-      ? `Agrega los elementos que realmente ocurrieron (máximo ${field.max_items}). Puedes registrar cero.`
-      : "Agrega los elementos que realmente ocurrieron. Puedes registrar cero.";
+      ? `Puedes dejar la lista vacía o registrar hasta ${field.max_items} elementos.`
+      : "Puedes dejar la lista vacía.";
   }
   return undefined;
 }
@@ -148,11 +148,16 @@ function CaptureField({ field, path, formId, value, issues, onValueChange, clear
     const items = Array.isArray(value) ? value as Record<string, unknown>[] : [];
     const canRemove = items.length > 0;
     const canAdd = field.max_items === undefined || items.length < field.max_items;
+    const addLabel = /^(products?|productos?|channels?|canales?|mix_ventas|mezcla_ventas)(_|$)/.test(field.id)
+      ? "Agregar producto o canal"
+      : /^(contacts?|contactos?)(_|$)/.test(field.id)
+        ? "Agregar contacto"
+        : `Agregar a «${field.label}»`;
 
     return (
       <fieldset id={id} tabIndex={-1} aria-describedby={describedBy} className="min-w-0">
         <legend className="text-sm font-semibold text-slate-900">
-          {field.label}<RequirementMark required={field.required} />
+          {field.label}
         </legend>
         {description}
         {error}
@@ -204,7 +209,7 @@ function CaptureField({ field, path, formId, value, issues, onValueChange, clear
               requestFocus(captureFieldDomId(formId, `${path}.${items.length}.${field.fields[0].id}`));
             }}
           >
-            Agregar<span className="sr-only"> {field.label}</span> otro
+            {addLabel}
           </button>
         )}
       </fieldset>
@@ -352,7 +357,7 @@ export function DynamicActionCompletionForm({
     if (!validation.success) {
       event.preventDefault();
       setIssues(validation.issues);
-      setMessage("Revisa los campos marcados.");
+      setMessage(undefined);
       requestFocus(captureFieldDomId(formId, validation.issues[0].path));
       return;
     }

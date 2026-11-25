@@ -135,6 +135,162 @@ select {
   backdrop-filter: blur(12px);
 }
 
+body:has(.command-shell) {
+  --background: #f5f7fa;
+  --surface-neutral: #f5f7fa;
+  background: var(--background);
+}
+
+body:has(.command-shell)::before {
+  display: none;
+}
+
+.command-shell {
+  display: grid;
+  max-width: 1504px;
+  margin-inline: auto;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0.875rem
+    calc(4.75rem + env(safe-area-inset-bottom));
+}
+
+.command-grid,
+.command-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.command-stack {
+  align-content: start;
+  min-width: 0;
+}
+
+.command-stack--execution {
+  grid-template-rows: auto 1fr;
+}
+
+.command-card {
+  border: 1px solid #e0e6ee;
+  border-radius: 1rem;
+  background: white;
+  box-shadow: 0 1px 2px rgb(23 45 70 / 4%);
+}
+
+.command-kicker {
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.command-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 0.2em;
+}
+
+.command-navigation {
+  position: fixed;
+  z-index: 20;
+  inset: auto 0 0;
+  padding: 0.25rem 0.5rem max(0.25rem, env(safe-area-inset-bottom));
+  border-top: 1px solid #e0e6ee;
+  background: white;
+}
+
+.command-navigation-items {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+.command-brand {
+  display: none;
+}
+
+.command-nav-link {
+  display: flex;
+  min-height: 3rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 0.625rem;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 550;
+  line-height: 1.1;
+}
+
+.command-nav-link:hover,
+.command-nav-link[aria-current="page"] {
+  background: var(--executive-blue-soft);
+  color: var(--executive-blue);
+}
+
+.command-shell :is(a, button, summary):focus-visible {
+  outline: 2px solid #677e95;
+  outline-offset: 2px;
+}
+
+@media (min-width: 1100px) {
+  .command-shell {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 1rem;
+    padding: 0.875rem 1.25rem;
+  }
+
+  .command-grid {
+    grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+    gap: 1rem;
+  }
+
+  .command-stack--execution {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .command-stack--business {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .command-navigation {
+    position: static;
+    min-width: 0;
+    padding: 0.625rem 0.25rem;
+    border: 1px solid #e0e6ee;
+    border-radius: 1rem;
+  }
+
+  .command-navigation-items {
+    grid-auto-flow: row;
+    gap: 0.375rem;
+  }
+
+  .command-brand {
+    display: grid;
+    width: 2.5rem;
+    aspect-ratio: 1;
+    place-items: center;
+    margin: 0.25rem auto 1.25rem;
+    border-radius: 0.75rem;
+    background: var(--executive-blue);
+    color: white;
+  }
+
+  .command-nav-link {
+    min-height: 3.5rem;
+    padding-block: 0.25rem;
+  }
+}
+
 .form-field {
   width: 100%;
   min-height: 48px;
@@ -315,6 +471,15 @@ a:focus-visible {
 .accent-button:hover {
   background: #1d4ed8;
   transform: translateY(-1px);
+}
+
+.command-shell .accent-button {
+  background: var(--executive-blue);
+  box-shadow: none;
+}
+
+.command-shell .accent-button:hover {
+  background: #23425f;
 }
 
 @keyframes pop-in {

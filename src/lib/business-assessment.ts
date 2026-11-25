@@ -220,7 +220,7 @@ function buildMaturity(
   }
 
   if (operationalEvidence.length === 0) {
-    missingInformation.push("Evidencia operativa documentada de ventas, métricas o resultados.");
+    missingInformation.push("Registros de ventas, indicadores o resultados del negocio.");
   }
 
   let level = stage?.level ?? null;
@@ -239,7 +239,7 @@ function buildMaturity(
     );
   } else if (stage) {
     appliedRules.push(
-      `La etapa ${input.businessStage} se mapea de forma provisional a ${maturityStageLabels[stage.stage]}; no se considera una certificación.`,
+      `La información que compartiste sobre el estado de tu negocio apunta a la etapa ${maturityStageLabels[stage.stage]} como estimación.`,
     );
   }
 
@@ -316,8 +316,8 @@ function buildHealth(
   } else if (input.latestOutcome === "positive" && operationalEvidence.length > 0) {
     status = "favorable";
     summary = "Favorable con límites";
-    explanation = "Existe un resultado semanal positivo junto con evidencia operativa documentada. Esto no prueba rentabilidad ni liquidez.";
-    appliedRules.push("Resultado positivo y evidencia operativa documentada producen un estado favorable provisional.");
+    explanation = "La última revisión indica un avance y tienes registros de lo que ocurrió en el negocio. Para evaluar la rentabilidad y la liquidez hacen falta datos financieros.";
+    appliedRules.push("La revisión positiva y los registros de la operación permiten una evaluación favorable provisional.");
   } else {
     missingInformation.push("Resultados empresariales comparables y señales de liquidez.");
   }
@@ -356,7 +356,7 @@ function buildDimension(
       case "liquidity":
         return evidenceFor(input, "cost", "sale", "metric");
       case "operations":
-        return evidenceFor(input, "action_result", "follow_up");
+        return evidenceFor(input, "follow_up");
       case "autonomy":
         return [];
       case "growth":
@@ -376,7 +376,7 @@ function buildDimension(
       if (hasText(input.customersDescription) && evidence.length > 0) {
         status = "favorable";
         summary = "Favorable con límites";
-        explanation = "Existe una descripción del cliente y evidencia documentada relacionada con mercado.";
+        explanation = "Identificaste a tus clientes y registraste información sobre productos, oportunidades o ventas.";
         appliedRules.push("Descripción de clientes más evidencia de producto, oportunidad o venta.");
       } else {
         explanation = "Hay que conectar el cliente descrito con evidencia observable de mercado.";
@@ -395,8 +395,8 @@ function buildDimension(
       if (hasText(input.salesProcess) && evidence.length > 0) {
         status = "favorable";
         summary = "Favorable con límites";
-        explanation = "Existe un proceso comercial declarado y actividad operativa documentada.";
-        appliedRules.push("Proceso de ventas declarado más resultado o seguimiento documentado.");
+        explanation = "Describiste cómo vendes y registraste el seguimiento de esa actividad.";
+        appliedRules.push("Se consideraron tu descripción del proceso de ventas y los registros de seguimiento.");
       } else {
         explanation = "El proceso operativo necesita señales observables para evaluar su consistencia.";
         missingInformation.push("Resultados repetibles del proceso operativo.");
@@ -410,8 +410,8 @@ function buildDimension(
       if (input.businessStage === "growing" && evidence.length > 0) {
         status = "favorable";
         summary = "Favorable con límites";
-        explanation = "El negocio declara una etapa de crecimiento y tiene señales documentadas relacionadas.";
-        appliedRules.push("La etapa de crecimiento no se considera suficiente sin evidencia documentada.");
+        explanation = "Indicaste que el negocio está creciendo y existen registros relacionados con ese crecimiento.";
+        appliedRules.push("La evaluación toma en cuenta los registros de oportunidades, ventas o indicadores.");
       } else {
         explanation = "No se penaliza no querer crecer; se necesita una intención y evidencia de crecimiento explícitas para evaluar esta dimensión.";
         missingInformation.push("Intención de crecimiento y capacidad demostrada para sostenerlo.");

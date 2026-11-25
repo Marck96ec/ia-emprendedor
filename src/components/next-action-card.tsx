@@ -9,6 +9,9 @@ type NextActionCardProps = {
   pendingCount: number;
   reviewed: boolean;
   allCompleted: boolean;
+  objective?: string;
+  embedded?: boolean;
+  onPrimaryAction?: () => void;
 };
 
 const cardClassName =
@@ -30,10 +33,17 @@ export function NextActionCard({
   pendingCount,
   reviewed,
   allCompleted,
+  objective,
+  embedded = false,
+  onPrimaryAction,
 }: NextActionCardProps) {
+  const sectionClassName = embedded
+    ? "flex min-w-0 flex-col"
+    : cardClassName;
+
   if (!action) {
     return (
-      <section className={reviewed || allCompleted ? celebrationClassName : cardClassName} aria-labelledby="next-action-title">
+      <section className={reviewed || allCompleted ? celebrationClassName : sectionClassName} aria-labelledby="next-action-title">
         {(reviewed || allCompleted) && <CheckBadge />}
         <p id="next-action-title" className={`eyebrow ${reviewed || allCompleted ? "mt-3 !text-emerald-700" : "!text-blue-700"}`}>
           {reviewed ? "Revisión completada" : allCompleted ? "Semana completada" : "Siguiente paso"}
@@ -70,7 +80,7 @@ export function NextActionCard({
   const ctaLabel = isAiAssisted && hasResult ? "Ver lo que logramos" : "Empezar esta acción";
 
   return (
-    <section className={cardClassName} aria-labelledby="next-action-title">
+    <section className={sectionClassName} aria-labelledby="next-action-title">
       <div className="flex items-center justify-between gap-3">
         <p id="next-action-title" className="eyebrow !text-blue-700">
           {pendingCount === 1 ? "Última acción de la semana" : "Siguiente paso"}
@@ -82,14 +92,34 @@ export function NextActionCard({
         )}
       </div>
 
-      <h2 className="mt-2 text-xl font-semibold leading-snug tracking-tight text-slate-950">
+      <h2 className="mt-2 line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-slate-950 sm:text-xl">
         {action.action}
       </h2>
 
-      <p className="mt-2 hidden line-clamp-2 text-base leading-6 text-slate-700 sm:block cockpit:short:hidden">{action.reason}</p>
+      <p className="mt-2 line-clamp-2 text-sm leading-5 text-slate-700">
+        {action.reason}
+      </p>
 
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 cockpit:mt-auto cockpit:pt-3">
-        {isAiAssisted ? (
+      {objective && (
+        <p className="mt-1 line-clamp-1 text-xs leading-5 text-slate-500">
+          Ayuda al objetivo: {objective}
+        </p>
+      )}
+
+      <p className="mt-1 line-clamp-1 text-xs leading-5 text-slate-600">
+        Resultado esperado: {action.expected_result}
+      </p>
+
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        {onPrimaryAction ? (
+          <button
+            type="button"
+            onClick={onPrimaryAction}
+            className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto"
+          >
+            {ctaLabel}
+          </button>
+        ) : isAiAssisted ? (
           <Link href={`/actions/${action.id}`} className="accent-button order-2 min-h-11 w-full px-5 py-2 text-base sm:order-1 sm:w-auto cockpit:min-h-10">
             {ctaLabel}
           </Link>

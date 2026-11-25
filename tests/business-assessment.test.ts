@@ -6,6 +6,7 @@ import {
   evaluateBusinessAssessment,
   type NormalizedBusinessAssessmentInput,
 } from "../src/lib/business-assessment";
+import { normalizeBusinessAssessmentInput } from "../src/lib/business-assessment-adapter";
 import { businessAssessmentScenarios } from "./fixtures/business-assessment-scenarios";
 
 function baseInput(
@@ -159,6 +160,45 @@ test("unknown-certainty evidence cannot support a favorable dimension", () => {
 
   assert.equal(assessment.dimensions.find((item) => item.key === "market")?.status, "unknown");
   assert.equal(assessment.evidenceSummary.documented, 1);
+});
+
+test("a cash-map action result does not become operational evidence", () => {
+  const assessment = evaluateBusinessAssessment(
+    baseInput({
+      evidence: [evidence("action_result", "cash-map-1")],
+      latestOutcome: "positive",
+      reviewedWeeks: 1,
+    }),
+  );
+
+  assert.equal(
+    assessment.dimensions.find((item) => item.key === "operations")?.status,
+    "unknown",
+  );
+  assert.equal(assessment.health.status, "favorable");
+  assert.equal(assessment.maturity.level, 3);
+});
+
+test("the current adapter keeps persisted action evidence declared", () => {
+  const normalized = normalizeBusinessAssessmentInput({
+    diagnostic: {
+      business_stage: "operating",
+      team_size: 1,
+      owner_hours_per_week: 20,
+      owner_responsibilities: "Ventas",
+      customers_description: "Clientes locales",
+      sales_process: "Venta directa",
+      monthly_revenue: 1000,
+    },
+    evidence: [{
+      id: "00000000-0000-0000-0000-000000000001",
+      evidence_type: "action_result",
+      certainty: "real",
+      observed_at: "2026-11-24T00:00:00.000Z",
+    }],
+  });
+
+  assert.equal(normalized.evidence[0]?.source, "declared");
 });
 
 test("scenario fixtures preserve conservative distinctions", () => {

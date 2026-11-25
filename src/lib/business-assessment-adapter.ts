@@ -58,9 +58,9 @@ function normalizeEvidence(
     id: item.id,
     evidenceType: item.evidence_type,
     certainty: item.certainty,
-    // Persisted evidence is documented, but it is never promoted to verified
-    // because the current product does not independently verify user input.
-    source: "documented",
+    // Persistence proves that a user record exists; it does not independently
+    // verify the observation or make it documentary evidence.
+    source: "declared",
     observedAt: item.observed_at,
   }));
 }
