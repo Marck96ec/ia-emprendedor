@@ -1,0 +1,30 @@
+{
+    "status":  "RESOLVED_WITH_USER_INPUT",
+    "source":  "Valores sintéticos autorizados durante la auditoría",
+    "scenarios":  {
+                      "nova-studio":  {
+                                          "currency":  "USD",
+                                          "initial":  {
+                                                          "status":  "BLOCKED",
+                                                          "completedQuestions":  8,
+                                                          "questions":  10,
+                                                          "cause":  "Facturación obligatoria sin valor informado",
+                                                          "validation":  "Escribe un número válido dentro del rango indicado.",
+                                                          "ui":  "Ej. 5000"
+                                                      },
+                                          "authorizedMonthlyRevenue":  4500
+                                      },
+                      "taller-andino":  {
+                                            "currency":  "USD",
+                                            "initial":  {
+                                                            "status":  "BLOCKED",
+                                                            "completedQuestions":  8,
+                                                            "questions":  10,
+                                                            "cause":  "Facturación obligatoria sin valor informado",
+                                                            "validation":  "Escribe un número válido dentro del rango indicado.",
+                                                            "ui":  "Ej. 5000"
+                                                        },
+                                            "authorizedMonthlyRevenue":  18000
+                                        }
+                  }
+}

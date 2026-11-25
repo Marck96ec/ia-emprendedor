@@ -1,0 +1,2171 @@
+{
+  "run": "mwvdyrqk",
+  "reference": "a43187b8583f281ebdd701e3ae6499cd3084f8b5",
+  "date": "24 de noviembre de 2026",
+  "environment": {
+    "application": "http://localhost:3000",
+    "supabase": "http://127.0.0.1:54321",
+    "mailpit": "http://127.0.0.1:54324",
+    "providerConfigured": true,
+    "chromium": "158.0.8127.18"
+  },
+  "criteria": {
+    "viewportDesktop": "Bloques visibles, CTA ?ntegro, documento cabe, ausencia de overflow horizontal/clipping.",
+    "viewportMobile": "Decisi?n, ejecución y CTA ?ntegros sobre navegación fija, sin overflow horizontal/clipping.",
+    "counts": "Las repeticiones de recuperaci?n, avances parciales y bloqueos iniciales resueltos se registran por separado."
+  },
+  "counts": {
+    "browserFlows": {
+      "PASS": 55,
+      "FAIL": 0,
+      "SKIP": 1,
+      "BLOCKED": 0
+    },
+    "viewports": {
+      "PASS": 10,
+      "FAIL": 5,
+      "SKIP": 0,
+      "BLOCKED": 0
+    },
+    "isolation": {
+      "PASS": 6,
+      "FAIL": 0,
+      "SKIP": 0,
+      "BLOCKED": 0
+    }
+  },
+  "statusEvaluation": {
+    "functional": "GO",
+    "security": "GO",
+    "productDesign": "NO GO",
+    "ceoIntelligence": "parcial",
+    "businessValue": "parcial"
+  },
+  "technical": {
+    "defaultTest": {
+      "command": "npm.cmd test",
+      "total": 168,
+      "passed": 165,
+      "failed": 0,
+      "skipped": 3,
+      "blocked": 0
+    },
+    "localTest": {
+      "command": "SUPABASE_LOCAL_TESTS=1 npm.cmd test",
+      "total": 168,
+      "passed": 168,
+      "failed": 0,
+      "skipped": 0,
+      "blocked": 0
+    },
+    "lint": {
+      "command": "npm.cmd run lint",
+      "status": "PASS"
+    },
+    "typecheck": {
+      "command": "npm.cmd run typecheck",
+      "status": "PASS"
+    },
+    "build": {
+      "command": "npm.cmd run build",
+      "status": "PASS"
+    },
+    "diffCheck": {
+      "command": "git diff --check",
+      "status": "PASS"
+    }
+  },
+  "onboardingFirstAttempt": {
+    "status": "RESOLVED_WITH_USER_INPUT",
+    "source": "Valores sintéticos autorizados durante la auditoría",
+    "scenarios": {
+      "nova-studio": {
+        "currency": "USD",
+        "initial": {
+          "status": "BLOCKED",
+          "completedQuestions": 8,
+          "questions": 10,
+          "cause": "Facturación obligatoria sin valor informado",
+          "validation": "Escribe un número válido dentro del rango indicado.",
+          "ui": "Ej. 5000"
+        },
+        "authorizedMonthlyRevenue": 4500
+      },
+      "taller-andino": {
+        "currency": "USD",
+        "initial": {
+          "status": "BLOCKED",
+          "completedQuestions": 8,
+          "questions": 10,
+          "cause": "Facturación obligatoria sin valor informado",
+          "validation": "Escribe un número válido dentro del rango indicado.",
+          "ui": "Ej. 5000"
+        },
+        "authorizedMonthlyRevenue": 18000
+      }
+    }
+  },
+  "browserFlows": [
+    {
+      "scenario": "cafe-horizonte",
+      "id": "landing",
+      "status": "PASS",
+      "hero": "Decide con claridad. Ejecuta con enfoque. Mejora con evidencia.",
+      "cta": "Crear cuenta"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "signup",
+      "status": "PASS",
+      "statusShown": "account_created"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "email-confirmation",
+      "status": "PASS",
+      "destination": "/dashboard",
+      "subject": "Confirma tu cuenta de IA Emprendedor",
+      "exactRecipient": true,
+      "language": "es",
+      "identity": "IA Emprendedor"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "onboarding-business",
+      "status": "PASS",
+      "questions": 3,
+      "emptyRejected": true,
+      "seconds": 1
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "onboarding-diagnostic",
+      "status": "PASS",
+      "questions": 10,
+      "seconds": 0,
+      "persisted": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "first-plan",
+      "status": "PASS",
+      "count": 3,
+      "assisted": 0,
+      "secondsAfterOnboarding": 0
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "T0",
+      "status": "PASS",
+      "stage": "Sin etapa establecida",
+      "ringSegments": 5,
+      "sources": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "dashboard",
+      "status": "PASS",
+      "tabs": [
+        "Foco",
+        "Prioridades",
+        "Evidencia"
+      ],
+      "workspace": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "action-1",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "action-2",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "action-3",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "T1",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        6,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "weekly-review-save",
+      "status": "PASS",
+      "saved": true,
+      "outcome": "mixed",
+      "completed": 3
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "second-plan",
+      "status": "PASS",
+      "count": 3,
+      "continuity": "deepening",
+      "seconds": 32
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "review-persistence",
+      "status": "PASS",
+      "reload": true,
+      "logout": true,
+      "login": true,
+      "history": true,
+      "protectedRoutes": 3
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "T2",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        6,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "week2-ai-supplement",
+      "status": "PASS",
+      "sequence": 3,
+      "week": 2,
+      "afterT2": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "week2-manual-control",
+      "status": "PASS",
+      "sequence": 1,
+      "week": 2,
+      "afterT2": true,
+      "case": "Un cobro de USD 1.200 confirmado de tres revisados. Fecha ISO. Confirmación de promesa, no de recepción."
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "keyboard-and-mobile-order",
+      "status": "PASS",
+      "focusTrapped": true,
+      "focusRestored": true,
+      "mobileOrder": true,
+      "zoom": {
+        "factor": 2,
+        "scrollWidth": 683,
+        "clientWidth": 683,
+        "openedByKeyboard": true
+      }
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "id": "native-zoom-200",
+      "status": "PASS",
+      "factor": 2,
+      "scrollWidth": 683,
+      "clientWidth": 683,
+      "openedByKeyboard": true
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "landing",
+      "status": "PASS",
+      "hero": "Decide con claridad. Ejecuta con enfoque. Mejora con evidencia.",
+      "cta": "Crear cuenta"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "signup",
+      "status": "PASS",
+      "statusShown": "account_created"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "email-confirmation",
+      "status": "PASS",
+      "destination": "/dashboard",
+      "subject": "Confirma tu cuenta de IA Emprendedor",
+      "exactRecipient": true,
+      "language": "es",
+      "identity": "IA Emprendedor"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "onboarding-business",
+      "status": "PASS",
+      "questions": 3,
+      "emptyRejected": true,
+      "seconds": 1
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "onboarding-diagnostic",
+      "status": "PASS",
+      "questions": 10,
+      "seconds": 6,
+      "persisted": true
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "first-plan",
+      "status": "PASS",
+      "count": 4,
+      "assisted": 1,
+      "generationSeconds": 17
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "T0",
+      "status": "PASS",
+      "stage": "Sin etapa establecida",
+      "ringSegments": 5,
+      "sources": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "dashboard",
+      "status": "PASS",
+      "tabs": [
+        "Foco",
+        "Prioridades",
+        "Evidencia"
+      ],
+      "workspace": true
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "action-1",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "action-2",
+      "status": "PASS",
+      "mode": "ai_assisted"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "action-3",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "action-4",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "T1",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        7,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "weekly-review-save",
+      "status": "PASS",
+      "saved": true,
+      "outcome": "mixed",
+      "completed": 4
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "second-plan",
+      "status": "PASS",
+      "count": 3,
+      "continuity": "deepening",
+      "seconds": 30
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "review-persistence",
+      "status": "PASS",
+      "reload": true,
+      "logout": true,
+      "login": true,
+      "history": true,
+      "protectedRoutes": 3
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "T2",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        7,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "nova-studio",
+      "id": "keyboard-and-mobile-order",
+      "status": "PASS",
+      "focusTrapped": true,
+      "focusRestored": true,
+      "mobileOrder": true
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "landing",
+      "status": "PASS",
+      "hero": "Decide con claridad. Ejecuta con enfoque. Mejora con evidencia.",
+      "cta": "Crear cuenta"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "signup",
+      "status": "PASS",
+      "statusShown": "account_created"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "email-confirmation",
+      "status": "PASS",
+      "destination": "/dashboard",
+      "subject": "Confirma tu cuenta de IA Emprendedor",
+      "exactRecipient": true,
+      "language": "es",
+      "identity": "IA Emprendedor"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "onboarding-business",
+      "status": "PASS",
+      "questions": 3,
+      "emptyRejected": true,
+      "seconds": 1
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "onboarding-diagnostic",
+      "status": "PASS",
+      "questions": 10,
+      "seconds": 5,
+      "persisted": true
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "first-plan",
+      "status": "PASS",
+      "count": 3,
+      "assisted": 0,
+      "generationSeconds": 15
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "T0",
+      "status": "PASS",
+      "stage": "Sin etapa establecida",
+      "ringSegments": 5,
+      "sources": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "dashboard",
+      "status": "PASS",
+      "tabs": [
+        "Foco",
+        "Prioridades",
+        "Evidencia"
+      ],
+      "workspace": true
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "action-1",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "T1",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "weekly-review-save",
+      "status": "PASS",
+      "saved": true,
+      "outcome": "mixed",
+      "completed": 3
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "second-plan",
+      "status": "PASS",
+      "count": 3,
+      "continuity": "deepening",
+      "seconds": 27
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "T2",
+      "status": "PASS",
+      "stage": "Estimado 2 de 5",
+      "ringSegments": 5,
+      "sources": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "action-2",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "action-3",
+      "status": "PASS",
+      "mode": "manual"
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "review-persistence",
+      "status": "PASS",
+      "reload": true,
+      "logout": true,
+      "login": true,
+      "history": true,
+      "protectedRoutes": 3
+    },
+    {
+      "scenario": "taller-andino",
+      "id": "keyboard-and-mobile-order",
+      "status": "PASS",
+      "focusTrapped": true,
+      "focusRestored": true,
+      "mobileOrder": true
+    },
+    {
+      "scenario": "cross-scenario",
+      "id": "ai-value-proposition-as-deliverable",
+      "status": "SKIP",
+      "cause": "No se generó ese tipo de acción en la primera semana."
+    }
+  ],
+  "viewport": [
+    {
+      "scenario": "cafe-horizonte",
+      "innerWidth": 1280,
+      "innerHeight": 720,
+      "usable": 720,
+      "scrollHeight": 736,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 99,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "FAIL",
+      "filename": "cafe-horizonte-1280x720.png",
+      "essentialBlocksFullyVisible": false,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "innerWidth": 1366,
+      "innerHeight": 768,
+      "usable": 768,
+      "scrollHeight": 768,
+      "scrollWidth": 1366,
+      "clientWidth": 1366,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "cafe-horizonte-1366x768.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "usable": 900,
+      "scrollHeight": 900,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "cafe-horizonte-1440x900.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "innerWidth": 1920,
+      "innerHeight": 1080,
+      "usable": 1080,
+      "scrollHeight": 1080,
+      "scrollWidth": 1920,
+      "clientWidth": 1920,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "cafe-horizonte-1920x1080.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "usable": 787,
+      "scrollHeight": 1327,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "blocks": {
+        "header": {
+          "top": 8,
+          "bottom": 64,
+          "height": 56,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 76,
+          "bottom": 282,
+          "height": 206,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 294,
+          "bottom": 771,
+          "height": 477,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 783,
+          "bottom": 997,
+          "height": 214,
+          "percent": 2,
+          "clipping": []
+        },
+        "dna": {
+          "top": 1009,
+          "bottom": 1251,
+          "height": 242,
+          "percent": 0,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 658,
+          "bottom": 702,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "cafe-horizonte-390x844.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "nova-studio",
+      "innerWidth": 1280,
+      "innerHeight": 720,
+      "usable": 720,
+      "scrollHeight": 773,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 154,
+          "bottom": 388,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 400,
+          "bottom": 759,
+          "height": 359,
+          "percent": 89,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 154,
+          "bottom": 372,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 384,
+          "bottom": 626,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 694,
+          "bottom": 738,
+          "height": 44,
+          "percent": 59,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "FAIL",
+      "filename": "nova-studio-1280x720.png",
+      "essentialBlocksFullyVisible": false,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "nova-studio",
+      "innerWidth": 1366,
+      "innerHeight": 768,
+      "usable": 768,
+      "scrollHeight": 773,
+      "scrollWidth": 1366,
+      "clientWidth": 1366,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 154,
+          "bottom": 388,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 400,
+          "bottom": 759,
+          "height": 359,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 154,
+          "bottom": 372,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 384,
+          "bottom": 626,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 694,
+          "bottom": 738,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "FAIL",
+      "filename": "nova-studio-1366x768.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "nova-studio",
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "usable": 900,
+      "scrollHeight": 900,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 154,
+          "bottom": 388,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 400,
+          "bottom": 759,
+          "height": 359,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 154,
+          "bottom": 372,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 384,
+          "bottom": 626,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 694,
+          "bottom": 738,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "nova-studio-1440x900.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "nova-studio",
+      "innerWidth": 1920,
+      "innerHeight": 1080,
+      "usable": 1080,
+      "scrollHeight": 1080,
+      "scrollWidth": 1920,
+      "clientWidth": 1920,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 154,
+          "bottom": 388,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 400,
+          "bottom": 759,
+          "height": 359,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 154,
+          "bottom": 372,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 384,
+          "bottom": 626,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 694,
+          "bottom": 738,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "nova-studio-1920x1080.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "nova-studio",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "usable": 787,
+      "scrollHeight": 1414,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "blocks": {
+        "header": {
+          "top": 8,
+          "bottom": 64,
+          "height": 56,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 163,
+          "bottom": 369,
+          "height": 206,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 381,
+          "bottom": 858,
+          "height": 477,
+          "percent": 85,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 870,
+          "bottom": 1084,
+          "height": 214,
+          "percent": 0,
+          "clipping": []
+        },
+        "dna": {
+          "top": 1096,
+          "bottom": 1338,
+          "height": 242,
+          "percent": 0,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 745,
+          "bottom": 789,
+          "height": 44,
+          "percent": 96,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "FAIL",
+      "filename": "nova-studio-390x844.png",
+      "essentialBlocksFullyVisible": false,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "taller-andino",
+      "innerWidth": 1280,
+      "innerHeight": 720,
+      "usable": 720,
+      "scrollHeight": 736,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 99,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "FAIL",
+      "filename": "taller-andino-1280x720.png",
+      "essentialBlocksFullyVisible": false,
+      "fitsDocument": false
+    },
+    {
+      "scenario": "taller-andino",
+      "innerWidth": 1366,
+      "innerHeight": 768,
+      "usable": 768,
+      "scrollHeight": 768,
+      "scrollWidth": 1366,
+      "clientWidth": 1366,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "taller-andino-1366x768.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "taller-andino",
+      "innerWidth": 1440,
+      "innerHeight": 900,
+      "usable": 900,
+      "scrollHeight": 900,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "taller-andino-1440x900.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "taller-andino",
+      "innerWidth": 1920,
+      "innerHeight": 1080,
+      "usable": 1080,
+      "scrollHeight": 1080,
+      "scrollWidth": 1920,
+      "clientWidth": 1920,
+      "blocks": {
+        "header": {
+          "top": 14,
+          "bottom": 78,
+          "height": 64,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 90,
+          "bottom": 324,
+          "height": 234,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 336,
+          "bottom": 722,
+          "height": 386,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 90,
+          "bottom": 308,
+          "height": 218,
+          "percent": 100,
+          "clipping": []
+        },
+        "dna": {
+          "top": 320,
+          "bottom": 562,
+          "height": 242,
+          "percent": 100,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 657,
+          "bottom": 701,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "taller-andino-1920x1080.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": true
+    },
+    {
+      "scenario": "taller-andino",
+      "innerWidth": 390,
+      "innerHeight": 844,
+      "usable": 787,
+      "scrollHeight": 1327,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "blocks": {
+        "header": {
+          "top": 8,
+          "bottom": 64,
+          "height": 56,
+          "percent": 100,
+          "clipping": []
+        },
+        "decision": {
+          "top": 76,
+          "bottom": 282,
+          "height": 206,
+          "percent": 100,
+          "clipping": []
+        },
+        "execution": {
+          "top": 294,
+          "bottom": 771,
+          "height": 477,
+          "percent": 100,
+          "clipping": []
+        },
+        "evolution": {
+          "top": 783,
+          "bottom": 997,
+          "height": 214,
+          "percent": 2,
+          "clipping": []
+        },
+        "dna": {
+          "top": 1009,
+          "bottom": 1251,
+          "height": 242,
+          "percent": 0,
+          "clipping": []
+        },
+        "results": null,
+        "cta": {
+          "top": 658,
+          "bottom": 702,
+          "height": 44,
+          "percent": 100,
+          "clipping": []
+        }
+      },
+      "boardOpen": false,
+      "status": "PASS",
+      "filename": "taller-andino-390x844.png",
+      "essentialBlocksFullyVisible": true,
+      "fitsDocument": false
+    }
+  ],
+  "isolation": [
+    {
+      "owner": "cafe-horizonte",
+      "visitor": "nova-studio",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 6,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "action_results": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    },
+    {
+      "owner": "cafe-horizonte",
+      "visitor": "taller-andino",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 6,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "action_results": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    },
+    {
+      "owner": "nova-studio",
+      "visitor": "cafe-horizonte",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        },
+        "action_results": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    },
+    {
+      "owner": "nova-studio",
+      "visitor": "taller-andino",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        },
+        "action_results": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 7,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    },
+    {
+      "owner": "taller-andino",
+      "visitor": "cafe-horizonte",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 6,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 3,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    },
+    {
+      "owner": "taller-andino",
+      "visitor": "nova-studio",
+      "tables": {
+        "businesses": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "ceo_plans": {
+          "qaRecords": 2,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_actions": {
+          "qaRecords": 6,
+          "returned": 0,
+          "errorCode": null
+        },
+        "weekly_reviews": {
+          "qaRecords": 1,
+          "returned": 0,
+          "errorCode": null
+        },
+        "business_evidence": {
+          "qaRecords": 3,
+          "returned": 0,
+          "errorCode": null
+        }
+      },
+      "status": "PASS",
+      "route": {
+        "finalPath": "/dashboard",
+        "exposed": false
+      }
+    }
+  ],
+  "checkpoints": {
+    "cafe-horizonte": {
+      "T0": {
+        "contextWeek": 1,
+        "stage": "Sin etapa establecida",
+        "ringSegments": 5,
+        "confidence": null,
+        "health": "requiere atención",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 0,
+          "documented": 0,
+          "verified": 0,
+          "items": []
+        },
+        "development": null,
+        "actionProgress": {
+          "completed": 0,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Debemos concentrar esta semana la gestión del negocio en proteger caja y reordenar cobros/pagos antes de intentar cualquier expansión o mejora comercial?",
+          "rationale": "Con caja de USD 600 y pagos próximos de USD 2.500, la decisión que más cambia el riesgo del negocio es asegurar cumplimiento financiero; crecer sin estabilizar eso aumenta la fragilidad.",
+          "target_metric": "caja disponible y obligaciones próximas cubiertas",
+          "expected_outcome": "Mayor visibilidad del faltante real y un plan de pagos/cobros que reduzca el riesgo inmediato de incumplimiento.",
+          "recommended_direction": "Sí: priorizar liquidez, calendarizar compromisos y activar cobros rápidos sobre toda iniciativa de crecimiento."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 0.\n\nSalud del negocio\n\nEl negocio se declara estancado y necesita identificar qué restricción impide avanzar.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nLa etapa estancada activa una alerta de fragilidad sin inferir un problema financiero.\nQué falta por conocer\nRegistros de ventas, indicadores o resultados del negocio.\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nRiesgos detectados\nEl negocio se declara estancado; hace falta identificar la restricción concreta.\nLa etapa declarada es estancada.\nFuentes de información\n\n0 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T1": {
+        "contextWeek": 1,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "requiere atención",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Favorable",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 6,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "follow_up",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "follow_up",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n3 resultados declarados\n3 acciones completadas",
+        "actionProgress": {
+          "completed": 3,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Debemos concentrar esta semana la gestión del negocio en proteger caja y reordenar cobros/pagos antes de intentar cualquier expansión o mejora comercial?",
+          "rationale": "Con caja de USD 600 y pagos próximos de USD 2.500, la decisión que más cambia el riesgo del negocio es asegurar cumplimiento financiero; crecer sin estabilizar eso aumenta la fragilidad.",
+          "target_metric": "caja disponible y obligaciones próximas cubiertas",
+          "expected_outcome": "Mayor visibilidad del faltante real y un plan de pagos/cobros que reduzca el riesgo inmediato de incumplimiento.",
+          "recommended_direction": "Sí: priorizar liquidez, calendarizar compromisos y activar cobros rápidos sobre toda iniciativa de crecimiento."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 4.\n\nSalud del negocio\n\nEl negocio se declara estancado y necesita identificar qué restricción impide avanzar.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nLa etapa estancada activa una alerta de fragilidad sin inferir un problema financiero.\nQué falta por conocer\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nRiesgos detectados\nEl negocio se declara estancado; hace falta identificar la restricción concreta.\nLa etapa declarada es estancada.\nFuentes de información\n\n6 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T2": {
+        "contextWeek": 2,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "requiere atención",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Favorable",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 6,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "follow_up",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "follow_up",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n3 resultados declarados\n3 acciones completadas\n1 decisión evaluada",
+        "actionProgress": {
+          "completed": 0,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Debemos seguir concentrando esta semana la gestión en asegurar caja real y cobros próximos, o ya cambiar el foco hacia corregir el margen estructural del negocio?",
+          "rationale": "La última semana mejoró la visibilidad, pero no el efectivo disponible. Con USD 600 en caja y USD 2.500 próximos a vencer, el riesgo inmediato sigue siendo el incumplimiento, no la falta de ventas.",
+          "target_metric": "caja disponible y obligaciones próximas cubiertas",
+          "expected_outcome": "Mayor claridad sobre el efectivo realmente recuperable y una base mínima para cubrir pagos urgentes o renegociarlos.",
+          "recommended_direction": "Seguir priorizando caja y cobros próximos antes de abrir un frente comercial más amplio."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 4.\n\nSalud del negocio\n\nEl negocio se declara estancado y necesita identificar qué restricción impide avanzar.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nLa etapa estancada activa una alerta de fragilidad sin inferir un problema financiero.\nQué falta por conocer\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nRiesgos detectados\nEl negocio se declara estancado; hace falta identificar la restricción concreta.\nLa etapa declarada es estancada.\nFuentes de información\n\n6 declaradas · 0 documentadas · 0 verificadas"
+      }
+    },
+    "nova-studio": {
+      "T0": {
+        "contextWeek": 1,
+        "stage": "Sin etapa establecida",
+        "ringSegments": 5,
+        "confidence": null,
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 0,
+          "documented": 0,
+          "verified": 0,
+          "items": []
+        },
+        "development": null,
+        "actionProgress": {
+          "completed": 0,
+          "total": 4
+        },
+        "decision": {
+          "question": "¿Debemos fijar una propuesta de valor única y probarla como base comercial antes de diversificar mensajes o canales?",
+          "rationale": "La incertidumbre principal está en el posicionamiento; sin una oferta clara, cualquier esfuerzo comercial se dispersa y no genera aprendizaje confiable.",
+          "target_metric": "oportunidades comerciales cualificadas",
+          "expected_outcome": "Mayor claridad comercial, más consistencia en el discurso y primeras señales observables de interés cualificado.",
+          "recommended_direction": "Sí: concentrar el esfuerzo en una sola propuesta clara y usarla para testear mensajes comerciales consistentes en el mercado objetivo."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 0.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nRegistros de ventas, indicadores o resultados del negocio.\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n0 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T1": {
+        "contextWeek": 1,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Favorable",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 7,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "sale",
+              "certainty": "real"
+            },
+            {
+              "type": "sale",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n4 resultados declarados\n4 acciones completadas",
+        "actionProgress": {
+          "completed": 4,
+          "total": 4
+        },
+        "decision": {
+          "question": "¿Debemos fijar una propuesta de valor única y probarla como base comercial antes de diversificar mensajes o canales?",
+          "rationale": "La incertidumbre principal está en el posicionamiento; sin una oferta clara, cualquier esfuerzo comercial se dispersa y no genera aprendizaje confiable.",
+          "target_metric": "oportunidades comerciales cualificadas",
+          "expected_outcome": "Mayor claridad comercial, más consistencia en el discurso y primeras señales observables de interés cualificado.",
+          "recommended_direction": "Sí: concentrar el esfuerzo en una sola propuesta clara y usarla para testear mensajes comerciales consistentes en el mercado objetivo."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 7.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n7 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T2": {
+        "contextWeek": 2,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Favorable",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 7,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "sale",
+              "certainty": "real"
+            },
+            {
+              "type": "sale",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n4 resultados declarados\n4 acciones completadas\n1 decisión evaluada",
+        "actionProgress": {
+          "completed": 0,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Debemos seguir validando la misma propuesta de valor con una muestra más amplia y comparable antes de cambiar de canal o de mensaje?",
+          "rationale": "Ya existe una señal inicial, pero todavía no alcanza para decidir con seguridad. Cambiar ahora sería abandonar una hipótesis antes de medirla bien.",
+          "target_metric": "oportunidades comerciales calificadas",
+          "expected_outcome": "Más claridad sobre si la propuesta genera interés real y qué tipo de prospecto responde mejor.",
+          "recommended_direction": "Sí: profundizar la validación de la propuesta actual con más casos comparables y registrar la respuesta por origen."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 7.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n7 declaradas · 0 documentadas · 0 verificadas"
+      }
+    },
+    "taller-andino": {
+      "T0": {
+        "contextWeek": 1,
+        "stage": "Sin etapa establecida",
+        "ringSegments": 5,
+        "confidence": null,
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 0,
+          "documented": 0,
+          "verified": 0,
+          "items": []
+        },
+        "development": null,
+        "actionProgress": {
+          "completed": 0,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Conviene invertir esta semana en estandarizar y delegar las decisiones operativas críticas, o primero redefinir el tipo de pedidos que el taller acepta?",
+          "rationale": "La evidencia apunta a un cuello de botella de autonomía más que de demanda; liberar decisiones repetitivas debería mejorar continuidad antes de pensar en crecer.",
+          "target_metric": "continuidad operativa sin intervención constante del propietario",
+          "expected_outcome": "Menos interrupciones por ausencia del dueño y mayor fluidez en compras, cotización y programación.",
+          "recommended_direction": "Estandarizar la toma de decisiones operativas mínimas para que el equipo avance pedidos sin esperar al dueño, mientras se observa si eso reduce retrasos."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 0.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nRegistros de ventas, indicadores o resultados del negocio.\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n0 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T1": {
+        "contextWeek": 1,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 3,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n3 resultados declarados\n3 acciones completadas",
+        "actionProgress": {
+          "completed": 3,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Conviene invertir esta semana en estandarizar y delegar las decisiones operativas críticas, o primero redefinir el tipo de pedidos que el taller acepta?",
+          "rationale": "La evidencia apunta a un cuello de botella de autonomía más que de demanda; liberar decisiones repetitivas debería mejorar continuidad antes de pensar en crecer.",
+          "target_metric": "continuidad operativa sin intervención constante del propietario",
+          "expected_outcome": "Menos interrupciones por ausencia del dueño y mayor fluidez en compras, cotización y programación.",
+          "recommended_direction": "Estandarizar la toma de decisiones operativas mínimas para que el equipo avance pedidos sin esperar al dueño, mientras se observa si eso reduce retrasos."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 3.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n3 declaradas · 0 documentadas · 0 verificadas"
+      },
+      "T2": {
+        "contextWeek": 2,
+        "stage": "Estimado 2 de 5",
+        "ringSegments": 5,
+        "confidence": "baja",
+        "health": "sin evaluar",
+        "dna": {
+          "Mercado": "Sin evaluar",
+          "Finanzas": "Sin evaluar",
+          "Liquidez": "Sin evaluar",
+          "Operaciones": "Sin evaluar",
+          "Autonomía": "Sin evaluar",
+          "Crecimiento": "Sin evaluar"
+        },
+        "evidence": {
+          "declared": 3,
+          "documented": 0,
+          "verified": 0,
+          "items": [
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            },
+            {
+              "type": "action_result",
+              "certainty": "real"
+            }
+          ]
+        },
+        "development": "Resultados registrados\n3 resultados declarados\n3 acciones completadas\n1 decisión evaluada",
+        "actionProgress": {
+          "completed": 0,
+          "total": 3
+        },
+        "decision": {
+          "question": "¿Conviene ampliar ahora la delegación de compras estándar con límites explícitos y medir el tiempo de espera por pedido, o mantener la intervención del dueño para evitar errores en excepciones?",
+          "rationale": "La evidencia ya muestra que una parte del proceso funciona sin el dueño; el objetivo ahora no es delegar todo, sino separar con precisión lo estándar de lo excepcional para reducir esperas sin perder control.",
+          "target_metric": "tiempo de espera por pedido y continuidad operativa sin intervención constante del propietario",
+          "expected_outcome": "Menos pedidos detenidos por aprobaciones rutinarias y una lista más clara de decisiones que pueden operar sin el dueño.",
+          "recommended_direction": "Ampliar la delegación solo en compras y decisiones estándar con límites claros, mientras se mide el tiempo de espera y se identifican las excepciones que todavía deben escalarse."
+        },
+        "assessmentExplanation": "Evaluación empresarial\nCerrar\nEtapa empresarial\n\nEl nivel combina la etapa declarada con señales operativas explícitas. Completar acciones no cambia el nivel automáticamente.\n\nRegistros considerados para la etapa: 3.\n\nSalud del negocio\n\nNo hay información suficiente para evaluar la salud sin confundir ejecución con resultados empresariales.\n\nCómo se evaluó\nLa información que compartiste sobre el estado de tu negocio apunta a la etapa Supervivencia como estimación.\nQué falta por conocer\nResultados empresariales comparables y señales de liquidez.\nUna revisión semanal con resultado observable.\nEvidencia observable de clientes, oportunidades o ventas.\nCostos, margen y resultado financiero comparable.\nFlujo de caja, obligaciones futuras y fechas de pago.\nResultados repetibles del proceso operativo.\nDistribución de responsabilidades, delegación y continuidad sin el dueño.\nIntención de crecimiento y capacidad demostrada para sostenerlo.\nFuentes de información\n\n3 declaradas · 0 documentadas · 0 verificadas"
+      }
+    }
+  },
+  "validationGaps": [
+    "No apareció un entregable AI de tipo value_proposition en la primera semana.",
+    "La evidencia de uso real es sintética.",
+    "Hay campos de captura de la semana 1 con entradas semánticamente inválidas aceptadas por la app."
+  ],
+  "detailedObservations": "reports/observations.json"
+}
