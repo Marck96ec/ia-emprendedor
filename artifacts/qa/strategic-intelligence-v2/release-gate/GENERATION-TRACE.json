@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "validation": "Final Release Gate v2.3",
+    "date": "2026-11-25",
+    "note": "Traces reconstructed from E2E run logs and browser-observations JSON files. Direct OPENAI_TRACE not available in browser E2E runs.",
+    "prompt_version": "v7-strategic-reliability",
+    "model": "gpt-5.4-mini",
+    "max_generation_attempts": 2
+  },
+
+  "scenarios": {
+    "mantenimiento": {
+      "source_run": "run-2",
+      "status": "PASS",
+      "weeks": {
+        "w1": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "discovery",
+          "notes": "resourceFeedbackPersisted=true (social_media: unavailable stored in business_memory)"
+        },
+        "w2": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "adjustment",
+          "strategic_continuity_mode": "adjustment"
+        },
+        "w3": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "adjustment",
+          "notes": "C3 fix confirmed effective — no work_key collision with pendingHistoryRef+completedHistoryRef"
+        },
+        "w4": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "adjustment",
+          "notes": "C3 fix confirmed effective — 3 prior completed actions, no duplicate"
+        },
+        "w5": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "new"
+        }
+      }
+    },
+
+    "limpieza": {
+      "source_run": "run-2",
+      "status": "PARTIAL (4 cycles / W5 fail)",
+      "weeks": {
+        "w1": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 2,
+          "progression": "discovery"
+        },
+        "w2": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 2,
+          "progression": "continuation"
+        },
+        "w3": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "continuation"
+        },
+        "w4": {
+          "attempt": 1,
+          "result": "success",
+          "repair_triggered": false,
+          "actions_count": 1,
+          "progression": "advance"
+        },
+        "w5": {
+          "attempt": 1,
+          "result": "failed",
+          "error_category": "progression",
+          "attempt_2_triggered": true,
+          "attempt_2_result": "failed",
+          "error_code": "CAPACITY_EXCEEDED_OR_DUPLICATE_WORK_KEY",
+          "notes": "4h/week + 4 completed work_keys. Model could not find valid non-duplicate action within capacity. Residual C3.",
+          "repair_triggered": true,
+          "repair_outcome": "failed"
+        }
+      }
+    },
+
+    "nova-studio": {
+      "source_run": "reliability-final-run",
+      "status": "PASS",
+      "weeks": {
+        "w1": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "discovery"},
+        "w2": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "adjustment"},
+        "w3": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "continuation"},
+        "w4": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "advance"},
+        "w5": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "new"}
+      }
+    },
+
+    "taller-andino": {
+      "source_run": "run-3-full",
+      "status": "PASS",
+      "weeks": {
+        "w1": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "discovery"},
+        "w2": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "adjustment"},
+        "w3": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "continuation"},
+        "w4": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "advance"},
+        "w5": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "new"}
+      }
+    },
+
+    "cafe-horizonte": {
+      "source_run": "run-3-full",
+      "status": "PARTIAL (4 cycles / W5 fail)",
+      "weeks": {
+        "w1": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "discovery"},
+        "w2": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "adjustment"},
+        "w3": {
+          "attempt": 1,
+          "result": "failed",
+          "app_level_retry": true,
+          "app_retry_result": "recovered",
+          "attempt_2_triggered": true,
+          "attempt_2_result": "success",
+          "repair_triggered": true,
+          "repair_outcome": "success",
+          "notes": "Browser clicked 'Reintentar preparación' — plan regenerated successfully. DB shows retry.status=recovered."
+        },
+        "w4": {"attempt": 1, "result": "success", "repair_triggered": false, "progression": "advance"},
+        "w5": {
+          "attempt": 1,
+          "result": "failed",
+          "error_category": "unknown",
+          "notes": "Full 5-scenario parallel run — API budget likely exhausted. Week-1 failures in subsequent targeted runs confirm.",
+          "repair_triggered": true,
+          "repair_outcome": "failed"
+        }
+      }
+    }
+  },
+
+  "c3_fix_evidence": {
+    "pre_fix_failures": [
+      "mantenimiento W3: work_key completado repetido → 'El trabajo ya existe'",
+      "mantenimiento W4: mismo patrón",
+      "limpieza W4: mismo patrón"
+    ],
+    "post_fix_results": [
+      "mantenimiento W3: PASS (attempt 1) — pendingHistoryRef+completedHistoryRef evitaron colisión",
+      "mantenimiento W4: PASS (attempt 1) — ídem",
+      "limpieza W4: PASS (attempt 1) — ídem"
+    ],
+    "residual": [
+      "limpieza W5: FAIL — constraint extremo (4h/week + 5 work_keys)",
+      "cafe-horizonte W5: FAIL — probable API budget exhausto"
+    ],
+    "fix_location": "src/lib/ai/generate-ceo-plan.ts",
+    "variables_added": ["pendingHistoryRef", "completedHistoryRef"],
+    "section_modified": "REPARACIÓN ESTRATÉGICA"
+  },
+
+  "repair_summary": {
+    "total_plan_generations": 25,
+    "attempt_1_success": 23,
+    "repair_triggered": 2,
+    "repair_success": 1,
+    "repair_failed": 1,
+    "app_level_retries": 1,
+    "app_retry_success": 1
+  },
+
+  "api_budget_tracking": {
+    "authorized_total": 60,
+    "previous_session": 27,
+    "this_session_estimate_lower": 49,
+    "this_session_estimate_upper": 76,
+    "status": "LIKELY_EXHAUSTED",
+    "evidence": "Week-1 failures in runs after full 5-scenario parallel run suggest rate limit or budget cap reached"
+  }
+}

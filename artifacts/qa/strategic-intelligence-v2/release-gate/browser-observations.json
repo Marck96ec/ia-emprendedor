@@ -1,0 +1,2143 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T13:58:44.565Z",
+  "scenarios": {
+    "mantenimiento": {
+      "status": "PASS",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Registrar durante esta semana cada consulta recibida y anotar de dónde vino, qué pidió y si avanzó o no.",
+              "reason": "La decisión crítica depende de descubrir qué entrada genera consultas reales; sin eso no conviene escalar publicidad ni cambiar el servicio a ciegas.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La prioridad es aprender de consultas reales con evidencia mínima y factible, sin depender de una propuesta previa ni de un canal confirmado.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Obtener la primera evidencia confiable de origen de demanda con los recursos ya disponibles.",
+              "action_type": "generic",
+              "role_reason": "El dueño es quien recibe, cotiza y entiende mejor la consulta; no conviene delegar esta observación inicial.",
+              "capture_schema": {
+                "title": "Registro de consultas y origen",
+                "fields": [
+                  {
+                    "id": "planned_count",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Consultas esperadas a registrar",
+                    "required": true,
+                    "description": "Número estimado de consultas que planeas registrar esta semana."
+                  },
+                  {
+                    "id": "observed_count",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Consultas realmente registradas",
+                    "required": true,
+                    "description": "Número real de consultas registradas esta semana."
+                  },
+                  {
+                    "id": "consultas",
+                    "type": "repeatable_group",
+                    "label": "Detalle de consultas",
+                    "fields": [
+                      {
+                        "id": "channel_origin",
+                        "type": "single_select",
+                        "label": "Origen",
+                        "options": [
+                          {
+                            "label": "Internet",
+                            "value": "internet"
+                          },
+                          {
+                            "label": "WhatsApp",
+                            "value": "whatsapp"
+                          },
+                          {
+                            "label": "Referido",
+                            "value": "referido"
+                          },
+                          {
+                            "label": "Llamada",
+                            "value": "llamada"
+                          },
+                          {
+                            "label": "Presencial",
+                            "value": "presencial"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "otro"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Cómo llegó la consulta."
+                      },
+                      {
+                        "id": "service_requested",
+                        "type": "text",
+                        "label": "Servicio pedido",
+                        "required": true,
+                        "max_length": 120,
+                        "description": "Qué reparación o trabajo solicitó.",
+                        "placeholder": "Ej.: fuga de agua, cambio de foco, pintura de habitación"
+                      },
+                      {
+                        "id": "advanced",
+                        "type": "single_select",
+                        "label": "¿Avanzó?",
+                        "options": [
+                          {
+                            "label": "Sí",
+                            "value": "si"
+                          },
+                          {
+                            "label": "No",
+                            "value": "no"
+                          },
+                          {
+                            "label": "Parcial",
+                            "value": "parcial"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Si la consulta pasó a cotización, visita o trabajo."
+                      },
+                      {
+                        "id": "main_reason",
+                        "type": "textarea",
+                        "label": "Motivo principal",
+                        "required": false,
+                        "max_length": 300,
+                        "description": "Por qué avanzó o por qué no avanzó.",
+                        "placeholder": "Ej.: precio, urgencia, confianza, disponibilidad"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Muestra de las consultas recibidas para ver patrón de origen y avance."
+                  },
+                  {
+                    "id": "first_pattern",
+                    "type": "textarea",
+                    "label": "Primer patrón observado",
+                    "required": false,
+                    "max_length": 400,
+                    "description": "Qué patrón inicial aparece en las consultas.",
+                    "placeholder": "Ej.: llegan más por referido que por internet, o preguntan por urgencias."
+                  }
+                ],
+                "version": 1,
+                "description": "Capturar señales concretas de cada consulta recibida para decidir qué canal o contacto repetir.",
+                "capture_type": "consultas_semanales",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Cada consulta registrada con origen, tipo de solicitud y estado de avance.",
+              "estimated_hours": 2,
+              "expected_result": "Una señal inicial para distinguir qué fuente merece repetirse y cuál no.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos primero comprobar con los recursos ya disponibles qué tipo de contacto trae consultas reales antes de invertir más en amplificar publicidad?",
+            "rationale": "Este negocio vive de trabajos por encargo y el dueño tiene tiempo limitado; si no se identifica la fuente de demanda, escalar publicidad sería gastar sin aprendizaje.",
+            "target_metric": "consultas entrantes registradas",
+            "expected_outcome": "Obtener una señal concreta sobre cómo llegan las primeras consultas y qué vale la pena repetir después.",
+            "recommended_direction": "Sí: priorizar una verificación simple del origen de consultas y registrar qué señales aparecen con los contactos ya disponibles."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "consultas": [
+                  {
+                    "advanced": "parcial",
+                    "main_reason": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                    "channel_origin": "internet",
+                    "service_requested": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico."
+                  }
+                ],
+                "first_pattern": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                "planned_count": 2,
+                "observed_count": 1
+              }
+            }
+          ],
+          "resourceFeedbackPersisted": true,
+          "review": {
+            "id": "8502b149-a49e-4914-8577-c41fb0a5fe0c",
+            "outcome_status": "no_change",
+            "decision_learning": {
+              "evidence": [
+                "No disponemos de evidencia de mercado."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si verificamos y registramos el origen de las consultas con los recursos ya disponibles, aparecerá una señal útil para decidir qué canal o acercamiento merece repetirse.",
+              "target_metric": "consultas entrantes registradas",
+              "observed_result": "No se obtuvieron resultados empresariales. No tengo redes sociales.",
+              "expected_outcome": "Obtener una señal concreta sobre cómo llegan las primeras consultas y qué vale la pena repetir después.",
+              "decision_question": "¿Debemos primero comprobar con los recursos ya disponibles qué tipo de contacto trae consultas reales antes de invertir más en amplificar publicidad?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: priorizar una verificación simple del origen de consultas y registrar qué señales aparecen con los contactos ya disponibles.",
+              "evidence_assessment_note": "La revisión indica que aún faltan resultados o evidencia para validar la hipótesis.",
+              "reported_hypothesis_status": "validated"
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 2,
+          "plan": [
+            {
+              "action": "Hacer una revisión breve de las consultas o conversaciones disponibles y anotar qué parte del servicio generó interés, qué duda apareció y en qué punto avanzó o se frenó cada caso.",
+              "reason": "La decisión crítica ya no es solo medir si llegan contactos, sino entender qué mensaje u առաջարկa produce interés útil para este negocio de reparación por encargo.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "new",
+                "justification": "Es una verificación independiente y más precisa sobre la señal comercial disponible; no depende de una acción posterior ni repite formalmente el pendiente anterior.",
+                "prior_barrier": "resolved",
+                "new_evidence_id": "e21a2525-ba25-4da2-bdc6-f8c27dabe427",
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Identificar qué elemento de la oferta mueve la respuesta del cliente y cuál la bloquea.",
+              "action_type": "generic",
+              "role_reason": "El propietario es quien cotiza y conversa con el cliente; esa lectura no conviene delegarla.",
+              "capture_schema": {
+                "title": "Revisión de señal comercial",
+                "fields": [
+                  {
+                    "id": "observed_count",
+                    "max": 20,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Casos revisados",
+                    "required": true,
+                    "description": "Número real de consultas o conversaciones revisadas esta semana."
+                  },
+                  {
+                    "id": "cases",
+                    "type": "repeatable_group",
+                    "label": "Casos observados",
+                    "fields": [
+                      {
+                        "id": "interest_trigger",
+                        "type": "text",
+                        "label": "Elemento que generó interés",
+                        "required": true,
+                        "max_length": 120,
+                        "description": "Qué parte del servicio o mensaje llamó la atención.",
+                        "placeholder": "rapidez, urgencia, tipo de reparación, precio"
+                      },
+                      {
+                        "id": "main_doubt",
+                        "type": "textarea",
+                        "label": "Duda principal",
+                        "required": true,
+                        "max_length": 250,
+                        "description": "Qué duda impidió o retrasó el avance.",
+                        "placeholder": "qué incluye, horario, costo, confianza"
+                      },
+                      {
+                        "id": "advancement_state",
+                        "type": "single_select",
+                        "label": "Estado del avance",
+                        "options": [
+                          {
+                            "label": "Avanzó",
+                            "value": "advanced"
+                          },
+                          {
+                            "label": "Quedó en pausa",
+                            "value": "paused"
+                          },
+                          {
+                            "label": "No avanzó",
+                            "value": "did_not_advance"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Cómo terminó el caso."
+                      },
+                      {
+                        "id": "next_step_needed",
+                        "type": "textarea",
+                        "label": "Siguiente paso sugerido",
+                        "required": false,
+                        "max_length": 200,
+                        "description": "Qué habría hecho falta para que avanzara mejor.",
+                        "placeholder": "cotización, aclaración, seguimiento"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 5,
+                    "min_items": 1,
+                    "description": "Muestra de los casos revisados con la señal comercial observada."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué activó interés, qué generó duda y si hubo avance real en conversaciones o consultas disponibles.",
+                "capture_type": "consultation_signal_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Al menos una muestra registrada con interés principal, duda principal y estado de avance.",
+              "estimated_hours": 2,
+              "expected_result": "Una señal inicial para decidir qué ajustar en la comunicación comercial sin inventar un canal ni una oferta nueva.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos dedicar esta semana a verificar qué parte de la oferta genera una respuesta útil antes de insistir en ampliar la difusión?",
+            "rationale": "Este negocio vive de trabajos por encargo y el dueño tiene tiempo limitado; si no se identifica qué despierta respuesta útil, cualquier escalado sería ciego.",
+            "target_metric": "consultas útiles",
+            "expected_outcome": "Obtener una señal clara para saber qué ajustar primero en la comunicación comercial.",
+            "recommended_direction": "Sí: probar con una verificación simple de la respuesta del cliente y registrar qué elemento de la oferta mueve o frena el avance."
+          },
+          "continuity": {
+            "mode": "deepening",
+            "justification": "La validación anterior sobre origen de consultas sigue incompleta; esta semana profundiza el aprendizaje desde la señal de interés hacia la claridad de la oferta.",
+            "prior_evidence_gap": "La semana 1 mostró una señal inicial, pero no permitió distinguir con precisión qué parte del mensaje comercial funcionaba.",
+            "new_verifiable_signal": "Registro de consultas con motivo de interés, duda principal y punto exacto donde se frena o avanza.",
+            "unresolved_uncertainty": "Todavía no sabemos qué aspecto de la oferta produce una respuesta útil y cuál la frena."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "cases": [
+                  {
+                    "main_doubt": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                    "interest_trigger": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico.",
+                    "next_step_needed": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                    "advancement_state": "advanced"
+                  }
+                ],
+                "observed_count": 1
+              }
+            }
+          ],
+          "review": {
+            "id": "8aa16c0f-2f7f-4817-8817-dcb08929e399",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si observamos qué elemento de la oferta genera respuesta útil, podremos enfocar mejor la comunicación y reducir consultas confusas o poco avanzadas.",
+              "target_metric": "consultas útiles",
+              "observed_result": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+              "expected_outcome": "Obtener una señal clara para saber qué ajustar primero en la comunicación comercial.",
+              "decision_question": "¿Debemos dedicar esta semana a verificar qué parte de la oferta genera una respuesta útil antes de insistir en ampliar la difusión?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: probar con una verificación simple de la respuesta del cliente y registrar qué elemento de la oferta mueve o frena el avance."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 3,
+          "plan": [
+            {
+              "action": "Tomar una consulta real recibida esta semana y registrar de forma breve de dónde vino, qué pidió, cuál fue la duda principal y en qué punto avanzó o se frenó.",
+              "reason": "La decisión crítica es separar origen y fricción; ese aprendizaje define si conviene repetir un canal, ajustar el mensaje o ambos.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 3,
+                "progression": "new",
+                "justification": "Es una prueba nueva y más concreta que la revisión anterior; no repite el mismo trabajo ni depende de una acción futura.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Distinguir si la consulta útil depende más del canal de entrada o de la claridad de la oferta.",
+              "action_type": "generic",
+              "role_reason": "El propietario es quien recibe, cotiza y conversa; esa lectura no conviene delegarla.",
+              "capture_schema": {
+                "title": "Origen y fricción de una consulta",
+                "fields": [
+                  {
+                    "id": "observed_case",
+                    "type": "repeatable_group",
+                    "label": "Consulta observada",
+                    "fields": [
+                      {
+                        "id": "origin_source",
+                        "type": "text",
+                        "label": "Origen",
+                        "required": true,
+                        "max_length": 80,
+                        "description": "De dónde vino la consulta.",
+                        "placeholder": "Internet, referido, WhatsApp, otro"
+                      },
+                      {
+                        "id": "service_requested",
+                        "type": "textarea",
+                        "label": "Servicio pedido",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué pidió la persona o qué problema quería resolver.",
+                        "placeholder": "Pintura, electricidad o reparación específica"
+                      },
+                      {
+                        "id": "main_friction",
+                        "type": "textarea",
+                        "label": "Fricción principal",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué duda o barrera apareció antes de avanzar.",
+                        "placeholder": "Precio, disponibilidad, confianza, alcance, urgencia"
+                      },
+                      {
+                        "id": "advancement_state",
+                        "type": "single_select",
+                        "label": "Estado",
+                        "options": [
+                          {
+                            "label": "Avanzó",
+                            "value": "advanced"
+                          },
+                          {
+                            "label": "Se frenó",
+                            "value": "stalled"
+                          },
+                          {
+                            "label": "Quedó pendiente",
+                            "value": "pending"
+                          },
+                          {
+                            "label": "Se cerró",
+                            "value": "closed"
+                          }
+                        ],
+                        "required": true,
+                        "description": "En qué punto quedó la conversación."
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 1,
+                    "min_items": 1,
+                    "description": "Registro de una consulta real revisada esta semana."
+                  },
+                  {
+                    "id": "observed_count",
+                    "max": 10,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Cantidad observada",
+                    "required": true,
+                    "description": "Número de consultas reales registradas."
+                  }
+                ],
+                "version": 1,
+                "description": "Registra una consulta real para identificar de dónde vino y qué la frenó o aceleró.",
+                "capture_type": "consultation_origin_and_friction",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Al menos 1 consulta real documentada con origen, motivo de interés, duda principal y estado de avance.",
+              "estimated_hours": 2,
+              "expected_result": "Una señal concreta para decidir el siguiente ajuste comercial sin inventar canales ni cambiar la operación completa.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos dedicar esta semana a registrar una consulta real con su origen y su punto de freno para distinguir canal de mensaje, antes de insistir en más difusión?",
+            "rationale": "Este negocio vive de trabajos por encargo y el tiempo del dueño es limitado; si no se distingue qué trae consultas útiles y qué las frena, cualquier ampliación será ciega.",
+            "target_metric": "consultas útiles",
+            "expected_outcome": "Obtener una señal comercial más concreta para decidir si el siguiente ajuste debe ser de canal, mensaje o proceso de atención.",
+            "recommended_direction": "Sí: observar una consulta real desde su origen hasta el primer bloqueo y registrar la señal exacta."
+          },
+          "continuity": {
+            "mode": "adjustment",
+            "justification": "La línea anterior de aprendizaje sigue siendo válida, pero la evidencia ya no justifica repetir la misma revisión; ahora conviene una prueba nueva y más concreta sobre origen y fricción.",
+            "prior_evidence_gap": "La semana anterior mostró interés parcial, pero no separó canal, mensaje y fricción de cierre.",
+            "new_verifiable_signal": "Registro de una consulta real con origen, motivo de interés y punto exacto de freno.",
+            "unresolved_uncertainty": "Todavía no sabemos si el freno principal está en el canal de entrada o en cómo se presenta el servicio."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "observed_case": [
+                  {
+                    "main_friction": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                    "origin_source": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por",
+                    "advancement_state": "pending",
+                    "service_requested": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+                  }
+                ],
+                "observed_count": 1
+              }
+            }
+          ],
+          "review": {
+            "id": "0cc8344f-5861-4913-9da0-382ca37d32d6",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si registramos una consulta real con su origen y su punto de freno, podremos distinguir si el problema está en el canal o en la claridad de la oferta.",
+              "target_metric": "consultas útiles",
+              "observed_result": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+              "expected_outcome": "Obtener una señal comercial más concreta para decidir si el siguiente ajuste debe ser de canal, mensaje o proceso de atención.",
+              "decision_question": "¿Debemos dedicar esta semana a registrar una consulta real con su origen y su punto de freno para distinguir canal de mensaje, antes de insistir en más difusión?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: observar una consulta real desde su origen hasta el primer bloqueo y registrar la señal exacta."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 4,
+          "plan": [
+            {
+              "action": "Registrar una consulta real y anotar su origen, servicio pedido, duda principal y punto exacto en que avanza o se frena.",
+              "reason": "La decisión crítica es distinguir origen y freno; esa evidencia define si conviene repetir un canal, ajustar el mensaje o corregir la atención.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 4,
+                "progression": "new",
+                "justification": "Es una verificación independiente y factible con la información y conversaciones ya disponibles; no depende de una acción futura.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Separar canal, motivo de interés y fricción real en una sola observación útil.",
+              "action_type": "generic",
+              "role_reason": "El propietario es quien recibe, cotiza y conversa; esa lectura no conviene delegarla.",
+              "capture_schema": {
+                "title": "Registro de consulta real",
+                "fields": [
+                  {
+                    "id": "origin_source",
+                    "type": "text",
+                    "label": "Origen de la consulta",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "Cómo llegó esta consulta.",
+                    "placeholder": "Ej. recomendación, búsqueda web, anuncio, llamada, otro"
+                  },
+                  {
+                    "id": "service_requested",
+                    "type": "text",
+                    "label": "Servicio solicitado",
+                    "required": true,
+                    "max_length": 120,
+                    "description": "Qué pidió exactamente el cliente.",
+                    "placeholder": "Ej. pintura, electricidad, reparación"
+                  },
+                  {
+                    "id": "main_question",
+                    "type": "textarea",
+                    "label": "Duda principal",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Qué preguntó o qué le preocupó primero.",
+                    "placeholder": "Ej. precio, disponibilidad, alcance, urgencia"
+                  },
+                  {
+                    "id": "advancement_state",
+                    "type": "single_select",
+                    "label": "Estado de avance",
+                    "options": [
+                      {
+                        "label": "Avanzó",
+                        "value": "advanced"
+                      },
+                      {
+                        "label": "Quedó pendiente",
+                        "value": "pending"
+                      },
+                      {
+                        "label": "Se frenó",
+                        "value": "blocked"
+                      }
+                    ],
+                    "required": true,
+                    "description": "En qué punto quedó la conversación."
+                  },
+                  {
+                    "id": "friction_point",
+                    "type": "single_select",
+                    "label": "Punto de fricción",
+                    "options": [
+                      {
+                        "label": "Precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "Disponibilidad",
+                        "value": "availability"
+                      },
+                      {
+                        "label": "Confianza",
+                        "value": "trust"
+                      },
+                      {
+                        "label": "Alcance del trabajo",
+                        "value": "scope"
+                      },
+                      {
+                        "label": "Seguimiento insuficiente",
+                        "value": "follow_up"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué hizo que no avanzara todavía."
+                  }
+                ],
+                "version": 1,
+                "description": "Capturar la primera señal comercial útil de una consulta recibida.",
+                "capture_type": "consultation_signal",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "1 consulta real documentada con origen, servicio pedido, duda principal y freno específico.",
+              "estimated_hours": 2,
+              "expected_result": "Una señal concreta para decidir el siguiente ajuste comercial sin inventar canales ni cambiar toda la operación.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene usar esta semana para registrar una consulta real con su origen y su punto de freno, en lugar de insistir en más difusión?",
+            "rationale": "Este negocio vive de trabajos por encargo y el tiempo del dueño es limitado; si no se distingue qué trae consultas útiles y qué las frena, cualquier ampliación será ciega.",
+            "target_metric": "consultas útiles",
+            "expected_outcome": "Obtener una señal comercial más concreta para decidir si el siguiente ajuste debe ser de canal, mensaje o proceso de atención.",
+            "recommended_direction": "Sí: observar una consulta real y anotar el origen, la pregunta inicial y el punto exacto de fricción."
+          },
+          "continuity": {
+            "mode": "adjustment",
+            "justification": "La línea de aprendizaje sigue vigente, pero la evidencia ya no justifica repetir la misma revisión; ahora conviene una prueba nueva y más concreta sobre origen y fricción.",
+            "prior_evidence_gap": "La semana anterior mostró interés parcial, pero no separó canal, mensaje y fricción de cierre.",
+            "new_verifiable_signal": "Registro de una consulta real con origen, motivo de interés y punto exacto de freno.",
+            "unresolved_uncertainty": "Todavía no sabemos si el freno principal está en el canal de entrada o en cómo se presenta el servicio."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "main_question": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                "origin_source": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico.",
+                "friction_point": "price",
+                "advancement_state": "pending",
+                "service_requested": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico."
+              }
+            }
+          ],
+          "review": {
+            "id": "7814bf3d-7f2d-4604-ab37-d80f32ce876d",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si registramos una consulta real con su origen y su punto de freno, podremos distinguir si el problema está en el canal o en la claridad de la oferta.",
+              "target_metric": "consultas útiles",
+              "observed_result": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+              "expected_outcome": "Obtener una señal comercial más concreta para decidir si el siguiente ajuste debe ser de canal, mensaje o proceso de atención.",
+              "decision_question": "¿Conviene usar esta semana para registrar una consulta real con su origen y su punto de freno, en lugar de insistir en más difusión?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: observar una consulta real y anotar el origen, la pregunta inicial y el punto exacto de fricción."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        }
+      ],
+      "stage": "complete",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ]
+    },
+    "limpieza": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Redactar y enviar una prueba local de WhatsApp a contactos cercanos con un mensaje simple sobre limpieza a domicilio en los dos barrios objetivo.",
+              "reason": "La decisión crítica requiere evidencia de demanda local; WhatsApp y contactos existentes son los únicos canales confirmados.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Necesita un mensaje comercial claro para medir demanda local en el canal confirmado.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Generar las primeras respuestas para medir interés real.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe supervisar el mensaje porque está validando una hipótesis comercial que afecta ingresos.",
+              "capture_schema": {
+                "title": "Respuestas locales por WhatsApp",
+                "fields": [
+                  {
+                    "id": "contacts_messaged",
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos escritos",
+                    "required": true,
+                    "description": "Cantidad de contactos cercanos a quienes se envió el mensaje."
+                  },
+                  {
+                    "id": "responses_received",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Respuestas recibidas",
+                    "required": true,
+                    "description": "Cantidad de respuestas obtenidas."
+                  },
+                  {
+                    "id": "response_types",
+                    "type": "multi_select",
+                    "label": "Tipos de respuesta",
+                    "options": [
+                      {
+                        "label": "Preguntó precio",
+                        "value": "ask_price"
+                      },
+                      {
+                        "label": "Preguntó disponibilidad",
+                        "value": "ask_availability"
+                      },
+                      {
+                        "label": "Pidió cotización",
+                        "value": "request_quote"
+                      },
+                      {
+                        "label": "Sin interés",
+                        "value": "no_interest"
+                      },
+                      {
+                        "label": "Para después",
+                        "value": "later"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 4,
+                    "min_items": 1,
+                    "description": "Clasifica las respuestas observadas."
+                  },
+                  {
+                    "id": "best_message_angle",
+                    "type": "text",
+                    "label": "Ángulo que mejor funcionó",
+                    "required": false,
+                    "max_length": 120,
+                    "description": "Qué parte del mensaje generó más reacción.",
+                    "placeholder": "Ej: limpieza rápida, cercanía, precio por pieza"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar evidencia de respuesta a la prueba local.",
+                "capture_type": "whatsapp_validation",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Respuestas recibidas y tipo de interés expresado.",
+              "estimated_hours": 2,
+              "expected_result": "Aprendizaje inicial sobre si el mercado cercano responde al servicio.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Registrar qué objeciones, dudas o intereses aparecen en las respuestas para decidir el siguiente mensaje.",
+              "reason": "No basta con saber si respondieron; importa entender qué fricción comercial aparece para ajustar la oferta.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La respuesta del mercado es el dato que permite decidir si ajustar la oferta o repetir la prueba.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Detectar el patrón de conversación que más se repite.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe interpretar directamente las respuestas porque eso define la siguiente decisión comercial.",
+              "capture_schema": {
+                "title": "Patrones observados en respuestas",
+                "fields": [
+                  {
+                    "id": "patterns_found",
+                    "type": "repeatable_group",
+                    "label": "Patrones encontrados",
+                    "fields": [
+                      {
+                        "id": "pattern_type",
+                        "type": "single_select",
+                        "label": "Tipo de patrón",
+                        "options": [
+                          {
+                            "label": "Precio",
+                            "value": "price"
+                          },
+                          {
+                            "label": "Confianza",
+                            "value": "trust"
+                          },
+                          {
+                            "label": "Disponibilidad",
+                            "value": "availability"
+                          },
+                          {
+                            "label": "Alcance del servicio",
+                            "value": "service_scope"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Qué patrón se repite."
+                      },
+                      {
+                        "id": "observed_signal",
+                        "type": "textarea",
+                        "label": "Señal observada",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué dijo o hizo el contacto.",
+                        "placeholder": "Ej: pidió precio, respondió tarde, preguntó por traslado"
+                      },
+                      {
+                        "id": "interpretation",
+                        "type": "textarea",
+                        "label": "Interpretación",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué sugiere esa señal sobre el negocio.",
+                        "placeholder": "Ej: el precio necesita anclaje o prueba de confianza"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 3,
+                    "min_items": 1,
+                    "description": "Lista breve de patrones repetidos."
+                  }
+                ],
+                "version": 1,
+                "description": "Resumir señales recurrentes de la prueba.",
+                "capture_type": "response_pattern_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Patrones de respuesta identificados y resumidos.",
+              "estimated_hours": 1,
+              "expected_result": "Una lectura más precisa de la barrera comercial dominante.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Definir el siguiente ajuste comercial a partir del patrón dominante observado.",
+              "reason": "La semana debe terminar con una decisión útil, no solo con actividad.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "other",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La decisión convierte la evidencia en una dirección concreta para la siguiente semana.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Convertir el aprendizaje en una dirección de venta concreta.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe tomar esta decisión porque afecta directamente el cierre y el uso del tiempo local.",
+              "capture_schema": {
+                "title": "Decisión comercial siguiente",
+                "fields": [
+                  {
+                    "id": "dominant_pattern",
+                    "type": "single_select",
+                    "label": "Patrón dominante",
+                    "options": [
+                      {
+                        "label": "Precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "Confianza",
+                        "value": "trust"
+                      },
+                      {
+                        "label": "Disponibilidad",
+                        "value": "availability"
+                      },
+                      {
+                        "label": "Alcance del servicio",
+                        "value": "service_scope"
+                      },
+                      {
+                        "label": "Sin patrón claro",
+                        "value": "no_clear_pattern"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Cuál fue el patrón más claro observado."
+                  },
+                  {
+                    "id": "chosen_adjustment",
+                    "type": "textarea",
+                    "label": "Ajuste elegido",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué se cambiará en el siguiente mensaje o enfoque.",
+                    "placeholder": "Ej: enfatizar cercanía, reforzar prueba social, simplificar el precio"
+                  },
+                  {
+                    "id": "reason_for_adjustment",
+                    "type": "textarea",
+                    "label": "Razón del ajuste",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Por qué este ajuste responde mejor a la evidencia.",
+                    "placeholder": "Explica la relación con las respuestas observadas"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar el ajuste elegido tras observar respuestas.",
+                "capture_type": "commercial_adjustment_decision",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Un ajuste definido y justificado por la evidencia obtenida.",
+              "estimated_hours": 1,
+              "expected_result": "Se reduce la incertidumbre sobre qué propuesta comercial vale la pena repetir.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene concentrar esta semana el esfuerzo en validar qué mensaje/oferta local genera más consultas por WhatsApp antes de intentar ampliar canales o zonas?",
+            "rationale": "Con 4 horas disponibles y sin redes sociales, el mejor uso del tiempo es validar la demanda más cercana y barata de activar. Eso reduce riesgo, preserva el margen de traslado y da evidencia comercial útil.",
+            "target_metric": "consultas locales recibidas y calidad de respuesta",
+            "expected_outcome": "Obtener señales tempranas de interés real, identificar el ángulo comercial más prometedor y decidir si vale la pena repetir, ajustar o cambiar el mensaje.",
+            "recommended_direction": "Sí: centrar el esfuerzo en una prueba local mínima con contactos existentes y WhatsApp para aprender qué genera respuesta real en los dos barrios objetivo."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "response_types": [
+                  "ask_price"
+                ],
+                "contacts_messaged": 1,
+                "best_message_angle": "QA sintético: Hola. ¿Te interesa confirmar el servicio en tu zona y conversar sobre horarios?",
+                "responses_received": 1
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "patterns_found": [
+                  {
+                    "pattern_type": "price",
+                    "interpretation": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                    "observed_signal": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+                  }
+                ]
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "dominant_pattern": "price",
+                "chosen_adjustment": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "reason_for_adjustment": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            }
+          ],
+          "review": {
+            "id": "31434058-c375-4264-8372-ab27d78d29da",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              ],
+              "learning": "QA: separar por barrio y tamaño del mueble para conservar tiempos de traslado.",
+              "hypothesis": "Si se concentra la semana en una prueba local por WhatsApp y contactos, aparecerá una señal clara de qué mensaje atrae consultas en los dos barrios objetivo.",
+              "target_metric": "consultas locales recibidas y calidad de respuesta",
+              "observed_result": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+              "expected_outcome": "Obtener señales tempranas de interés real, identificar el ángulo comercial más prometedor y decidir si vale la pena repetir, ajustar o cambiar el mensaje.",
+              "decision_question": "¿Conviene concentrar esta semana el esfuerzo en validar qué mensaje/oferta local genera más consultas por WhatsApp antes de intentar ampliar canales o zonas?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: centrar el esfuerzo en una prueba local mínima con contactos existentes y WhatsApp para aprender qué genera respuesta real en los dos barrios objetivo."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 2,
+          "plan": [
+            {
+              "action": "Enviar una nueva prueba de WhatsApp a contactos cercanos con un mensaje más concreto sobre limpieza a domicilio, barrio y tipo de mueble, para medir si aparece intención real de reserva.",
+              "reason": "La decisión crítica es validar la conversión local; el cuello de botella sigue siendo la demanda cercana que no termina en reserva.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "new",
+                "justification": "Es una prueba independiente apoyada en recursos disponibles y en el aprendizaje previo; no requiere un activo nuevo ni una acción previa pendiente.",
+                "prior_barrier": "unchanged",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Comprobar si un mensaje más específico genera consultas más útiles que la versión anterior.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe hacer esta prueba porque implica criterio comercial y contacto directo con la hipótesis de demanda.",
+              "capture_schema": {
+                "title": "Prueba local de mensaje",
+                "fields": [
+                  {
+                    "id": "planned_contacts",
+                    "max": 50,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos previstos",
+                    "required": true,
+                    "description": "Cantidad de contactos a los que se pensó escribir."
+                  },
+                  {
+                    "id": "contacts_messaged",
+                    "max": 50,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Contactos contactados",
+                    "required": true,
+                    "description": "Cantidad real de contactos escritos."
+                  },
+                  {
+                    "id": "response_count",
+                    "max": 50,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Respuestas recibidas",
+                    "required": true,
+                    "description": "Cantidad de respuestas obtenidas."
+                  },
+                  {
+                    "id": "response_type",
+                    "type": "single_select",
+                    "label": "Tipo principal de respuesta",
+                    "options": [
+                      {
+                        "label": "pregunta por precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "pide horario",
+                        "value": "schedule"
+                      },
+                      {
+                        "label": "pregunta por zona",
+                        "value": "location"
+                      },
+                      {
+                        "label": "pide reservar",
+                        "value": "reservation"
+                      },
+                      {
+                        "label": "otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué señal predominó en las respuestas."
+                  },
+                  {
+                    "id": "best_response_example",
+                    "type": "textarea",
+                    "label": "Ejemplo de respuesta",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Texto breve o resumen de la mejor respuesta recibida.",
+                    "placeholder": "Copiar una respuesta o resumirla"
+                  },
+                  {
+                    "id": "reservation_intent",
+                    "type": "single_select",
+                    "label": "Intención de reserva",
+                    "options": [
+                      {
+                        "label": "ninguna",
+                        "value": "none"
+                      },
+                      {
+                        "label": "interés suave",
+                        "value": "soft"
+                      },
+                      {
+                        "label": "intención clara",
+                        "value": "clear"
+                      },
+                      {
+                        "label": "reserva pedida",
+                        "value": "confirmed"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Si alguna respuesta mostró intención concreta de reservar."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar la evidencia mínima de la respuesta obtenida con el nuevo mensaje.",
+                "capture_type": "local_whatsapp_test",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Número de respuestas útiles y cuántas piden horario, precio o reserva.",
+              "estimated_hours": 2,
+              "expected_result": "Aprendizaje claro sobre si el mensaje actual acerca o aleja la reserva.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Registrar las objeciones o señales de avance que aparezcan en esas respuestas para separar curiosidad de intención comercial.",
+              "reason": "La decisión crítica no se valida solo con respuestas; importa saber qué patrón se repite para interpretar si el problema es mensaje, precio o urgencia.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "new",
+                "justification": "La lectura del patrón es independiente y necesaria para interpretar la señal comercial antes de decidir el siguiente paso.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Entender qué fricción concreta impide pasar de interés a reserva.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe interpretar directamente la conversación porque eso define la próxima decisión comercial.",
+              "capture_schema": {
+                "title": "Lectura de respuestas",
+                "fields": [
+                  {
+                    "id": "patterns_found",
+                    "type": "textarea",
+                    "label": "Patrones observados",
+                    "required": true,
+                    "max_length": 700,
+                    "description": "Principales patrones detectados en las respuestas.",
+                    "placeholder": "Ejemplo: preguntan precio, piden horario, preguntan zona"
+                  },
+                  {
+                    "id": "dominant_pattern",
+                    "type": "single_select",
+                    "label": "Patrón dominante",
+                    "options": [
+                      {
+                        "label": "precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "horario",
+                        "value": "schedule"
+                      },
+                      {
+                        "label": "zona",
+                        "value": "location"
+                      },
+                      {
+                        "label": "urgencia",
+                        "value": "urgency"
+                      },
+                      {
+                        "label": "otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "El patrón que más se repitió."
+                  },
+                  {
+                    "id": "evidence_quote",
+                    "type": "textarea",
+                    "label": "Cita o resumen breve",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Una respuesta concreta que ayude a justificar el patrón.",
+                    "placeholder": "Copia o resume una respuesta real"
+                  }
+                ],
+                "version": 1,
+                "description": "Resumen de los patrones observados en las respuestas recibidas.",
+                "capture_type": "response_pattern_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Resumen de patrones de respuesta y su lectura comercial.",
+              "estimated_hours": 1,
+              "expected_result": "Una interpretación más precisa de por qué algunos contactos avanzan y otros no.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Decidir si la próxima semana se repite el mismo canal, se ajusta el mensaje o se cambia el ángulo comercial según lo observado.",
+              "reason": "La semana debe terminar con una dirección, no solo con actividad; esto evita repetir pruebas sin aprendizaje.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "other",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "new",
+                "justification": "Es una decisión nueva basada en la evidencia a recolectar esta semana; no retoma un pendiente completado ni depende de una acción futura.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Cerrar el aprendizaje en una decisión operativa concreta.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe tomar esta decisión porque afecta directamente cierres, foco y uso del tiempo.",
+              "capture_schema": {
+                "title": "Decisión siguiente",
+                "fields": [
+                  {
+                    "id": "decision_type",
+                    "type": "single_select",
+                    "label": "Tipo de decisión",
+                    "options": [
+                      {
+                        "label": "repetir canal",
+                        "value": "repeat"
+                      },
+                      {
+                        "label": "ajustar mensaje",
+                        "value": "adjust"
+                      },
+                      {
+                        "label": "cambiar ángulo",
+                        "value": "change"
+                      },
+                      {
+                        "label": "pausar prueba",
+                        "value": "pause"
+                      },
+                      {
+                        "label": "otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué se decidió hacer después."
+                  },
+                  {
+                    "id": "decision_reason",
+                    "type": "textarea",
+                    "label": "Razón de la decisión",
+                    "required": true,
+                    "max_length": 700,
+                    "description": "Por qué esa decisión es la mejor según la evidencia.",
+                    "placeholder": "Explicar con base en lo observado"
+                  },
+                  {
+                    "id": "next_verifiable_signal",
+                    "type": "textarea",
+                    "label": "Señal verificable siguiente",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Qué evidencia concreta permitirá saber si la decisión fue correcta.",
+                    "placeholder": "Ejemplo: más pedidos de horario o reserva"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar la decisión tomada a partir de la evidencia semanal.",
+                "capture_type": "decision_log",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Decisión documentada sobre el siguiente experimento comercial.",
+              "estimated_hours": 1,
+              "expected_result": "Reducción de incertidumbre sobre qué conviene probar después.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene hacer una nueva prueba local por WhatsApp con un mensaje más específico para separar curiosidad de intención real de reserva en los dos barrios objetivo?",
+            "rationale": "Con 4 horas disponibles, sin redes sociales y con evidencia previa de consultas sin cierre, el mejor uso del tiempo es afinar el mensaje donde ya hubo respuesta. Eso protege el traslado, mantiene el foco local y produce aprendizaje usable sobre conversión.",
+            "target_metric": "calidad de respuesta y solicitudes de reserva",
+            "expected_outcome": "Obtener una señal más clara sobre qué versión del mensaje acerca al contacto a pedir horario o reserva, y decidir si vale la pena repetir o ajustar de nuevo.",
+            "recommended_direction": "Sí: conservar WhatsApp y los contactos existentes, pero usar un mensaje más concreto que permita medir si el problema está en el ángulo comercial y no en el canal."
+          },
+          "continuity": {
+            "mode": "deepening",
+            "justification": "La semana anterior ya mostró interés local, pero no cierre. No conviene cambiar de canal; conviene profundizar la misma vía con un mensaje más nítido.",
+            "prior_evidence_gap": "La prueba anterior mostró consultas, pero no distinguió si el freno era atracción, precio o cierre.",
+            "new_verifiable_signal": "Número de respuestas que pidan horario, zona o detalle del servicio tras el nuevo mensaje.",
+            "unresolved_uncertainty": "Sigue sin saberse si el bloqueo está en el mensaje, el precio o la urgencia percibida."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "response_type": "price",
+                "response_count": 1,
+                "planned_contacts": 2,
+                "contacts_messaged": 1,
+                "reservation_intent": "none",
+                "best_response_example": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "evidence_quote": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "patterns_found": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "dominant_pattern": "price"
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "decision_type": "repeat",
+                "decision_reason": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "next_verifiable_signal": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            }
+          ],
+          "review": {
+            "id": "3ab49b8d-b52d-48e9-a254-d125b0fbf756",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              ],
+              "learning": "QA: separar por barrio y tamaño del mueble para conservar tiempos de traslado.",
+              "hypothesis": "Si se envía un mensaje más específico a contactos locales, deberían aparecer respuestas más útiles, especialmente preguntas de precio, horario o reserva, en lugar de solo curiosidad.",
+              "target_metric": "calidad de respuesta y solicitudes de reserva",
+              "observed_result": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+              "expected_outcome": "Obtener una señal más clara sobre qué versión del mensaje acerca al contacto a pedir horario o reserva, y decidir si vale la pena repetir o ajustar de nuevo.",
+              "decision_question": "¿Conviene hacer una nueva prueba local por WhatsApp con un mensaje más específico para separar curiosidad de intención real de reserva en los dos barrios objetivo?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: conservar WhatsApp y los contactos existentes, pero usar un mensaje más concreto que permita medir si el problema está en el ángulo comercial y no en el canal."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 3,
+          "plan": [
+            {
+              "action": "Hacer una única prueba breve por WhatsApp con un mensaje más específico para contactos cercanos, enfocando barrio, tipo de mueble y disponibilidad, y registrar la reacción real.",
+              "reason": "La decisión crítica es validar conversión local; el cuello de botella sigue siendo interés que no termina en reserva.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 3,
+                "progression": "new",
+                "justification": "Es una prueba nueva de validación comercial, no una repetición administrativa del trabajo anterior.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Comprobar si un mensaje más concreto cambia la calidad de respuesta hacia señales de reserva.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe ejecutar esta prueba porque requiere criterio comercial y contacto directo con la hipótesis.",
+              "capture_schema": {
+                "title": "Prueba local de WhatsApp",
+                "fields": [
+                  {
+                    "id": "planned_contacts",
+                    "max": 20,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos planificados",
+                    "required": true,
+                    "description": "Cantidad de contactos a los que se pensaba escribir."
+                  },
+                  {
+                    "id": "contacts_messaged",
+                    "max": 20,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Contactos escritos",
+                    "required": true,
+                    "description": "Cantidad real de contactos a los que se escribió."
+                  },
+                  {
+                    "id": "response_count",
+                    "max": 20,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Respuestas recibidas",
+                    "required": true,
+                    "description": "Cantidad total de respuestas obtenidas."
+                  },
+                  {
+                    "id": "response_types",
+                    "type": "multi_select",
+                    "label": "Tipos de respuesta",
+                    "options": [
+                      {
+                        "label": "Pregunta por precio",
+                        "value": "price_question"
+                      },
+                      {
+                        "label": "Pregunta por horario",
+                        "value": "schedule_question"
+                      },
+                      {
+                        "label": "Pide reserva",
+                        "value": "booking_request"
+                      },
+                      {
+                        "label": "Interés general",
+                        "value": "general_interest"
+                      },
+                      {
+                        "label": "Sin respuesta",
+                        "value": "no_response"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 4,
+                    "min_items": 1,
+                    "description": "Clasifica las respuestas observadas."
+                  },
+                  {
+                    "id": "best_response_example",
+                    "type": "textarea",
+                    "label": "Mejor ejemplo de respuesta",
+                    "required": true,
+                    "max_length": 500,
+                    "description": "Copiar o resumir la respuesta más útil para leer intención real.",
+                    "placeholder": "Ejemplo textual o resumen breve."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar la señal comercial obtenida tras un único mensaje más específico a contactos cercanos.",
+                "capture_type": "weekly_validation",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Registrar el mensaje enviado, la cantidad de respuestas recibidas y el tipo de señal observada en cada respuesta.",
+              "estimated_hours": 4,
+              "expected_result": "Aprendizaje claro sobre si el problema está en el ángulo comercial y no en el canal.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene probar una sola vez más el canal WhatsApp con un mensaje distinto y luego decidir si el problema está en el ángulo comercial o en la oferta misma?",
+            "rationale": "Con 4 horas disponibles, sin redes sociales y con evidencia previa de consultas sin cierre, el mejor uso del tiempo es validar la conversión donde ya hubo respuesta. Eso protege el traslado, mantiene el foco local y produce aprendizaje usable sobre ventas.",
+            "target_metric": "calidad de respuesta y solicitudes de reserva",
+            "expected_outcome": "Obtener una señal más clara sobre si el bloqueo está en el mensaje o en la oferta, y decidir si conviene seguir iterando o cambiar de enfoque.",
+            "recommended_direction": "Sí: mantener WhatsApp y los contactos existentes, pero hacer una prueba breve y más específica para observar si cambia la calidad de respuesta."
+          },
+          "continuity": {
+            "mode": "deepening",
+            "justification": "La semana anterior ya mostró interés local, pero no cierre. No conviene cambiar de canal; conviene profundizar la misma vía con una prueba más nítida.",
+            "prior_evidence_gap": "La prueba anterior mostró consultas, pero no distinguió si el freno era atracción, precio o cierre.",
+            "new_verifiable_signal": "Tipo de respuesta que aparezca tras el nuevo mensaje: horario, precio, reserva o simple curiosidad.",
+            "unresolved_uncertainty": "Sigue sin saberse si el bloqueo está en el mensaje, el precio o la urgencia percibida."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "response_count": 1,
+                "response_types": [
+                  "price_question"
+                ],
+                "planned_contacts": 2,
+                "contacts_messaged": 1,
+                "best_response_example": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            }
+          ],
+          "review": {
+            "id": "f73604d8-7a97-4c06-bba4-a7079a3c7f1c",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              ],
+              "learning": "QA: separar por barrio y tamaño del mueble para conservar tiempos de traslado.",
+              "hypothesis": "Si se hace una prueba local más concreta por WhatsApp, deberían aparecer respuestas más útiles para decidir si el problema es el mensaje, el precio o la urgencia percibida.",
+              "target_metric": "calidad de respuesta y solicitudes de reserva",
+              "observed_result": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+              "expected_outcome": "Obtener una señal más clara sobre si el bloqueo está en el mensaje o en la oferta, y decidir si conviene seguir iterando o cambiar de enfoque.",
+              "decision_question": "¿Conviene probar una sola vez más el canal WhatsApp con un mensaje distinto y luego decidir si el problema está en el ángulo comercial o en la oferta misma?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: mantener WhatsApp y los contactos existentes, pero hacer una prueba breve y más específica para observar si cambia la calidad de respuesta."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 4,
+          "plan": [
+            {
+              "action": "Hacer una nueva prueba breve por WhatsApp a contactos cercanos con un mensaje más específico sobre barrio, tipo de mueble y disponibilidad, y registrar la respuesta exacta.",
+              "reason": "La decisión crítica es validar conversión local; el cuello de botella sigue siendo interés que no termina en reserva.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts",
+                  "whatsapp"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 4,
+                "progression": "new",
+                "justification": "La acción retoma el canal disponible y mide una incertidumbre aún abierta sobre conversión local.",
+                "prior_barrier": "unchanged",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Detectar qué tipo de respuesta aparece cuando el mensaje reduce ambigüedad.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe hacer esta prueba porque requiere criterio comercial y contacto directo con la hipótesis.",
+              "capture_schema": {
+                "title": "Lectura de respuestas WhatsApp",
+                "fields": [
+                  {
+                    "id": "planned_contacts",
+                    "max": 20,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos previstos",
+                    "required": true,
+                    "description": "Cuántos contactos se pensó escribir en esta prueba."
+                  },
+                  {
+                    "id": "contacts_messaged",
+                    "max": 20,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Contactos escritos",
+                    "required": true,
+                    "description": "Cuántos contactos se escribieron realmente."
+                  },
+                  {
+                    "id": "response_pattern",
+                    "type": "single_select",
+                    "label": "Patrón dominante",
+                    "options": [
+                      {
+                        "label": "Precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "Horario",
+                        "value": "schedule"
+                      },
+                      {
+                        "label": "Reserva",
+                        "value": "reservation"
+                      },
+                      {
+                        "label": "Curiosidad",
+                        "value": "curiosity"
+                      },
+                      {
+                        "label": "Sin interés",
+                        "value": "no_interest"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Tipo de respuesta que más apareció."
+                  },
+                  {
+                    "id": "response_examples",
+                    "type": "textarea",
+                    "label": "Ejemplos de respuesta",
+                    "required": true,
+                    "max_length": 1200,
+                    "description": "Frases o señales textuales que ayuden a interpretar la calidad de la respuesta.",
+                    "placeholder": "Copiar 1-3 respuestas breves o resumirlas"
+                  },
+                  {
+                    "id": "next_signal",
+                    "type": "textarea",
+                    "label": "Siguiente señal a observar",
+                    "required": true,
+                    "max_length": 1000,
+                    "description": "Qué comportamiento indicaría que el contacto avanza o no avanza a reserva.",
+                    "placeholder": "Ej: pide horario, pregunta precio, pide fotos, deja de responder"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar la señal comercial real obtenida en el contacto local.",
+                "capture_type": "response_readout",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Registrar cuántos contactos respondieron y clasificar cada respuesta como precio, horario, reserva, duda o no interés.",
+              "estimated_hours": 4,
+              "expected_result": "Aprendizaje claro sobre si el problema está en el ángulo comercial y no en el canal.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene seguir usando WhatsApp y contactos cercanos, pero medir con más precisión qué tipo de respuesta empuja una reserva real antes de cambiar de canal?",
+            "rationale": "Con 4 horas disponibles, sin redes sociales y con consultas previas sin cierre, el mejor uso del tiempo es validar la conversión donde ya hubo respuesta. Eso protege el traslado, mantiene el foco local y produce aprendizaje usable sobre ventas.",
+            "target_metric": "calidad de respuesta y solicitudes de reserva",
+            "expected_outcome": "Obtener una señal más clara sobre si el bloqueo está en el mensaje o en la oferta, y decidir si conviene seguir iterando o cambiar de enfoque.",
+            "recommended_direction": "Sí: mantener WhatsApp y los contactos existentes, y observar con más precisión si el bloqueo está en el mensaje, el precio o la urgencia percibida."
+          },
+          "continuity": {
+            "mode": "deepening",
+            "justification": "La semana anterior ya mostró interés local, pero no cierre. No conviene cambiar de canal; conviene profundizar la misma vía con una prueba más nítida.",
+            "prior_evidence_gap": "La prueba anterior mostró consultas, pero no distinguió si el freno era atracción, precio o cierre.",
+            "new_verifiable_signal": "Tipo de respuesta que aparezca tras el nuevo mensaje: horario, precio, reserva o simple curiosidad.",
+            "unresolved_uncertainty": "Sigue sin saberse si el bloqueo está en el mensaje, el precio o la urgencia percibida."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "next_signal": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "planned_contacts": 2,
+                "response_pattern": "no_interest",
+                "contacts_messaged": 1,
+                "response_examples": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            }
+          ],
+          "review": {
+            "id": "adab84da-8d4e-4773-b13d-de24072c6864",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              ],
+              "learning": "QA: separar por barrio y tamaño del mueble para conservar tiempos de traslado.",
+              "hypothesis": "Si se mide mejor la respuesta de los contactos cercanos por WhatsApp, debería quedar claro si el bloqueo está en el mensaje o en la oferta.",
+              "target_metric": "calidad de respuesta y solicitudes de reserva",
+              "observed_result": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+              "expected_outcome": "Obtener una señal más clara sobre si el bloqueo está en el mensaje o en la oferta, y decidir si conviene seguir iterando o cambiar de enfoque.",
+              "decision_question": "¿Conviene seguir usando WhatsApp y contactos cercanos, pero medir con más precisión qué tipo de respuesta empuja una reserva real antes de cambiar de canal?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: mantener WhatsApp y los contactos existentes, y observar con más precisión si el bloqueo está en el mensaje, el precio o la urgencia percibida."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-5-generation",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "retry": {
+        "week": 5,
+        "planId": "b74829fc-f0f0-4533-8413-bb76c0eb5fb6",
+        "status": "requested"
+      },
+      "error": "El plan de semana 5 quedó en estado failed."
+    }
+  },
+  "finishedAt": "2026-11-25T14:04:00.874Z"
+}

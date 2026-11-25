@@ -1,0 +1,29 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T14:14:14.944Z",
+  "scenarios": {
+    "cafe-horizonte": {
+      "status": "FAIL",
+      "cycles": [],
+      "stage": "week-1",
+      "retry": {
+        "week": 1,
+        "planId": "e876d499-3e80-4428-86b3-e1124aa8e183",
+        "status": "requested"
+      },
+      "error": "El plan de semana 1 quedó en estado failed."
+    },
+    "nova-studio": {
+      "status": "FAIL",
+      "cycles": [],
+      "stage": "week-1",
+      "retry": {
+        "week": 1,
+        "planId": "ac01f9fe-5139-4c99-a174-8dd030720a26",
+        "status": "requested"
+      },
+      "error": "El plan de semana 1 quedó en estado failed."
+    }
+  },
+  "finishedAt": "2026-11-25T14:14:53.153Z"
+}

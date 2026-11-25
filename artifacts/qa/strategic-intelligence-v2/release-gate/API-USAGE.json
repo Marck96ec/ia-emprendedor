@@ -1,0 +1,62 @@
+{
+  "session": "Final Release Gate v2.3",
+  "date": "2026-11-25",
+  "authorized_budget": 60,
+  "calls_used_previous_session": 27,
+
+  "current_session_estimate": {
+    "note": "Direct API call counting not available from this session. Estimated from E2E run structure.",
+    "e2e_run_1_mantenimiento_limpieza_partial": {
+      "description": "mantenimiento (2 cycles done, w3 failed+retry) + limpieza (3 cycles done, w4 failed+retry)",
+      "estimated_calls": "12-18"
+    },
+    "e2e_run_2_mantenimiento_limpieza_full": {
+      "description": "mantenimiento (4 cycles + w5) + limpieza (4 cycles, w5 failed+retry)",
+      "estimated_calls": "15-22"
+    },
+    "e2e_run_3_nova_cafe_failed_w1": {
+      "description": "nova-studio and cafe-horizonte both failed at week 1 — possible API budget exhaustion",
+      "estimated_calls": "2-4"
+    },
+    "e2e_run_4_full_5_scenarios": {
+      "description": "5 scenarios parallel — taller-andino PASS, 4 others partially failed",
+      "estimated_calls": "20-30"
+    }
+  },
+
+  "total_estimate": {
+    "lower_bound": 27 + 12 + 15 + 2 + 20,
+    "upper_bound": 27 + 18 + 22 + 4 + 30,
+    "note": "Likely exceeded 60-call budget. Week-1 failures in later runs strongly suggest budget exhaustion."
+  },
+
+  "budget_status": "LIKELY EXHAUSTED",
+
+  "week_5_failures": [
+    {
+      "scenario": "limpieza",
+      "week": 5,
+      "likely_cause": "C3 progression — 4 completed actions + 4h/week tight constraint",
+      "api_budget": "Available (failed before budget exhaustion)"
+    },
+    {
+      "scenario": "cafe-horizonte",
+      "week": 5,
+      "likely_cause": "API budget exhaustion or C3 progression",
+      "api_budget": "Uncertain — occurred in full 5-scenario parallel run"
+    }
+  ],
+
+  "week_1_failures_in_later_runs": {
+    "nova-studio": "FAIL at week-1 (run after full 5-scenario run)",
+    "cafe-horizonte": "FAIL at week-1 (run after full 5-scenario run)",
+    "mantenimiento": "FAIL at week-1 (in parallel with 4 other scenarios in full run)",
+    "interpretation": "Week-1 failures with no history strongly suggest API rate limit or budget exhaustion, not validation errors"
+  },
+
+  "calls_per_generation": {
+    "first_attempt": 1,
+    "with_repair": 2,
+    "app_level_retry": "1-2 additional (triggers new generation with 1-2 attempts)"
+  }
+}

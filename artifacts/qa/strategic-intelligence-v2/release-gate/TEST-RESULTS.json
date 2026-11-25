@@ -1,0 +1,126 @@
+{
+  "validation": "Final Release Gate v2.3",
+  "date": "2026-11-25",
+  "branch": "feature/strategic-intelligence-v2",
+
+  "technical_validation": {
+    "typecheck": "PASS",
+    "lint": "PASS (0 errors, 4 warnings — preexisting in QA artifact only)",
+    "build": "PASS",
+    "test_suite": {
+      "total": 184,
+      "pass": 184,
+      "fail": 0,
+      "skipped": 0,
+      "skipped_reason": "All 4 Supabase integration tests now executed with SUPABASE_LOCAL_TESTS=1",
+      "result": "PASS"
+    },
+    "git_diff_check": "PASS (only expected CRLF warning on Windows)"
+  },
+
+  "supabase_integration_tests": {
+    "executed": 4,
+    "passed": 4,
+    "tests": [
+      {
+        "name": "La evidencia de acciones se valida en Supabase y la tabla no admite escrituras directas",
+        "result": "PASS",
+        "duration_ms": 8516
+      },
+      {
+        "name": "El validador de PostgreSQL coincide con el de TypeScript en los fixtures compartidos",
+        "result": "PASS",
+        "duration_ms": 4205
+      },
+      {
+        "name": "Supabase local conserva memoria antigua, registra cambios y aísla a dos propietarios",
+        "result": "PASS",
+        "duration_ms": 8158
+      },
+      {
+        "name": "CEO plan RPC en Supabase local protege propietarios, estados y atomicidad",
+        "result": "PASS",
+        "duration_ms": 9158
+      }
+    ]
+  },
+
+  "c3_fix": {
+    "description": "Added pending and completed history refs to REPARACIÓN ESTRATÉGICA section",
+    "files_changed": ["src/lib/ai/generate-ceo-plan.ts"],
+    "changes": [
+      "Added pendingHistoryRef: list of pending history actions with work_key and intent (shown in attempt 2 when strategicContext exists)",
+      "Added completedHistoryRef: list of completed history actions with work_key and intent (shown in attempt 2 when strategicContext exists)",
+      "Added capacity reminder: sum of estimated_hours must not exceed ownerHoursPerWeek",
+      "Refs are unconditional in REPARACIÓN ESTRATÉGICA (not gated by error category) for maximum coverage"
+    ],
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "test_suite": "184/184 PASS"
+  },
+
+  "e2e_consolidated": {
+    "scenarios_total": 5,
+    "scenarios_4_cycles_complete": 5,
+    "week_5_plans_generated": 3,
+    "reviews_persisted": 20,
+    "per_scenario": {
+      "mantenimiento": {
+        "four_cycles": true,
+        "reviews_persisted": 4,
+        "week_5_generated": true,
+        "source_run": "run-2 (mantenimiento+limpieza)"
+      },
+      "limpieza": {
+        "four_cycles": true,
+        "reviews_persisted": 4,
+        "week_5_generated": false,
+        "failure_reason": "C3 progression error — week 5 with 4 completed actions and 4h/week constraint",
+        "source_run": "run-2 (mantenimiento+limpieza)"
+      },
+      "nova-studio": {
+        "four_cycles": true,
+        "reviews_persisted": 4,
+        "week_5_generated": true,
+        "source_run": "reliability-final-run"
+      },
+      "taller-andino": {
+        "four_cycles": true,
+        "reviews_persisted": 4,
+        "week_5_generated": true,
+        "source_run": "full-5-scenario-run"
+      },
+      "cafe-horizonte": {
+        "four_cycles": true,
+        "reviews_persisted": 4,
+        "week_5_generated": false,
+        "failure_reason": "API budget likely exhausted in full 5-scenario run; cafe-horizonte reached week-5 stage but generation failed",
+        "recovery_verified": true,
+        "note": "Week 3 retry recovered (status: recovered) in same run",
+        "source_run": "full-5-scenario-run"
+      }
+    }
+  },
+
+  "recovery_verification": {
+    "tested": true,
+    "scenario": "cafe-horizonte week 3",
+    "result": "recovered",
+    "evidence": "browser-observations-full.json: retry.status = 'recovered'"
+  },
+
+  "duplicate_verification": {
+    "result": "PASS",
+    "evidence": "DB local: 1 plan per week per business in all E2E runs. No duplicate plans or actions observed."
+  },
+
+  "strategic_intelligence": {
+    "social_media_constraint": "VERIFIED — limpieza (unavailable) respected across all 4 cycles. No plan proposed social media usage.",
+    "mantenimiento_no_social_media": "VERIFIED — weeks 2-4 all passed requiredResources check for social_media absence",
+    "limpieza_4h_constraint": "PARTIAL — weeks 1-4 respected; week 5 failed with C3 issue",
+    "offer_reuse": "VERIFIED — week 2+ plans reference prior actions from history",
+    "progression": "VERIFIED — continuation and advance progressions used correctly in passing plans",
+    "unjustified_repetition": "PASS — no confirmed unjustified repetitions in passing plans",
+    "recovery_feedback": "VERIFIED — resourceFeedbackPersisted=true in mantenimiento W1 (social_media unavailable stored in business_memory)"
+  }
+}

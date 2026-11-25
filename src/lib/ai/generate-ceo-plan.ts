@@ -247,6 +247,24 @@ ${
             .map((e) => e.id)
             .join(", ") || null
         : null;
+      const pendingHistoryRef = context
+        ? context.history
+            .filter((a) => a.status === "pending")
+            .slice(0, 8)
+            .map((a) =>
+              `${a.id} w${a.week} "${a.action.slice(0, 80)}" (work_key: ${a.strategy?.work_key ?? inferWorkKey(a.action)}, intent: ${a.strategy?.intent ?? inferredIntent(a.action)})`,
+            )
+            .join("\n") || null
+        : null;
+      const completedHistoryRef = context
+        ? context.history
+            .filter((a) => a.status === "completed")
+            .slice(0, 8)
+            .map((a) =>
+              `${a.id} w${a.week} "${a.action.slice(0, 80)}" (work_key: ${a.strategy?.work_key ?? inferWorkKey(a.action)}, intent: ${a.strategy?.intent ?? inferredIntent(a.action)})`,
+            )
+            .join("\n") || null
+        : null;
       const previousWeek = input.previousWeek;
       const promptInput = context ? {
         ...input,
@@ -448,7 +466,8 @@ un pendiente con otro nombre para evadir la relación histórica. No dependas de
 un paso futuro. Mantén las tres prioridades y la continuidad cuando corresponda.
 Para errores de captura conserva las evidencias necesarias, usa ids únicos en
 snake_case y permite registrar un resultado nulo o inferior a la meta.
-${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente uno de estos si necesitas prior_action_id o completed_prerequisite_id):\n${validHistoryRef}` : ""}${validEvidenceRef ? `\nIDs válidos para new_evidence_id (certainty != unknown): ${validEvidenceRef}` : ""}
+La suma de estimated_hours de todas las acciones del plan no puede superar ${input.diagnostic.ownerHoursPerWeek} horas semanales disponibles. Si una acción supera ese límite, reduce su alcance o elimínala.
+${pendingHistoryRef ? `\nAcciones pendientes en historial (usa progression=continuation + prior_action_id=<id> para continuar una; elige un trabajo con distinto alcance si quieres progression=new y prior_action_id=null):\n${pendingHistoryRef}` : ""}${completedHistoryRef ? `\nAcciones completadas en historial (si usas el mismo work_key con progression=new, la validación fallará; usa progression=advance + prior_action_id=<id> para profundizar, o elige un trabajo nuevo de work_key distinto):\n${completedHistoryRef}` : ""}${validHistoryRef ? `\nIDs válidos disponibles en el historial (usa exactamente uno de estos si necesitas prior_action_id o completed_prerequisite_id):\n${validHistoryRef}` : ""}${validEvidenceRef ? `\nIDs válidos para new_evidence_id (certainty != unknown): ${validEvidenceRef}` : ""}
 ` : ""}
 `,
       );
