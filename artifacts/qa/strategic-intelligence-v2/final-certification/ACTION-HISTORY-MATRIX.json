@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-11-25",
+  "source": "browser-observations.json — limpieza E2E run (PASS)",
+  "scenario": "limpieza",
+  "weeks": [
+    {
+      "week": 1,
+      "status": "completed",
+      "actions": [
+        {
+          "sequence": 1,
+          "work_key": "commercial_messages",
+          "intent": "build",
+          "progression": "new",
+          "execution_mode": "manual",
+          "social_media_required": false
+        }
+      ]
+    },
+    {
+      "week": 2,
+      "status": "completed",
+      "actions": [
+        {
+          "sequence": 1,
+          "work_key": "commercial_outreach",
+          "intent": "discover",
+          "progression": "new",
+          "execution_mode": "manual",
+          "social_media_required": false
+        }
+      ]
+    },
+    {
+      "week": 3,
+      "status": "completed",
+      "actions": [
+        {
+          "sequence": 1,
+          "work_key": "lead_follow_up",
+          "intent": "discover",
+          "progression": "recurrence",
+          "execution_mode": "manual",
+          "social_media_required": false
+        }
+      ]
+    },
+    {
+      "week": 4,
+      "status": "completed",
+      "actions": [
+        {
+          "sequence": 1,
+          "work_key": "lead_follow_up",
+          "progression": "recurrence",
+          "execution_mode": "manual",
+          "title_distinct_from_w3": true,
+          "social_media_required": false
+        }
+      ]
+    }
+  ],
+  "invariants_verified": {
+    "no_social_media_required": true,
+    "recurrence_w3_w4_different_titles": true,
+    "prompt_version": "v7-strategic-reliability",
+    "four_cycles_complete": true
+  }
+}

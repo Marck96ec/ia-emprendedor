@@ -187,7 +187,7 @@ test("seguimiento de prospectos admite recurrencia en semana posterior con nueva
     result: "5 respuestas registradas",
     strategy: strategy({ work_key: "lead_follow_up", intent: "validate", period_week: 3 }),
   };
-  assert.equal(validateProgression(candidate("Registrar y clasificar cada respuesta para detectar interés real", {
+  assert.equal(validateProgression(candidate("Registrar y clasificar respuestas de nuevos contactos recibidas esta semana", {
     work_key: "lead_follow_up", intent: "validate", progression: "recurrence",
     prior_action_id: uuid(10), period_week: 4,
   }), [prevFollow], [], 4, false), null);
@@ -202,8 +202,14 @@ test("repetición injustificada sobre mismos prospectos bloquea la progresión",
     "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
     { work_key: "lead_follow_up", intent: "validate", progression: "new", prior_action_id: null },
   ), [sent], [], 3, false) ?? "", /ya existe/);
-  assert.equal(validateProgression(candidate(
+  // Same title + recurrence is blocked: lead_follow_up is not a tracking key
+  assert.match(validateProgression(candidate(
     "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
+    { work_key: "lead_follow_up", intent: "validate", progression: "recurrence", prior_action_id: sent.id, period_week: 3 },
+  ), [sent], [], 3, false) ?? "", /recurrencia/);
+  // Different title recurrence passes: new group contacted this week
+  assert.equal(validateProgression(candidate(
+    "Seguir y clasificar respuestas de nuevos contactos esta semana para detectar interés",
     { work_key: "lead_follow_up", intent: "validate", progression: "recurrence", prior_action_id: sent.id, period_week: 3 },
   ), [sent], [], 3, false), null);
 });
@@ -216,10 +222,16 @@ test("seguimiento periódico de cobros admite recurrencia en período posterior"
     result: "USD 300 recuperados",
     strategy: strategy({ work_key: "collections", intent: "execute", period_week: 2 }),
   };
-  assert.equal(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+  // Different title recurrence passes: new debts this week, not the same group
+  assert.equal(validateProgression(candidate("Cobrar nuevas deudas generadas esta semana con mensaje de WhatsApp", {
     work_key: "collections", intent: "execute", progression: "recurrence",
     prior_action_id: uuid(20), period_week: 5,
   }), [col], [], 5, false), null);
+  // Same title recurrence is blocked: collections is not a tracking key
+  assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "recurrence",
+    prior_action_id: uuid(20), period_week: 5,
+  }), [col], [], 5, false) ?? "", /recurrencia/);
   assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
     work_key: "collections", intent: "execute", progression: "new", prior_action_id: null,
   }), [col], [], 5, false) ?? "", /ya existe/);
@@ -262,13 +274,69 @@ test("negocio con cuatro horas y cuatro semanas de historial puede recurrir con 
     strategy: strategy({ work_key: "collections", intent: "execute", period_week: n }),
   });
   const history = [makeHistItem(1), makeHistItem(2), makeHistItem(3), makeHistItem(4)];
-  assert.equal(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+  // Different title recurrence passes: new obligations this week
+  assert.equal(validateProgression(candidate("Cobrar nuevas obligaciones surgidas esta semana con mensaje de WhatsApp", {
     work_key: "collections", intent: "execute", progression: "recurrence",
     prior_action_id: uuid(34), period_week: 5,
   }), history, [], 5, false), null);
+  // Same title recurrence is blocked even after 4 weeks
+  assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
+    work_key: "collections", intent: "execute", progression: "recurrence",
+    prior_action_id: uuid(34), period_week: 5,
+  }), history, [], 5, false) ?? "", /recurrencia/);
   assert.match(validateProgression(candidate("Cobrar saldos pendientes del mes con mensaje de WhatsApp", {
     work_key: "collections", intent: "execute", progression: "new", prior_action_id: null,
   }), history, [], 5, false) ?? "", /ya existe/);
+});
+
+test("mantenimiento: cuatro semanas de investigación de cliente no bloquean semana 5 con texto nuevo", () => {
+  const makeResearch = (n: number, action: string): HistoricalAction => ({
+    id: uuid(50 + n), week: n, action,
+    objective: "Mejorar comprensión del cliente", status: "completed",
+    result: "Patrón registrado",
+    strategy: strategy({ work_key: "customer_research", intent: "discover", period_week: n }),
+  });
+  const history = [
+    makeResearch(1, "Registrar las consultas recibidas esta semana y anotar de dónde vino cada una"),
+    makeResearch(2, "Revisar conversaciones disponibles y anotar qué parte del servicio generó interés o dudas"),
+    makeResearch(3, "Tomar una consulta real y registrar de forma breve origen, solicitud y punto en que se frenó"),
+    makeResearch(4, "Registrar una consulta real y anotar origen, servicio pedido, duda principal y si avanzó"),
+  ];
+  assert.equal(validateProgression(candidate(
+    "Revisar casos de esta semana y documentar qué duda concreta frenó la decisión de compra",
+    { work_key: "customer_research", intent: "discover", progression: "new", prior_action_id: null },
+  ), history, [], 5, false), null);
+});
+
+test("taller-andino: cadena de delegación operativa avanza progresión hacia validación sin bloqueo", () => {
+  const w1: HistoricalAction = {
+    id: uuid(60), week: 1,
+    action: "Revisar pedidos recientes y clasificar qué decisión operativa frenó el avance en cada uno",
+    objective: "Identificar decisión repetible", status: "completed", result: "3 pedidos revisados",
+    strategy: strategy({ work_key: "owner_delegation", intent: "discover", period_week: 1 }),
+  };
+  const w2: HistoricalAction = {
+    id: uuid(61), week: 2,
+    action: "Aplicar en un pedido real una regla mínima para decisiones de compra de materiales",
+    objective: "Validar regla de delegación", status: "completed", result: "Regla probada en un caso",
+    strategy: strategy({ work_key: "owner_delegation", intent: "validate", period_week: 2 }),
+  };
+  const w3: HistoricalAction = {
+    id: uuid(62), week: 3,
+    action: "Observar un pedido real y registrar si una decisión operativa repetitiva puede delegarse",
+    objective: "Validar criterio de delegación", status: "completed", result: "Caso documentado",
+    strategy: strategy({ work_key: "owner_delegation", intent: "validate", prior_action_id: uuid(61), period_week: 3 }),
+  };
+  // W4 advance from W3: different target text, so sameWork is false
+  assert.equal(validateProgression(candidate(
+    "Registrar un caso real donde una decisión operativa repetitiva se delegó correctamente",
+    { work_key: "owner_delegation", intent: "validate", progression: "advance", prior_action_id: uuid(62) },
+  ), [w1, w2, w3], [], 4, false), null);
+  // W5 new independent: distinct text from all prior
+  assert.equal(validateProgression(candidate(
+    "Documentar las reglas de delegación aprendidas y verificar cuáles el equipo puede aplicar solo",
+    { work_key: "owner_delegation", intent: "build", progression: "new", prior_action_id: null },
+  ), [w1, w2, w3], [], 5, false), null);
 });
 
 test("el seguimiento de cobros enruta textos de cobro y nunca fichas de oferta", () => {

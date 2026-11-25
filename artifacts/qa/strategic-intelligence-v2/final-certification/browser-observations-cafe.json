@@ -1,0 +1,1203 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T20:49:33.465Z",
+  "scenarios": {
+    "cafe-horizonte": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Armar un mapa simple de caja con vencimientos, cobros esperados y pagos críticos de los próximos 14 días",
+              "reason": "La decisión crítica depende de saber exactamente qué entra, qué sale y cuándo; sin esto, el negocio opera a ciegas.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "discover",
+                "requires": [
+                  "existing_contacts",
+                  "whatsapp"
+                ],
+                "work_key": "cashflow_update",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Primero hay que convertir la caja y los vencimientos en una foto operable antes de decidir cobranzas o pagos.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener una vista operativa de liquidez para decidir qué priorizar esta semana.",
+              "action_type": "generic",
+              "role_reason": "Requiere criterio del dueño para clasificar pagos críticos y validar compromisos reales.",
+              "capture_schema": {
+                "title": "Mapa semanal de caja",
+                "fields": [
+                  {
+                    "id": "planned_outflow_count",
+                    "max": 50,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Cantidad de pagos o salidas planificadas",
+                    "required": true,
+                    "description": "Número total de compromisos incluidos en el mapa."
+                  },
+                  {
+                    "id": "planned_inflow_count",
+                    "max": 50,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Cantidad de cobros esperados",
+                    "required": true,
+                    "description": "Número total de entradas de dinero consideradas."
+                  },
+                  {
+                    "id": "critical_payment_items",
+                    "type": "repeatable_group",
+                    "label": "Pagos críticos",
+                    "fields": [
+                      {
+                        "id": "due_date",
+                        "type": "text",
+                        "label": "Fecha de vencimiento",
+                        "required": true,
+                        "max_length": 20,
+                        "placeholder": "YYYY-MM-DD"
+                      },
+                      {
+                        "id": "payment_type",
+                        "type": "single_select",
+                        "label": "Tipo de pago",
+                        "options": [
+                          {
+                            "label": "Proveedor",
+                            "value": "supplier"
+                          },
+                          {
+                            "label": "Alquiler",
+                            "value": "rent"
+                          },
+                          {
+                            "label": "Sueldos",
+                            "value": "salary"
+                          },
+                          {
+                            "label": "Impuestos",
+                            "value": "tax"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "amount",
+                        "max": 100000,
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto",
+                        "required": true
+                      },
+                      {
+                        "id": "priority_reason",
+                        "type": "textarea",
+                        "label": "Motivo de prioridad",
+                        "required": true,
+                        "max_length": 300,
+                        "placeholder": "Explica por qué este pago es crítico"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Pagos que no deberían diferirse sin afectar operación o reputación."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar vencimientos, cobros y prioridades de pago.",
+                "capture_type": "cashflow_map",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Lista completa de vencimientos y cobros con fecha, monto y prioridad.",
+              "estimated_hours": 2,
+              "expected_result": "Una base clara para decidir pagos y cobranza sin improvisar.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Enviar mensajes de cobranza a clientes con saldo pendiente y registrar respuestas",
+              "reason": "La caja está por debajo de lo necesario y WhatsApp es el canal disponible más rápido para cobrar sin costo adicional.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "collections",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La restricción inmediata es caja; cobrar pendientes es la acción más directa para aliviarla.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Recuperar efectivo rápido mediante cobros concretos por WhatsApp.",
+              "action_type": "generic",
+              "role_reason": "La negociación de cobro requiere criterio del dueño y manejo de excepciones; no conviene delegarla sin evidencia de capacidad interna.",
+              "capture_schema": {
+                "title": "Seguimiento de cobranzas por WhatsApp",
+                "fields": [
+                  {
+                    "id": "contacted_count",
+                    "max": 100,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Clientes contactados",
+                    "required": true,
+                    "description": "Cantidad de clientes con saldo pendiente a quienes se escribió."
+                  },
+                  {
+                    "id": "responses",
+                    "type": "repeatable_group",
+                    "label": "Respuestas recibidas",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "single_select",
+                        "label": "Tipo de cliente",
+                        "options": [
+                          {
+                            "label": "Individual",
+                            "value": "individual"
+                          },
+                          {
+                            "label": "Empresa",
+                            "value": "company"
+                          },
+                          {
+                            "label": "Recurrente",
+                            "value": "regular"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "response",
+                        "type": "textarea",
+                        "label": "Respuesta",
+                        "required": true,
+                        "max_length": 300,
+                        "placeholder": "Qué respondió el cliente"
+                      },
+                      {
+                        "id": "next_step",
+                        "type": "single_select",
+                        "label": "Siguiente paso",
+                        "options": [
+                          {
+                            "label": "Paga ahora",
+                            "value": "pay_now"
+                          },
+                          {
+                            "label": "Promete pagar luego",
+                            "value": "promise_later"
+                          },
+                          {
+                            "label": "Propone pago parcial",
+                            "value": "partial_payment"
+                          },
+                          {
+                            "label": "Sin respuesta",
+                            "value": "no_response"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "amount_recovered",
+                        "max": 100000,
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto recuperado",
+                        "required": false
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 3,
+                    "description": "Muestra de respuestas relevantes para decidir el siguiente paso."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar a quién se escribió, qué respondió y qué se recuperó.",
+                "capture_type": "collections_follow_up",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Cobros intentados con respuesta registrada y monto prometido o recibido por cliente.",
+              "estimated_hours": 3,
+              "expected_result": "Identificación de qué clientes pueden aportar efectivo esta semana.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Separar pagos que pueden diferirse de pagos que deben atenderse esta semana",
+              "reason": "Con caja ajustada, diferir lo negociable libera efectivo para los compromisos esenciales.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [
+                  "delegate"
+                ],
+                "work_key": "cashflow_update",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La caja mejora si se traduce el mapa de vencimientos en decisiones concretas de pago.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Proteger liquidez evitando egresos no urgentes.",
+              "action_type": "generic",
+              "role_reason": "La clasificación requiere criterio del dueño sobre reputación, operación y consecuencias de atraso.",
+              "capture_schema": {
+                "title": "Priorización de pagos",
+                "fields": [
+                  {
+                    "id": "payment_items",
+                    "type": "repeatable_group",
+                    "label": "Pagos clasificados",
+                    "fields": [
+                      {
+                        "id": "due_date",
+                        "type": "text",
+                        "label": "Fecha de vencimiento",
+                        "required": true,
+                        "max_length": 20,
+                        "placeholder": "YYYY-MM-DD"
+                      },
+                      {
+                        "id": "category",
+                        "type": "single_select",
+                        "label": "Categoría",
+                        "options": [
+                          {
+                            "label": "Crítico",
+                            "value": "critical"
+                          },
+                          {
+                            "label": "Negociable",
+                            "value": "negotiable"
+                          },
+                          {
+                            "label": "Diferible",
+                            "value": "deferrable"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "decision",
+                        "type": "single_select",
+                        "label": "Decisión",
+                        "options": [
+                          {
+                            "label": "Pagar ahora",
+                            "value": "pay_now"
+                          },
+                          {
+                            "label": "Negociar plazo",
+                            "value": "negotiate"
+                          },
+                          {
+                            "label": "Diferir",
+                            "value": "defer"
+                          },
+                          {
+                            "label": "Revisar luego",
+                            "value": "review_later"
+                          }
+                        ],
+                        "required": true
+                      },
+                      {
+                        "id": "reason",
+                        "type": "textarea",
+                        "label": "Motivo",
+                        "required": true,
+                        "max_length": 300,
+                        "placeholder": "Por qué se tomó esa decisión"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 3,
+                    "description": "Muestra de pagos con su clasificación y decisión."
+                  }
+                ],
+                "version": 1,
+                "description": "Clasificar los pagos según urgencia y costo de atraso.",
+                "capture_type": "payment_prioritization",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Lista de pagos clasificados en críticos, negociables y diferibles con decisión asociada.",
+              "estimated_hours": 1,
+              "expected_result": "Mayor control sobre el uso de caja y menor riesgo de incumplimiento.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene dedicar la próxima semana a un control estricto de caja y cobranza antes de intentar crecer ventas?",
+            "rationale": "Con caja muy baja y pagos próximos, la forma más rápida de reducir riesgo es ordenar vencimientos y recuperar efectivo antes de abrir nuevas iniciativas.",
+            "target_metric": "caja disponible y pagos cubiertos a tiempo",
+            "expected_outcome": "Más claridad sobre qué pagos pueden cubrirse, qué cobros pueden acelerarse y qué hueco real de caja queda.",
+            "recommended_direction": "Sí: concentrar la semana en mapear vencimientos, priorizar pagos críticos y activar cobros concretos por WhatsApp."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "planned_inflow_count": 2,
+                "planned_outflow_count": 2,
+                "critical_payment_items": [
+                  {
+                    "amount": 1,
+                    "due_date": "2026-11-27",
+                    "payment_type": "supplier",
+                    "priority_reason": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600."
+                  }
+                ]
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "responses": [
+                  {
+                    "response": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "next_step": "partial_payment",
+                    "customer_type": "individual",
+                    "amount_recovered": 1
+                  },
+                  {
+                    "response": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "next_step": "partial_payment",
+                    "customer_type": "individual",
+                    "amount_recovered": 1
+                  },
+                  {
+                    "response": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "next_step": "partial_payment",
+                    "customer_type": "individual",
+                    "amount_recovered": 1
+                  }
+                ],
+                "contacted_count": 1
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "payment_items": [
+                  {
+                    "reason": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "category": "critical",
+                    "decision": "pay_now",
+                    "due_date": "2026-11-27"
+                  },
+                  {
+                    "reason": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "category": "critical",
+                    "decision": "pay_now",
+                    "due_date": "2026-11-27"
+                  },
+                  {
+                    "reason": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                    "category": "critical",
+                    "decision": "pay_now",
+                    "due_date": "2026-11-27"
+                  }
+                ]
+              }
+            }
+          ],
+          "review": {
+            "id": "6c6cfe49-bf8d-4377-8305-d6ff926b49a7",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: 12 movimientos conciliados y calendario de USD 2.500 de pagos identificados. No se atribuye al plan una subida de ventas ni un cambio de efectivo."
+              ],
+              "learning": "QA sintético: ventas y margen aproximado no resuelven por sí solos el desfase de caja. Los pedidos empresariales demoran el cobro, aunque haya actividad regular.",
+              "hypothesis": "Si se prioriza el control de caja y la cobranza dirigida, el negocio ganará visibilidad suficiente para cubrir mejor los pagos próximos y evitar decisiones ciegas.",
+              "target_metric": "caja disponible y pagos cubiertos a tiempo",
+              "observed_result": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+              "expected_outcome": "Más claridad sobre qué pagos pueden cubrirse, qué cobros pueden acelerarse y qué hueco real de caja queda.",
+              "decision_question": "¿Conviene dedicar la próxima semana a un control estricto de caja y cobranza antes de intentar crecer ventas?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: concentrar la semana en mapear vencimientos, priorizar pagos críticos y activar cobros concretos por WhatsApp."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 2,
+          "plan": [
+            {
+              "action": "Revisar esta semana los cobros pendientes reales y marcar cuáles pueden entrar de inmediato, cuáles necesitan seguimiento y cuáles no son recuperables",
+              "reason": "La decisión crítica depende de saber qué caja puede recuperarse; sin eso, la negociación de pagos sigue a ciegas.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "collections",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "recurrence",
+                "justification": "Es una nueva ronda de cobranza sobre un problema ya identificado; ahora el foco es distinguir qué saldos sí se convierten en efectivo esta semana.",
+                "prior_barrier": "unchanged",
+                "new_evidence_id": "e56dd329-7a80-4c4b-ab25-29dd4e329bec",
+                "prior_action_id": "a701ec03-e289-4fa7-b29d-d4af7dbea813",
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Separar efectivo probable de efectivo dudoso para decidir con base real.",
+              "action_type": "generic",
+              "role_reason": "Requiere criterio del dueño para evaluar excepciones, promesas y prioridades de cobro.",
+              "capture_schema": {
+                "title": "Cobros revisados y clasificados",
+                "fields": [
+                  {
+                    "id": "reviewed_count",
+                    "max": 50,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Cantidad de cobros revisados",
+                    "required": true,
+                    "description": "Número total de cobros pendientes evaluados esta semana."
+                  },
+                  {
+                    "id": "recoverable_count",
+                    "max": 50,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Cantidad de cobros recuperables",
+                    "required": true,
+                    "description": "Cuántos de los revisados parecen cobrables en la semana actual."
+                  },
+                  {
+                    "id": "top_recoverable_cases",
+                    "type": "repeatable_group",
+                    "label": "Casos más recuperables",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "text",
+                        "label": "Tipo de cliente",
+                        "required": true,
+                        "max_length": 80,
+                        "description": "Ejemplo: empresa, vecino, recurrente.",
+                        "placeholder": "empresa"
+                      },
+                      {
+                        "id": "expected_amount",
+                        "max": 100000,
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto esperado",
+                        "required": true,
+                        "description": "Monto que se espera cobrar."
+                      },
+                      {
+                        "id": "recovery_signal",
+                        "type": "textarea",
+                        "label": "Señal de recuperación",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Qué evidencia concreta indica que sí puede entrar el cobro.",
+                        "placeholder": "Promesa fechada, transferencia, acuerdo parcial"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 3,
+                    "min_items": 1,
+                    "description": "Registrar hasta 3 casos con monto, cliente y motivo de recuperabilidad."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué cobros pueden entrar y con qué señal concreta.",
+                "capture_type": "cashflow_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Lista de cobros con estado, monto y fecha estimada de entrada para cada caso revisado.",
+              "estimated_hours": 2,
+              "expected_result": "Una visión más precisa del efectivo que puede aliviar la presión de caja.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Definir qué pagos se atienden ahora, cuáles se negocian y cuáles se difieren, dejando por escrito el motivo de cada decisión",
+              "reason": "Con liquidez frágil, la caja debe dirigirse primero a lo crítico; esta decisión reduce el riesgo de incumplimiento.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "optimize",
+                "requires": [],
+                "work_key": "cashflow_update",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "advance",
+                "justification": "Se apoya en el mapa y la clasificación de la semana anterior, pero ahora busca convertir esa información en decisiones concretas sobre pagos.",
+                "prior_barrier": "resolved",
+                "new_evidence_id": "e56dd329-7a80-4c4b-ab25-29dd4e329bec",
+                "prior_action_id": "e10eb4e3-cb67-4fca-86f1-17e1fd199fdb",
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": "e10eb4e3-cb67-4fca-86f1-17e1fd199fdb"
+              },
+              "objective": "Proteger la caja disponible y evitar usar efectivo en egresos de menor prioridad.",
+              "action_type": "generic",
+              "role_reason": "La decisión requiere criterio del dueño sobre reputación, operación y consecuencias de atraso.",
+              "capture_schema": {
+                "title": "Clasificación de pagos",
+                "fields": [
+                  {
+                    "id": "total_payments_reviewed",
+                    "max": 50,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Pagos revisados",
+                    "required": true,
+                    "description": "Número de pagos analizados para esta decisión."
+                  },
+                  {
+                    "id": "critical_payments_count",
+                    "max": 50,
+                    "min": 0,
+                    "type": "number",
+                    "label": "Pagos críticos",
+                    "required": true,
+                    "description": "Cantidad de pagos que deben atenderse ahora."
+                  },
+                  {
+                    "id": "payment_decisions",
+                    "type": "repeatable_group",
+                    "label": "Decisiones por pago",
+                    "fields": [
+                      {
+                        "id": "payment_type",
+                        "type": "text",
+                        "label": "Tipo de pago",
+                        "required": true,
+                        "max_length": 80,
+                        "description": "Ejemplo: proveedor, alquiler, nómina, impuesto.",
+                        "placeholder": "proveedor"
+                      },
+                      {
+                        "id": "decision",
+                        "type": "single_select",
+                        "label": "Decisión",
+                        "options": [
+                          {
+                            "label": "Pagar ahora",
+                            "value": "pay_now"
+                          },
+                          {
+                            "label": "Negociar",
+                            "value": "negotiate"
+                          },
+                          {
+                            "label": "Diferir",
+                            "value": "defer"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Pagar ahora, negociar o diferir."
+                      },
+                      {
+                        "id": "reason_for_decision",
+                        "type": "textarea",
+                        "label": "Motivo",
+                        "required": true,
+                        "max_length": 300,
+                        "description": "Por qué se tomó esa decisión.",
+                        "placeholder": "Impacto operativo, vencimiento, riesgo"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 5,
+                    "min_items": 1,
+                    "description": "Lista breve de pagos revisados y la decisión tomada."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar decisiones de pago con su lógica.",
+                "capture_type": "payment_priority_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Clasificación completa de pagos en críticos, negociables y diferibles con decisión concreta para cada uno.",
+              "estimated_hours": 2,
+              "expected_result": "Menos ambigüedad al pagar y más control sobre el uso del efectivo.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Preparar dos escenarios simples de caja para la próxima semana: uno si entran cobros clave y otro si no entran",
+              "reason": "La caja es tan frágil que conviene anticipar el escenario base y el adverso para no improvisar.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "validate",
+                "requires": [],
+                "work_key": "cashflow_update",
+                "deliverable": null,
+                "period_week": 2,
+                "progression": "advance",
+                "justification": "La semana anterior dejó claro que ver caja no basta; ahora hace falta probar qué decisiones cambian según entren o no cobros.",
+                "prior_barrier": "resolved",
+                "new_evidence_id": "e56dd329-7a80-4c4b-ab25-29dd4e329bec",
+                "prior_action_id": "e10eb4e3-cb67-4fca-86f1-17e1fd199fdb",
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": "e10eb4e3-cb67-4fca-86f1-17e1fd199fdb"
+              },
+              "objective": "Tomar decisiones más seguras antes de comprometer nueva compra o gasto.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe validar supuestos de cobro y pagos; no conviene delegarlo porque afecta decisiones sensibles.",
+              "capture_schema": {
+                "title": "Escenarios de caja",
+                "fields": [
+                  {
+                    "id": "scenario_name",
+                    "type": "text",
+                    "label": "Nombre del escenario",
+                    "required": true,
+                    "max_length": 80,
+                    "description": "Ejemplo: con cobros clave / sin cobros clave.",
+                    "placeholder": "con cobros clave"
+                  },
+                  {
+                    "id": "assumed_inflows",
+                    "type": "textarea",
+                    "label": "Cobros asumidos",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Monto y fuente de cobros incluidos en el escenario.",
+                    "placeholder": "Cliente A, Cliente B, monto estimado"
+                  },
+                  {
+                    "id": "expected_decision",
+                    "type": "textarea",
+                    "label": "Decisión resultante",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué se hará si este escenario ocurre.",
+                    "placeholder": "Pagar, negociar, diferir, comprar o no comprar"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar el escenario esperado y el adverso con sus decisiones.",
+                "capture_type": "cash_scenario_planning",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Dos escenarios escritos con supuestos, caja final estimada y decisiones resultantes.",
+              "estimated_hours": 2,
+              "expected_result": "Mejor lectura de riesgo y menos decisiones reactivas.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene dedicar la próxima semana a cerrar la brecha de caja con cobranza selectiva y negociación de pagos antes de cualquier iniciativa comercial nueva?",
+            "rationale": "Con caja de USD 600 y obligaciones cercanas, la mejor decisión es proteger liquidez primero; vender más no sirve si el cobro llega tarde o el efectivo se va en pagos mal priorizados.",
+            "target_metric": "caja disponible y pagos cubiertos a tiempo",
+            "expected_outcome": "Mayor claridad sobre qué efectivo puede entrar y qué pagos pueden reprogramarse, reduciendo el riesgo de incumplimiento.",
+            "recommended_direction": "Sí: concentrar la semana en identificar efectivo recuperable, confirmar pagos críticos y negociar lo negociable."
+          },
+          "continuity": {
+            "mode": "continuation",
+            "justification": "La semana anterior confirmó que ordenar caja y cobrar no resolvió el faltante, pero sí mostró que el problema sigue estando en liquidez y timing de cobro; por eso conviene continuar con la misma línea, profundizando la evidencia.",
+            "prior_evidence_gap": "La semana anterior hubo visibilidad operativa, pero no quedó probado qué parte del faltante era recuperable en efectivo y cuál era estructural.",
+            "new_verifiable_signal": "Registro de cobros realmente ingresados esta semana junto con acuerdos de pago fechados y priorizados.",
+            "unresolved_uncertainty": "Todavía no está claro si la brecha se corrige con cobranza y negociación o si el margen estructural es el verdadero límite."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "reviewed_count": 1,
+                "recoverable_count": 1,
+                "top_recoverable_cases": [
+                  {
+                    "customer_type": "QA · Contacto de la zona habitual",
+                    "expected_amount": 1,
+                    "recovery_signal": "2026-11-27"
+                  }
+                ]
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "payment_decisions": [
+                  {
+                    "decision": "pay_now",
+                    "payment_type": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo",
+                    "reason_for_decision": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600."
+                  }
+                ],
+                "critical_payments_count": 1,
+                "total_payments_reviewed": 1
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "scenario_name": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo",
+                "assumed_inflows": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+                "expected_decision": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600."
+              }
+            }
+          ],
+          "review": {
+            "id": "fc57c175-5d2c-44c3-b478-caded3b22ffa",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: 12 movimientos conciliados y calendario de USD 2.500 de pagos identificados. No se atribuye al plan una subida de ventas ni un cambio de efectivo."
+              ],
+              "learning": "QA sintético: ventas y margen aproximado no resuelven por sí solos el desfase de caja. Los pedidos empresariales demoran el cobro, aunque haya actividad regular.",
+              "hypothesis": "Si el dueño concentra la semana en cobranza selectiva y negociación de pagos, debería aparecer suficiente visibilidad para reducir la brecha de caja o confirmar que el problema es estructural.",
+              "target_metric": "caja disponible y pagos cubiertos a tiempo",
+              "observed_result": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+              "expected_outcome": "Mayor claridad sobre qué efectivo puede entrar y qué pagos pueden reprogramarse, reduciendo el riesgo de incumplimiento.",
+              "decision_question": "¿Conviene dedicar la próxima semana a cerrar la brecha de caja con cobranza selectiva y negociación de pagos antes de cualquier iniciativa comercial nueva?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: concentrar la semana en identificar efectivo recuperable, confirmar pagos críticos y negociar lo negociable."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true,
+          "nextPlanReady": true
+        },
+        {
+          "week": 3,
+          "plan": [
+            {
+              "action": "Revisar los cobros pendientes que puedan entrar esta semana y clasificar cada uno como recuperable, incierto o no recuperable",
+              "reason": "La decisión crítica depende de saber qué efectivo puede entrar de verdad; sin eso, la gestión de pagos sigue a ciegas.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "resolve_blocker",
+                "requires": [
+                  "whatsapp"
+                ],
+                "work_key": "collections",
+                "deliverable": null,
+                "period_week": 3,
+                "progression": "recurrence",
+                "justification": "Es una nueva ronda de verificación del mismo problema de caja, con alcance distinto: ahora se valida qué efectivo entra realmente esta semana.",
+                "prior_barrier": "resolved",
+                "new_evidence_id": "eac9e6d4-dc71-4d73-8fa8-66fbc1c54865",
+                "prior_action_id": "a6bb6509-e528-4a41-b350-e56bf6436ba7",
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Separar caja probable de caja dudosa para decidir con base real.",
+              "action_type": "generic",
+              "role_reason": "Requiere criterio del dueño para evaluar promesas, excepciones y prioridad de cobro.",
+              "capture_schema": {
+                "title": "Revisión de cobros recuperables",
+                "fields": [
+                  {
+                    "id": "reviewed_count",
+                    "min": 1,
+                    "type": "number",
+                    "label": "Cobros revisados",
+                    "required": true,
+                    "description": "Cantidad de cobros pendientes evaluados."
+                  },
+                  {
+                    "id": "recoverable_count",
+                    "min": 0,
+                    "type": "number",
+                    "label": "Cobros recuperables",
+                    "required": true,
+                    "description": "Cantidad de cobros que sí pueden entrar esta semana."
+                  },
+                  {
+                    "id": "top_cases",
+                    "type": "repeatable_group",
+                    "label": "Casos relevantes",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "single_select",
+                        "label": "Tipo de cliente",
+                        "options": [
+                          {
+                            "label": "Individual",
+                            "value": "individual"
+                          },
+                          {
+                            "label": "Empresa",
+                            "value": "business"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Quién debe pagar."
+                      },
+                      {
+                        "id": "expected_amount",
+                        "min": 0,
+                        "type": "number",
+                        "label": "Monto esperado",
+                        "required": true,
+                        "description": "Monto estimado del cobro."
+                      },
+                      {
+                        "id": "recovery_signal",
+                        "type": "textarea",
+                        "label": "Señal de recuperación",
+                        "required": true,
+                        "max_length": 500,
+                        "description": "Qué evidencia concreta indica que puede entrar.",
+                        "placeholder": "promesa, fecha, mensaje, comprobante"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 5,
+                    "min_items": 1,
+                    "description": "Muestra de los casos más importantes revisados."
+                  },
+                  {
+                    "id": "main_obstacle",
+                    "type": "single_select",
+                    "label": "Principal obstáculo",
+                    "options": [
+                      {
+                        "label": "Demora",
+                        "value": "delay"
+                      },
+                      {
+                        "label": "Pago parcial",
+                        "value": "partial_payment"
+                      },
+                      {
+                        "label": "Sin respuesta",
+                        "value": "no_response"
+                      },
+                      {
+                        "label": "Disputa",
+                        "value": "dispute"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Razón principal por la que un cobro no entra rápido."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué cobros pueden entrar esta semana y con qué evidencia.",
+                "capture_type": "cash_recovery_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Registro de cada cobro revisado con estado, monto esperado y fecha estimada de entrada.",
+              "estimated_hours": 2,
+              "expected_result": "Una lectura más precisa del efectivo que puede aliviar la presión de caja.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Conviene dedicar esta semana a comprobar qué cobros entran realmente antes de decidir nuevos pagos o compras?",
+            "rationale": "Con caja frágil, la mejor decisión no es asumir ingresos, sino confirmar qué efectivo entra de verdad para no comprometer pagos con información incompleta.",
+            "target_metric": "caja disponible y pagos cubiertos a tiempo",
+            "expected_outcome": "Más claridad sobre el efectivo disponible y menor riesgo de usar caja que todavía no existe.",
+            "recommended_direction": "Sí: validar cobros reales de esta semana antes de mover la caja."
+          },
+          "continuity": {
+            "mode": "deepening",
+            "justification": "La semana anterior ya mostró que ordenar la caja no bastó; ahora toca profundizar con una señal nueva y más fuerte sobre cobros realmente ingresados.",
+            "prior_evidence_gap": "La semana anterior hubo visibilidad operativa, pero no quedó probado qué parte del faltante era recuperable en efectivo y cuál era estructural.",
+            "new_verifiable_signal": "Registro de cobros efectivamente recibidos esta semana, con fecha y monto real.",
+            "unresolved_uncertainty": "Todavía no está claro si la brecha se corrige con cobranza inmediata o si el margen estructural es el límite real."
+          },
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "top_cases": [
+                  {
+                    "customer_type": "individual",
+                    "expected_amount": 1,
+                    "recovery_signal": "2026-11-27"
+                  }
+                ],
+                "main_obstacle": "partial_payment",
+                "reviewed_count": 1,
+                "recoverable_count": 1
+              }
+            }
+          ],
+          "review": {
+            "id": "b162f912-bfed-434f-a461-13f516c006de",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: 12 movimientos conciliados y calendario de USD 2.500 de pagos identificados. No se atribuye al plan una subida de ventas ni un cambio de efectivo."
+              ],
+              "learning": "QA sintético: ventas y margen aproximado no resuelven por sí solos el desfase de caja. Los pedidos empresariales demoran el cobro, aunque haya actividad regular.",
+              "hypothesis": "Si se confirma qué cobros entran realmente esta semana, el dueño podrá decidir mejor qué pagos sostener, cuáles negociar y cuáles diferir sin empeorar la presión de caja.",
+              "target_metric": "caja disponible y pagos cubiertos a tiempo",
+              "observed_result": "QA sintético: conciliamos 12 movimientos, separamos el cobro de ventas del costo de reposición y ubicamos USD 2.500 de obligaciones próximas. La caja disponible sigue en USD 600.",
+              "expected_outcome": "Más claridad sobre el efectivo disponible y menor riesgo de usar caja que todavía no existe.",
+              "decision_question": "¿Conviene dedicar esta semana a comprobar qué cobros entran realmente antes de decidir nuevos pagos o compras?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: validar cobros reales de esta semana antes de mover la caja."
+            },
+            "completed_actions": 1,
+            "total_actions": 1
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-4-generation",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "retry": {
+        "week": 2,
+        "planId": "d72156e4-5fcf-4a29-8d21-f7e6b79f661e",
+        "status": "recovered"
+      },
+      "error": "El plan de semana 4 quedó en estado failed."
+    }
+  },
+  "finishedAt": "2026-11-25T20:53:25.394Z"
+}

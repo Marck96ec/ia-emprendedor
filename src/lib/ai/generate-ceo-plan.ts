@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { run } from "@openai/agents";
 import { ZodError } from "zod";
 
@@ -65,6 +66,21 @@ const defaultCEOPlanRunner: CEOPlanRunner = async (
   agent,
   prompt,
 ) => {
+  const budgetFile = process.env.CEO_PLAN_API_BUDGET_FILE;
+  if (budgetFile) {
+    let budget: { limit: number; used: number };
+    try {
+      budget = JSON.parse(readFileSync(budgetFile, "utf8"));
+    } catch {
+      budget = { limit: 0, used: 0 };
+    }
+    if (budget.used >= budget.limit) {
+      throw new Error(
+        `CEO_PLAN_API_BUDGET_EXHAUSTED: Presupuesto de ${budget.limit} llamadas agotado (${budget.used} usadas). No se realizará la solicitud.`,
+      );
+    }
+    writeFileSync(budgetFile, JSON.stringify({ ...budget, used: budget.used + 1 }));
+  }
   let rejected: CEOPlanRunResult | undefined;
   try {
     return await run(agent, prompt, {
@@ -331,10 +347,13 @@ ${context ? `CONTRATO DE CONTEXTO Y FACTIBILIDAD:
   ronda de mensajes a nuevos contactos, medición operativa o revisión de caja)
   pueden declarar progression=recurrence cuando se repiten en un período nuevo
   con distinto alcance o grupo. Enlaza la acción previa completada con
-  prior_action_id y declara period_week igual a targetWeek. Cambiar únicamente
-  el título o la semana sin un alcance o grupo nuevo no es suficiente. Los
-  work_keys que admiten recurrencia son: cashflow_update, collections,
-  commercial_messages, commercial_outreach, lead_follow_up, operations_measure.
+  prior_action_id y declara period_week igual a targetWeek. El título de la
+  nueva acción debe ser diferente al de la acción previa y describir el nuevo
+  segmento o grupo (p. ej. «contactos que mostraron interés real» en lugar de
+  «contactos locales ya existentes»). Cambiar únicamente la semana sin
+  actualizar el título y el alcance no es suficiente. Los work_keys que admiten
+  recurrencia son: cashflow_update, collections, commercial_messages,
+  commercial_outreach, lead_follow_up, operations_measure.
   La etiqueta deepening no justifica repetir.
 - Para ai_assisted declara el entregable real. commercial_offers genera dos ofertas.
   commercial_messages prepara textos completos, normalmente tres variantes.

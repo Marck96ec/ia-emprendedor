@@ -1,0 +1,37 @@
+{
+  "session": "v2.5 final certification",
+  "date": "2026-11-25",
+  "model": "gpt-5.4-mini",
+  "budget_authorized": 30,
+  "note": "The dev server does not load CEO_PLAN_API_BUDGET_FILE, so the file-based budget counter is not enforced server-side during E2E runs. Call counts are estimated from scenario outcomes.",
+  "budget_implementation": {
+    "file": "src/lib/ai/generate-ceo-plan.ts",
+    "env_var": "CEO_PLAN_API_BUDGET_FILE",
+    "enforcement": "pre-call: reads budget file, throws CEO_PLAN_API_BUDGET_EXHAUSTED if used >= limit",
+    "status": "implemented and unit-testable, not enforced during this E2E session (server started without env var)"
+  },
+  "sessions": [
+    {
+      "session": "v2.5 previous session",
+      "scenarios_run": ["limpieza (FAIL at W4)"],
+      "calls_used": 9,
+      "breakdown": "W1:2 W2:2 W3:1 W4:4"
+    },
+    {
+      "session": "v2.5 this session",
+      "scenarios_run": [
+        "limpieza (PASS)",
+        "cafe-horizonte (FAIL at W4)",
+        "nova-studio (FAIL at W1)"
+      ],
+      "calls_used_estimate": 18,
+      "breakdown": {
+        "limpieza": "~5 calls (W1-W4 passed, estimated 1-2 per week)",
+        "cafe_horizonte": "~9 calls (W2 retry: 4; W1,W3: 2; W4: 2+1 retry skip)",
+        "nova_studio": "~4 calls (W1: 2 initial + 2 retry, all failed)"
+      }
+    }
+  ],
+  "total_v2_5_estimate": 27,
+  "remaining_estimate": 3
+}

@@ -222,6 +222,10 @@ const RECURRENT_ACTIVITY_KEYS = new Set<WorkKey>([
   "cashflow_update", "collections", "commercial_messages", "commercial_outreach", "lead_follow_up", "operations_measure",
 ]);
 
+// Periodic tracking keys allow recurrence with the same title (e.g. "Actualizar flujo de caja").
+// Activity keys (collections, commercial_messages, etc.) must have a different title to prove a new scope/group.
+const PERIODIC_TRACKING_KEYS = new Set<WorkKey>(["cashflow_update", "operations_measure"]);
+
 export function validateProgression(
   item: Candidate,
   history: HistoricalAction[],
@@ -248,7 +252,12 @@ export function validateProgression(
     if (RECURRENT_ACTIVITY_KEYS.has(key) && related?.status === "completed"
       && workKeyFor(related.action, related.strategy) === key
       && strategy.period_week === targetWeek
-      && (related.strategy?.period_week ?? related.week) < targetWeek) return null;
+      && (related.strategy?.period_week ?? related.week) < targetWeek) {
+      if (!PERIODIC_TRACKING_KEYS.has(key) && normalizeWorkText(item.action) === normalizeWorkText(related.action)) {
+        return "La recurrencia requiere un alcance o grupo nuevo. Adapta el título para reflejar la nueva ronda.";
+      }
+      return null;
+    }
     return "La recurrencia necesita una actividad periódica registrada y un período posterior distinto.";
   }
   if (strategy.progression === "rework") {

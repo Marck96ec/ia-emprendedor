@@ -1,0 +1,42 @@
+{
+  "date": "2026-11-25",
+  "command": "SUPABASE_LOCAL_TESTS=1 npm test -- --reporter=tap",
+  "results": {
+    "total": 192,
+    "pass": 192,
+    "fail": 0,
+    "skip": 0,
+    "todo": 0
+  },
+  "supabase_integration_tests": {
+    "enabled": true,
+    "note": "SUPABASE_LOCAL_TESTS=1 enables 4 Supabase integration tests that are skipped otherwise"
+  },
+  "without_supabase_integration": {
+    "total": 192,
+    "pass": 188,
+    "fail": 0,
+    "skip": 4,
+    "note": "Default run (npm test) skips 4 Supabase integration tests. Reports 188/192, not 190/190."
+  },
+  "new_tests_added_v2_5": [
+    {
+      "name": "mantenimiento: cuatro semanas de investigación de cliente no bloquean semana 5 con texto nuevo",
+      "category": "regression",
+      "covers": "customer_research/new progression through 4 weeks without blocking"
+    },
+    {
+      "name": "taller-andino: cadena de delegación operativa avanza progresión hacia validación sin bloqueo",
+      "category": "regression",
+      "covers": "owner_delegation chain: discover → validate (advance) → validate (advance) → build (new)"
+    }
+  ],
+  "updated_tests_v2_5": [
+    "seguimiento de prospectos admite recurrencia",
+    "repetición injustificada sobre mismos prospectos bloquea la progresión",
+    "seguimiento periódico de cobros admite recurrencia",
+    "negocio con cuatro horas y cuatro semanas"
+  ],
+  "typecheck": "0 errors",
+  "lint": "0 errors (4 pre-existing warnings unrelated to v2.5 changes)"
+}
