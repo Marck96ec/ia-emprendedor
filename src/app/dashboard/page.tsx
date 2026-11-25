@@ -3,12 +3,8 @@ import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { DecisionHero } from "@/components/decision-hero";
 import { ExecutiveSummary } from "@/components/executive-summary";
-import { NextActionCard } from "@/components/next-action-card";
-import { TimeAllocationCard } from "@/components/time-allocation-card";
-import { WelcomeBanner, DecisionLoop } from "@/components/welcome-banner";
 import {
   buildDashboardJourney,
-  getDecisionLoopStage,
   type DashboardJourney,
 } from "@/lib/dashboard-progress";
 import { parseStoredCEOPlanForDashboard } from "@/lib/ai/ceo-agent";
@@ -21,9 +17,13 @@ import type {
 import { createClient } from "@/lib/supabase/server";
 import { PlanGenerationExperience } from "@/components/plan-generation-experience";
 import { PlanGeneratingStatus } from "@/components/plan-generating-status";
-import { WeeklyActionBoard } from "@/components/weekly-action-board";
-import { WeeklyProgress } from "@/components/weekly-progress";
-import { ExternalEvidenceSection, summarizeEvidence } from "@/components/external-evidence-section";
+import { ExternalEvidenceSection } from "@/components/external-evidence-section";
+import { BusinessDNA } from "@/components/business-dna";
+import { BusinessEvolutionCard } from "@/components/business-evolution-card";
+import { BusinessResultsCard } from "@/components/business-results-card";
+import { ExecutionOverview } from "@/components/execution-overview";
+import { buildBusinessAssessment } from "@/lib/business-assessment-adapter";
+import { CommandCenterNavigation } from "@/components/command-center-navigation";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -92,7 +92,18 @@ export default async function DashboardPage({
     error: diagnosticError,
   } = await supabase
     .from("business_diagnostics")
-    .select("id, owner_hours_per_week")
+    .select(
+      `
+        id,
+        business_stage,
+        team_size,
+        owner_hours_per_week,
+        owner_responsibilities,
+        customers_description,
+        sales_process,
+        monthly_revenue
+      `,
+    )
     .eq("business_id", business.id)
     .maybeSingle();
 
@@ -109,6 +120,26 @@ export default async function DashboardPage({
 
   if (!diagnostic) {
     redirect("/onboarding/diagnostic");
+  }
+
+  const {
+    data: businessEvidence,
+    error: businessEvidenceError,
+  } = await supabase
+    .from("business_evidence")
+    .select("id, evidence_type, certainty, observed_at, canonical_key, source_weekly_action_id")
+    .eq("business_id", business.id)
+    .order("observed_at", { ascending: false });
+
+  if (businessEvidenceError) {
+    console.error(
+      "BUSINESS_EVIDENCE_LOAD_ERROR",
+      businessEvidenceError,
+    );
+
+    throw new Error(
+      "No pudimos cargar la evidencia empresarial",
+    );
   }
 
   /*
@@ -302,12 +333,6 @@ export default async function DashboardPage({
   const totalActions =
     weeklyActions.length;
 
-  const firstPendingAction =
-    weeklyActions.find(
-      (action) =>
-        action.status === "pending",
-    ) ?? null;
-
   const dashboardTimeAllocation =
     readyPlan?.time_allocation ?? {
       available_hours: Number(diagnostic.owner_hours_per_week),
@@ -362,6 +387,14 @@ export default async function DashboardPage({
       review as DashboardWeeklyReview | null;
   }
 
+  const businessAssessment = buildBusinessAssessment({
+    diagnostic,
+    evidence: businessEvidence ?? [],
+    completedActions,
+    totalActions,
+    latestReview: weeklyReview,
+  });
+
   /*
    * Progreso acumulado derivado del historial existente.
    */
@@ -415,14 +448,16 @@ export default async function DashboardPage({
   }
 
   const evidenceData = externalEvidence?.success ? externalEvidence.data : null;
-  const allActionsCompleted =
-    totalActions > 0 && completedActions === totalActions;
-  const nextActionHref = firstPendingAction
-    ? firstPendingAction.execution_mode === "ai_assisted"
-      ? `/actions/${firstPendingAction.id}`
-      : "#tablero-semanal"
-    : null;
-
+  const actionsWithResults = new Set(
+    weeklyActions
+      .filter((action) => action.status === "completed" && action.completion_data)
+      .map((action) => action.id),
+  );
+  for (const item of businessEvidence ?? []) {
+    if (item.source_weekly_action_id && item.canonical_key === `action:${item.source_weekly_action_id}`) {
+      actionsWithResults.add(item.source_weekly_action_id);
+    }
+  }
   const preparedWeekMessage = message?.match(
     /^Semana (\d+) preparada\.$/,
   );
@@ -431,23 +466,14 @@ export default async function DashboardPage({
     : message;
 
   return (
-    <main className={`ambient-shell min-h-dvh px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-8 ${readyPlan ? "cockpit:h-dvh cockpit:overflow-hidden cockpit:py-3" : ""}`}>
-      <div className={`mx-auto flex max-w-[1240px] flex-col gap-3 cockpit:short:gap-2 ${readyPlan ? "cockpit:h-full cockpit:min-h-0" : "min-h-[calc(100dvh-2rem)] justify-center"}`}>
+    <div className="command-shell">
+      <CommandCenterNavigation hasPlan={Boolean(readyPlan)} />
+      <main className="min-w-0 space-y-3" id="command-center">
         <DashboardHeader
           businessName={business.name}
           weekNumber={ceoPlan?.status === "ready" ? ceoPlan.week_number : null}
-        >
-          {readyPlan && ceoPlan && (
-            <WelcomeBanner
-              weekNumber={ceoPlan.week_number}
-              completedActions={completedActions}
-              totalActions={totalActions}
-              reviewed={Boolean(weeklyReview)}
-              hasPriorLearning={journey.hasPriorLearning}
-              nextActionHref={nextActionHref}
-            />
-          )}
-        </DashboardHeader>
+          email={typeof claimsData.claims.email === "string" ? claimsData.claims.email : null}
+        />
 
         {pageError && <div className="alert-box shrink-0" role="alert">{pageError}</div>}
         {displayMessage && <div className="success-box shrink-0" role="status">{displayMessage}</div>}
@@ -480,8 +506,8 @@ export default async function DashboardPage({
         )}
 
         {readyPlan && ceoPlan && (
-          <div className="flex flex-col gap-3 cockpit:min-h-0 cockpit:flex-1 cockpit:short:gap-2">
-            <div className="grid gap-3 cockpit:short:gap-2 min-[900px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+          <div className="command-grid">
+            <div className="command-stack command-stack--execution">
               <DecisionHero
                 summary={readyPlan.executive_summary}
                 strategicDiagnosis={readyPlan.strategic_diagnosis}
@@ -498,49 +524,33 @@ export default async function DashboardPage({
                     evidence={evidenceData}
                   />
                 }
-                evidenceSummary={summarizeEvidence(ceoPlan.evidence_status, evidenceData)}
               />
-              <NextActionCard
-                action={firstPendingAction}
-                pendingCount={totalActions - completedActions}
-                reviewed={Boolean(weeklyReview)}
-                allCompleted={allActionsCompleted}
+
+              <ExecutionOverview
+                objective={readyPlan.strategic_diagnosis.critical_decision.expected_outcome.trim()
+                  || readyPlan.strategic_diagnosis.business_understanding.current_goal.trim()
+                  || "El objetivo de esta semana"}
+                timeAllocation={dashboardTimeAllocation}
+                actions={weeklyActions}
+                review={weeklyReview}
+                nextWeekNumber={weeklyReview ? ceoPlan.week_number + 1 : null}
+                error={pageError}
+                message={displayMessage}
               />
             </div>
 
-            <div className="grid shrink-0 divide-y divide-slate-200/70 rounded-2xl bg-white/70 sm:border sm:border-slate-200 sm:bg-white/80 sm:shadow-sm cockpit:grid-cols-[minmax(0,1.2fr)_auto_minmax(0,1fr)] cockpit:divide-x cockpit:divide-y-0">
-              <WeeklyProgress
-                completedActions={completedActions}
-                totalActions={totalActions}
-                weekNumber={ceoPlan.week_number}
-                executedActions={journey.executedActions}
+            <div className="command-stack command-stack--business">
+              <BusinessEvolutionCard assessment={businessAssessment} />
+              <BusinessDNA assessment={businessAssessment} />
+              <BusinessResultsCard
+                results={actionsWithResults.size}
+                completedActions={journey.executedActions}
                 evaluatedDecisions={journey.evaluatedDecisions}
-                validatedHypotheses={journey.validatedHypotheses}
-                reviewStreak={journey.reviewStreak}
               />
-              <section className="px-4 py-3" aria-labelledby="decision-loop-title">
-                <h2 id="decision-loop-title" className="eyebrow">Ciclo de decisión</h2>
-                <div className="mt-1.5">
-                  <DecisionLoop
-                    stage={getDecisionLoopStage({
-                      reviewed: Boolean(weeklyReview),
-                      allCompleted: allActionsCompleted,
-                    })}
-                  />
-                </div>
-              </section>
-              <TimeAllocationCard timeAllocation={dashboardTimeAllocation} />
             </div>
-
-            <WeeklyActionBoard
-              actions={weeklyActions}
-              reviewed={Boolean(weeklyReview)}
-              review={weeklyReview}
-              nextWeekNumber={weeklyReview ? ceoPlan.week_number + 1 : null}
-            />
           </div>
         )}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

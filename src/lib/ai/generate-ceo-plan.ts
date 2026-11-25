@@ -18,6 +18,7 @@ import {
 } from "./ceo-plan-errors";
 import { parseActionCaptureModel } from "../action-capture";
 import type { StrategicContinuity } from "../strategic-continuity";
+import type { BusinessAssessment } from "../business-assessment";
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -54,6 +55,8 @@ export type GenerateCEOPlanInput = {
     monthlyRevenue: number;
     currencyCode: string;
   };
+
+  assessment?: BusinessAssessment;
 
   previousWeek: {
     weekNumber: number;
@@ -161,6 +164,14 @@ Analiza el siguiente negocio y prepara su próximo plan semanal.
 DATOS DISPONIBLES:
 
 ${JSON.stringify(input, null, 2)}
+
+Si assessment está disponible, es una evaluación determinística versionada del
+negocio. Utilízala como contexto para priorizar y explicar la decisión, pero no
+modifiques sus niveles, estados, confianza, evidencias ni información faltante.
+No conviertas una evaluación provisional o indeterminada en una confirmada.
+No uses acciones completadas como prueba automática de madurez, salud o éxito
+económico. Si assessment no tiene datos suficientes, conserva esa incertidumbre
+en tu razonamiento y prioriza una señal que permita aprender de forma segura.
 
 Si previousWeek es null, estás preparando la primera semana.
 En la primera semana no existe continuidad estratégica previa: devuelve

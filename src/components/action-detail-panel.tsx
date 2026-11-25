@@ -205,7 +205,7 @@ export function ActionDetailPanel({
   const captureSchema = getActionCaptureSchema(action.capture_schema);
 
   return (
-    <section className="flex min-h-0 w-full flex-col rounded-2xl bg-white/90 shadow-sm sm:border sm:border-slate-200 cockpit:h-full cockpit:flex-1" aria-labelledby="action-detail-title">
+    <section className="flex w-full flex-col rounded-2xl bg-white/90 shadow-sm sm:border sm:border-slate-200" aria-labelledby="action-detail-title">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-0 border-b border-slate-100 px-4 py-2.5">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <p className="eyebrow">
@@ -233,7 +233,7 @@ export function ActionDetailPanel({
         </div>
       </div>
 
-      <div className="thin-scroll p-4 cockpit:min-h-0 cockpit:flex-1 cockpit:overflow-y-auto">
+      <div className="p-4">
         <h2 id="action-detail-title" className="text-xl font-semibold leading-6 tracking-tight text-slate-950">
           {action.action}
         </h2>

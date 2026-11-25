@@ -72,30 +72,56 @@ test("maturity stages are prepared but not persisted", () => {
   ]);
 });
 
-test("dashboard orders welcome, decision, next action, progress/time strip, then the workspace", () => {
+test("dashboard keeps the workspace inside the execution overview", () => {
   const page = source("src/app/dashboard/page.tsx");
+  const execution = source("src/components/execution-overview.tsx");
   const order = [
-    "<WelcomeBanner",
     "<DecisionHero",
-    "<NextActionCard",
-    "<WeeklyProgress",
-    "<TimeAllocationCard",
-    "<WeeklyActionBoard",
+    "<ExecutionOverview",
   ].map((marker) => page.indexOf(marker));
 
   assert.ok(order.every((index) => index >= 0));
   assert.deepEqual(order, [...order].sort((a, b) => a - b));
+  assert.match(execution, /<WeeklyActionBoard/);
+  assert.match(execution, /execution-workspace-title/);
 });
 
-test("desktop dashboard is a single viewport with internal scrolling areas", () => {
+test("dashboard composes the command center around real assessment data", () => {
+  const page = source("src/app/dashboard/page.tsx");
+
+  for (const marker of [
+    "<BusinessEvolutionCard",
+    "<BusinessDNA",
+    "<BusinessResultsCard",
+    "<ExecutionOverview",
+    "buildBusinessAssessment",
+  ]) {
+    assert.ok(page.includes(marker), marker);
+  }
+
+  assert.match(page, /business_evidence/);
+  assert.match(source("src/app/globals.css"), /grid-template-columns: minmax\(0, 35fr\) minmax\(0, 65fr\)/);
+});
+
+test("desktop dashboard lets the main execution flow determine page height", () => {
   const page = source("src/app/dashboard/page.tsx");
   const board = source("src/components/weekly-action-board.tsx");
   const panel = source("src/components/action-detail-panel.tsx");
 
-  assert.match(page, /cockpit:h-dvh cockpit:overflow-hidden/);
-  assert.match(board, /cockpit:overflow-y-auto/);
-  assert.match(board, /cockpit:min-h-0/);
-  assert.match(panel, /cockpit:overflow-y-auto/);
+  assert.match(page, /className="command-shell"/);
+  assert.doesNotMatch(page, /cockpit:h-dvh cockpit:overflow-hidden/);
+  assert.doesNotMatch(board, /cockpit:overflow-y-auto/);
+  assert.doesNotMatch(panel, /cockpit:overflow-y-auto/);
+});
+
+test("mobile puts decision and execution before company details", () => {
+  const page = source("src/app/dashboard/page.tsx");
+
+  assert.ok(page.indexOf("<DashboardHeader") < page.indexOf("<DecisionHero"));
+  assert.ok(page.indexOf("<DecisionHero") < page.indexOf("<ExecutionOverview"));
+  assert.ok(page.indexOf("<ExecutionOverview") < page.indexOf("<BusinessEvolutionCard"));
+  assert.ok(page.indexOf("<BusinessEvolutionCard") < page.indexOf("<BusinessDNA"));
+  assert.ok(page.indexOf("<BusinessDNA") < page.indexOf("<BusinessResultsCard"));
 });
 
 test("focus, hypothesis and evidence live in the drawer instead of reserving page space", () => {
@@ -105,8 +131,8 @@ test("focus, hypothesis and evidence live in the drawer instead of reserving pag
 
   assert.match(page, /focusPanel=\{/);
   assert.match(page, /evidencePanel=\{/);
-  assert.ok(page.indexOf("evidencePanel={") < page.indexOf("<NextActionCard"));
-  for (const label of ["Entender decisión", "Ver evidencia", "Ver prioridades"]) {
+  assert.ok(page.indexOf("evidencePanel={") < page.indexOf("<ExecutionOverview"));
+  for (const label of ["¿Por qué esta decisión?"]) {
     assert.ok(hero.includes(label), label);
   }
   for (const tab of ["Decisión", "Foco", "Prioridades", "Evidencia"]) {
@@ -146,35 +172,35 @@ test("AI deliverable previews use the dashboard typography contract", () => {
 test("hero shows the decision, recommendation, human certainty and decision links", () => {
   const hero = source("src/components/decision-hero.tsx");
 
-  assert.match(hero, /Decisión de esta semana/);
-  assert.match(hero, /decision\.question/);
-  assert.match(hero, /CEO IA recomienda:/);
+  assert.match(hero, /Decisión de tu CEO IA/);
   assert.match(hero, /decision\.recommended_direction/);
-  assert.match(hero, /Nivel de certeza:/);
-  assert.match(hero, /low: "Exploratoria"/);
-  assert.match(hero, /Entender decisión/);
+  assert.match(hero, /Confianza/);
+  assert.match(hero, /¿Por qué esta decisión/);
 });
 
-test("next action card is the protagonist and handles last action and weekly celebration", () => {
-  const card = source("src/components/next-action-card.tsx");
+test("execution card presents one primary action and preserves the weekly review entry", () => {
+  const card = source("src/components/execution-overview.tsx");
   const panel = source("src/components/action-detail-panel.tsx");
 
-  assert.match(card, /href=\{`#tablero-semanal\?action=\$\{action\.id\}`\}/);
-  assert.match(card, /Siguiente paso/);
-  assert.match(card, /Última acción de la semana/);
+  assert.match(card, /Tu misión actual/);
+  assert.match(card, /Tu siguiente movimiento/);
   assert.match(card, /Tiempo estimado/);
-  assert.match(card, /Empezar esta acción/);
-  assert.match(card, /Plan ejecutado\./);
-  assert.match(card, /accent-button anim-rise anim-glow[^>]*>\s*Revisar mi semana/);
+  assert.match(card, /Comenzar acción/);
+  assert.match(card, /Plan ejecutado/);
+  assert.match(card, /href="\/weekly-review"[^>]*>Revisar mi semana/);
+  assert.doesNotMatch(card, /<NextActionCard|<WeeklyProgress/);
   assert.doesNotMatch(panel, /Revisar mi semana/);
 });
 
 test("mobile next action CTA focuses the selected action in the weekly board", () => {
+  const card = source("src/components/execution-overview.tsx");
   const board = source("src/components/weekly-action-board.tsx");
 
-  assert.match(board, /URLSearchParams/);
-  assert.match(board, /setSelectedActionId\(actionId\)/);
-  assert.match(board, /setMobileView\("detail"\)/);
+  assert.match(card, /setWorkspace\(\{ actionId: action\.id \}\)/);
+  assert.match(card, /URLSearchParams/);
+  assert.match(card, /initialActionId=\{workspace\.actionId\}/);
+  assert.match(board, /initialActionId \? "detail" : "actions"/);
+  assert.match(board, /useState\(initialActionId\)/);
 });
 
 test("evidence renders only inside the drawer and keeps its compact summary and counter evidence", () => {
@@ -237,16 +263,16 @@ test("drawer organizes priorities and uses non-technical language", () => {
   }
 });
 
-test("header keeps the compact product explanation for small screens and links to evolution", () => {
+test("header stays compact while navigation remains functional", () => {
   const header = source("src/components/dashboard-header.tsx");
+  const navigation = source("src/components/command-center-navigation.tsx");
 
-  assert.match(header, /weekNumber === 1/);
-  assert.match(header, /sm:hidden/);
-  assert.match(
-    header,
-    /CEO IA analiza tu negocio, identifica qué merece atención y te ayuda a decidir dónde invertir tu tiempo\./,
-  );
-  assert.match(header, /Mi evolución/);
+  assert.match(header, /TuCEO IA/);
+  assert.match(header, /truncate/);
+  assert.match(header, /Cerrar sesión/);
+  for (const destination of ["/dashboard", "/history", "Mi empresa", "Plan actual"]) {
+    assert.ok(navigation.includes(destination), destination);
+  }
 });
 
 test("welcome banner covers first visit, return, completion and learning copy", () => {

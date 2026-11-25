@@ -10,6 +10,7 @@ type WeeklyProgressProps = {
   evaluatedDecisions: number;
   validatedHypotheses: number;
   reviewStreak: number;
+  compact?: boolean;
 };
 
 const feedbackMessages = [
@@ -26,6 +27,7 @@ export function WeeklyProgress({
   evaluatedDecisions,
   validatedHypotheses,
   reviewStreak,
+  compact = false,
 }: WeeklyProgressProps) {
   const [previousCompleted, setPreviousCompleted] = useState(completedActions);
   const [justCompleted, setJustCompleted] = useState<number | null>(null);
@@ -71,7 +73,10 @@ export function WeeklyProgress({
     : journeyParts.join(" · ");
 
   return (
-    <section className="min-w-0 px-4 py-3" aria-labelledby="weekly-progress-title">
+    <section
+      className={`min-w-0 ${compact ? "px-0 py-3" : "px-4 py-3"}`}
+      aria-labelledby="weekly-progress-title"
+    >
       <div className="flex items-center justify-between gap-3">
         <h2 id="weekly-progress-title" className="eyebrow">
           {achievementUnlocked ? "Semana completada" : "Semana en progreso"}
@@ -109,13 +114,15 @@ export function WeeklyProgress({
         />
       </div>
 
-      <p
-        title={detailLine}
-        className={`mt-1.5 min-h-5 text-sm leading-5 cockpit:truncate ${justCompleted !== null ? "anim-rise font-medium text-emerald-800" : "max-sm:hidden cockpit:short:hidden text-slate-600"}`}
-        aria-live="polite"
-      >
-        {detailLine}
-      </p>
+      {!compact && (
+        <p
+          title={detailLine}
+          className={`mt-1.5 min-h-5 text-sm leading-5 cockpit:truncate ${justCompleted !== null ? "anim-rise font-medium text-emerald-800" : "max-sm:hidden cockpit:short:hidden text-slate-600"}`}
+          aria-live="polite"
+        >
+          {detailLine}
+        </p>
+      )}
     </section>
   );
 }
