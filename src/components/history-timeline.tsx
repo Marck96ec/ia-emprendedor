@@ -20,6 +20,7 @@ export type HistoryWeek = {
     decisionLearning: {
       decision_question: string;
       hypothesis_status: "validated" | "rejected" | "inconclusive";
+      reported_hypothesis_status?: "validated" | "rejected" | "inconclusive";
       learning: string;
     } | null;
   } | null;
@@ -192,6 +193,12 @@ export function HistoryTimeline({ weeks }: HistoryTimelineProps) {
                         <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-slate-500">Aprendizaje estratégico</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{selectedWeek.review.decisionLearning.decision_question}</p>
                         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">Hipótesis: {hypothesisStatusLabels[selectedWeek.review.decisionLearning.hypothesis_status]}</p>
+                        {selectedWeek.review.decisionLearning.reported_hypothesis_status &&
+                          selectedWeek.review.decisionLearning.reported_hypothesis_status !== selectedWeek.review.decisionLearning.hypothesis_status && (
+                            <p className="mt-1 text-xs text-slate-600">
+                              Percepción registrada: {hypothesisStatusLabels[selectedWeek.review.decisionLearning.reported_hypothesis_status]}
+                            </p>
+                          )}
                         <p className="mt-1.5 text-sm leading-5 text-slate-700">{selectedWeek.review.decisionLearning.learning}</p>
                       </div>
                     )}

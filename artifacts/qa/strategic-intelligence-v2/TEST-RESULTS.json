@@ -1,0 +1,360 @@
+{
+  "localDate": "2026-11-24",
+  "referenceCommit": "a43187b8583f281ebdd701e3ae6499cd3084f8b5",
+  "environment": "Aplicación y Supabase locales. Proveedor real para corridas con datos sintéticos.",
+  "commands": [
+    {
+      "command": "npm.cmd test",
+      "status": "PASS",
+      "total": 181,
+      "passed": 177,
+      "failed": 0,
+      "skipped": 4
+    },
+    {
+      "command": "npm.cmd run lint",
+      "status": "PASS"
+    },
+    {
+      "command": "npm.cmd run typecheck",
+      "status": "PASS"
+    },
+    {
+      "command": "npm.cmd run build",
+      "status": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "status": "PASS"
+    },
+    {
+      "command": "Supabase local, integraciones con SUPABASE_LOCAL_TESTS=1 y test-concurrency=1",
+      "status": "PASS",
+      "total": 4,
+      "passed": 4,
+      "recoveredFrom": "PGRST303 JWT issued at future durante la primera ejecución paralela"
+    },
+    {
+      "command": "npx.cmd supabase migration up --local",
+      "status": "PASS",
+      "migrations": [
+        "20261124200000",
+        "20261124201000"
+      ]
+    }
+  ],
+  "controlledLongTermMemory": {
+    "status": "PASS",
+    "weeks": [
+      5,
+      8
+    ],
+    "description": "Snapshots de PostgreSQL en fechas simuladas y construcción de contexto. Sin generación adicional de IA en la semana 8."
+  },
+  "baselineReproduction": {
+    "status": "PASS",
+    "defectsReproduced": 3,
+    "file": "baseline-reproduction.json"
+  },
+  "realModel": {
+    "rounds": [
+      {
+        "file": "model-evaluations.json",
+        "groups": [
+          {
+            "version": "baseline",
+            "scenario": "mantenimiento",
+            "generations": 3,
+            "accepted": 3,
+            "providerAttempts": 3,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 3,
+            "medianSeconds": 19.873,
+            "inputTokens": 20142,
+            "outputTokens": 8112
+          },
+          {
+            "version": "baseline",
+            "scenario": "limpieza",
+            "generations": 3,
+            "accepted": 0,
+            "providerAttempts": 6,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 34.709,
+            "inputTokens": 36736,
+            "outputTokens": 14805
+          },
+          {
+            "version": "v2",
+            "scenario": "mantenimiento",
+            "generations": 3,
+            "accepted": 1,
+            "providerAttempts": 5,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 38.363,
+            "inputTokens": 37655,
+            "outputTokens": 14859
+          },
+          {
+            "version": "v2",
+            "scenario": "limpieza",
+            "generations": 3,
+            "accepted": 0,
+            "providerAttempts": 6,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 35.265,
+            "inputTokens": 41794,
+            "outputTokens": 16157
+          }
+        ]
+      },
+      {
+        "file": "model-evaluations-adjusted.json",
+        "groups": [
+          {
+            "version": "v2",
+            "scenario": "mantenimiento",
+            "generations": 3,
+            "accepted": 0,
+            "providerAttempts": 6,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 36.535,
+            "inputTokens": 45922,
+            "outputTokens": 16987
+          },
+          {
+            "version": "v2",
+            "scenario": "limpieza",
+            "generations": 3,
+            "accepted": 2,
+            "providerAttempts": 4,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 18.325,
+            "inputTokens": 27994,
+            "outputTokens": 11329
+          }
+        ]
+      },
+      {
+        "file": "model-evaluations-final.json",
+        "groups": [
+          {
+            "version": "v2",
+            "scenario": "mantenimiento",
+            "generations": 3,
+            "accepted": 2,
+            "providerAttempts": 4,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 16.609,
+            "inputTokens": 30829,
+            "outputTokens": 10025
+          },
+          {
+            "version": "v2",
+            "scenario": "limpieza",
+            "generations": 3,
+            "accepted": 2,
+            "providerAttempts": 5,
+            "blockedActionsInAcceptedPlans": 0,
+            "undocumentedOverlapsDetectedAutomatically": 0,
+            "medianSeconds": 30.674,
+            "inputTokens": 35573,
+            "outputTokens": 12874
+          }
+        ]
+      }
+    ],
+    "observedManualOverlap": {
+      "scenario": "mantenimiento",
+      "round": "final",
+      "sample": 1,
+      "action": "Registrar y clasificar cada respuesta para separar interés, duda y rechazo",
+      "resolution": "Se añadió detección y prueba determinística después de la última ronda con el proveedor."
+    }
+  },
+  "browserRuns": [
+    {
+      "file": "browser-observations.json",
+      "scenarios": [
+        {
+          "scenario": "mantenimiento",
+          "status": "FAIL",
+          "stoppedAt": "week-1",
+          "error": "El plan de semana 1 quedó en estado failed.",
+          "fullCycles": 0,
+          "weeks": [],
+          "viewports": []
+        },
+        {
+          "scenario": "limpieza",
+          "status": "FAIL",
+          "stoppedAt": "week-2-generation",
+          "error": "El plan de semana 2 quedó en estado failed.",
+          "fullCycles": 0,
+          "weeks": [
+            {
+              "week": 1,
+              "plannedActions": 3,
+              "completedActions": 3,
+              "reviewPersisted": true,
+              "learningPersisted": true,
+              "nextPlanReady": false,
+              "evaluatedStatus": "inconclusive",
+              "reportedStatus": null
+            }
+          ],
+          "viewports": [
+            {
+              "width": 1280,
+              "height": 720,
+              "usableHeight": 720,
+              "executionBottom": 691,
+              "primaryActionBottom": 676,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1366,
+              "height": 768,
+              "usableHeight": 768,
+              "executionBottom": 691,
+              "primaryActionBottom": 676,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1440,
+              "height": 900,
+              "usableHeight": 900,
+              "executionBottom": 766,
+              "primaryActionBottom": 745,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "usableHeight": 1080,
+              "executionBottom": 739,
+              "primaryActionBottom": 718,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 390,
+              "height": 844,
+              "usableHeight": 787,
+              "executionBottom": 846,
+              "primaryActionBottom": 781,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "browser-observations-final.json",
+      "scenarios": [
+        {
+          "scenario": "mantenimiento",
+          "status": "FAIL",
+          "stoppedAt": "week-2-generation",
+          "error": "El plan de semana 2 quedó en estado failed.",
+          "fullCycles": 0,
+          "weeks": [
+            {
+              "week": 1,
+              "plannedActions": 3,
+              "completedActions": 3,
+              "reviewPersisted": true,
+              "learningPersisted": true,
+              "nextPlanReady": false,
+              "evaluatedStatus": "inconclusive",
+              "reportedStatus": "validated"
+            }
+          ],
+          "viewports": [
+            {
+              "width": 1280,
+              "height": 720,
+              "usableHeight": 720,
+              "executionBottom": 711,
+              "primaryActionBottom": 696,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1366,
+              "height": 768,
+              "usableHeight": 768,
+              "executionBottom": 711,
+              "primaryActionBottom": 696,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1440,
+              "height": 900,
+              "usableHeight": 900,
+              "executionBottom": 786,
+              "primaryActionBottom": 765,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 1920,
+              "height": 1080,
+              "usableHeight": 1080,
+              "executionBottom": 786,
+              "primaryActionBottom": 765,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            },
+            {
+              "width": 390,
+              "height": 844,
+              "usableHeight": 787,
+              "executionBottom": 846,
+              "primaryActionBottom": 781,
+              "primaryActionFullyVisible": true,
+              "horizontalOverflow": 0
+            }
+          ]
+        },
+        {
+          "scenario": "limpieza",
+          "status": "FAIL",
+          "stoppedAt": "week-1",
+          "error": "El plan de semana 1 quedó en estado failed.",
+          "fullCycles": 0,
+          "weeks": [],
+          "viewports": []
+        }
+      ]
+    }
+  ],
+  "regionalSummary": {
+    "previousQAOnly": [
+      "Café Horizonte",
+      "Nova Studio",
+      "Taller Andino"
+    ]
+  },
+  "verdicts": {
+    "functional": "NO GO",
+    "memory": "GO",
+    "feasibility": "GO en la cobertura verificada",
+    "strategicProgression": "NO GO",
+    "evidenceIntegrity": "GO en la cobertura verificada",
+    "security": "GO en Supabase local",
+    "productDesign": "GO en las muestras verificadas",
+    "ceoIntelligence": "parcial"
+  }
+}

@@ -32,7 +32,8 @@ export function ExecutionOverview({
 }: ExecutionOverviewProps) {
   const [workspace, setWorkspace] = useState<{ actionId: string | null } | null>(null);
   const workspaceRef = useRef<HTMLDialogElement>(null);
-  const action = actions.find((item) => item.status === "pending");
+  const action = actions.find((item) => item.status === "pending" && !item.resourceCheck?.blocked);
+  const blocked = actions.find((item) => item.status === "pending" && item.resourceCheck?.blocked);
   const completed = actions.filter((item) => item.status === "completed").length;
   const progress = `${completed} de ${actions.length} acciones completadas`;
 
@@ -71,7 +72,7 @@ export function ExecutionOverview({
     <>
       <section
         id="execution-overview"
-        className="command-card flex min-w-0 flex-1 flex-col p-4 sm:p-5"
+        className="command-card command-execution flex min-w-0 flex-1 flex-col p-4 sm:p-5"
         aria-labelledby="execution-overview-title"
       >
         <header className="border-b border-slate-200 pb-3">
@@ -115,7 +116,7 @@ export function ExecutionOverview({
                 <p className="mt-0.5 line-clamp-2 text-sm leading-5 text-slate-700">{action.expected_result}</p>
               </div>
             </div>
-            <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3">
+            <div className="command-execution-cta mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3">
               <button
                 type="button"
                 aria-haspopup="dialog"
@@ -140,12 +141,18 @@ export function ExecutionOverview({
           <div className="flex flex-1 flex-col items-start justify-center gap-2 pt-4">
             <p className="command-kicker text-slate-600">Tu siguiente movimiento</p>
             <h3 className="text-lg font-semibold text-slate-950">
-              {review ? "Tu semana ya fue revisada" : actions.length ? "Plan ejecutado" : "Tu plan aún no tiene acciones"}
+              {review ? "Tu semana ya fue revisada" : blocked ? "El plan necesita un recurso disponible" : actions.length ? "Plan ejecutado" : "Tu plan aún no tiene acciones"}
             </h3>
             {review ? (
               <button type="button" aria-haspopup="dialog" onClick={() => setWorkspace({ actionId: actions[0]?.id ?? null })} className={primaryActionClass}>
                 Ver resultado de la semana
               </button>
+            ) : blocked ? (
+              <>
+                <p className="text-sm text-slate-700">{blocked.resourceCheck?.detail}</p>
+                <Link href="/business-context" className={primaryActionClass}>Actualizar recursos</Link>
+                <button type="button" aria-haspopup="dialog" className="command-link" onClick={() => setWorkspace({ actionId: blocked.id })}>Ver el plan</button>
+              </>
             ) : actions.length > 0 && (
               <div className="flex flex-wrap items-center gap-3">
                 <Link href="/weekly-review" className={primaryActionClass}>Revisar mi semana</Link>

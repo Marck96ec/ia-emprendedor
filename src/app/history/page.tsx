@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { logout } from "@/actions/auth";
 import { HistoryTimeline, type HistoryWeek } from "@/components/history-timeline";
 import { createClient } from "@/lib/supabase/server";
+import { DecisionLearningSchema, hypothesisForPlanning } from "@/lib/decision-learning";
 
 type WeeklyActionRow = {
   ceo_plan_id: string;
@@ -225,6 +226,12 @@ export default async function HistoryPage() {
   const historyWeeks: HistoryWeek[] = (plans ?? []).map((plan) => {
     const planActions = actionsByPlanId.get(plan.id) ?? [];
     const review = reviewByPlanId.get(plan.id);
+    const parsed = DecisionLearningSchema.safeParse(review?.decision_learning);
+    const decisionLearning = parsed.success ? {
+      ...parsed.data,
+      reported_hypothesis_status: parsed.data.reported_hypothesis_status ?? parsed.data.hypothesis_status,
+      hypothesis_status: hypothesisForPlanning(parsed.data),
+    } : review?.decision_learning ?? null;
 
     return {
       id: plan.id,
@@ -242,7 +249,7 @@ export default async function HistoryPage() {
             nextWeekFocus: review.next_week_focus,
             outcomeStatus: review.outcome_status,
             outcomeSummary: review.outcome_summary,
-            decisionLearning: review.decision_learning,
+            decisionLearning,
           }
         : null,
     };

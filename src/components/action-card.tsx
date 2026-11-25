@@ -8,6 +8,14 @@ type ActionCardProps = {
 };
 
 function getActionState(action: DashboardAction) {
+  if (action.resourceCheck?.blocked) {
+    return {
+      label: "Bloqueada",
+      icon: String(action.sequence),
+      iconClassName: "bg-amber-50 text-amber-900",
+      labelClassName: "text-amber-900",
+    };
+  }
   if (action.status === "completed") {
     return {
       label: "Completada",
@@ -50,7 +58,7 @@ export function ActionCard({
   const state = getActionState(action);
   const completed = action.status === "completed";
   const highlighted = recommended && !completed;
-  const showMetaLine = highlighted || completed || state.icon === "✦";
+  const showMetaLine = highlighted || completed || state.icon === "✦" || action.resourceCheck?.blocked;
   const meta = `${roleLabels[action.role_recommendation]} · ${action.role_recommendation === "defer" ? "0 h" : `${action.estimated_hours} h`}`;
 
   return (

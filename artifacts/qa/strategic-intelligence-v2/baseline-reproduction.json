@@ -1,0 +1,32 @@
+{
+  "commit": "a43187b8583f281ebdd701e3ae6499cd3084f8b5",
+  "synthetic": true,
+  "scenarios": {
+    "repetitionWithNewMetric": {
+      "before": {
+        "action": "Definir la oferta principal de reparación urgente",
+        "objective": "Aclarar la oferta",
+        "successMetric": "Una oferta de servicios registrada"
+      },
+      "after": {
+        "action": "Definir la oferta principal de reparación urgente",
+        "objective": "Aclarar la oferta",
+        "successMetric": "Un texto listo para probar"
+      },
+      "result": {
+        "success": true,
+        "repeatedActions": 1
+      }
+    },
+    "rephrasedRepetition": {
+      "matches": 0
+    },
+    "validationWithoutEvidence": {
+      "hypothesisStatus": "validated",
+      "observedResult": "No se obtuvieron resultados empresariales.",
+      "evidence": [
+        "No disponemos de evidencia de mercado."
+      ]
+    }
+  }
+}

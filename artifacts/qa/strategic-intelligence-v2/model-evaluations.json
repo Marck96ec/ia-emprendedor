@@ -1,0 +1,1522 @@
+[
+  {
+    "case": "mantenimiento",
+    "version": "baseline",
+    "sample": 1,
+    "seconds": 22.397,
+    "attempts": [
+      {
+        "seconds": 21.728,
+        "promptChars": 10441,
+        "inputTokens": 6714,
+        "outputTokens": 2665
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Seguimos reforzando la oferta de reparaciones urgentes con pruebas comerciales enfocadas, o cambiamos de canal de captación antes de insistir en más mensajes?",
+      "recommended_direction": "Mantener la oferta enfocada y probar dos mensajes comerciales distinguibles para medir consultas cualificadas antes de cambiar de canal.",
+      "rationale": "La hipótesis anterior fue validada a nivel conceptual, pero aún no hay señal de mercado; el siguiente aprendizaje útil es saber si el problema está en el mensaje o en el canal.",
+      "expected_outcome": "Obtener al menos una señal temprana de interés real o evidencia clara de que el mensaje actual no mueve consultas.",
+      "target_metric": "consultas cualificadas"
+    },
+    "diagnosis": {
+      "summary": "La hipótesis principal ya fue formulada: una oferta de reparaciones urgentes puede generar consultas. Ahora el problema es verificar si el mercado responde y qué mensajes disparan interés real.",
+      "affected_area": "demand",
+      "why_it_matters": "Sin señales de demanda no se puede escalar ni ajustar el canal comercial con confianza."
+    },
+    "hours": {
+      "available_hours": 25,
+      "allocated_hours": 5,
+      "reserved_hours": 20,
+      "rationale": "Solo se necesitan las horas personales mínimas para definir, probar y registrar la señal comercial; el resto debe quedar libre para atender trabajo real o iterar según respuesta."
+    },
+    "continuity": {
+      "mode": "deepening",
+      "justification": "La semana anterior validó la dirección de la oferta, pero no produjo resultados de mercado; ahora toca profundizar la misma hipótesis con evidencia comercial, no repetirla sin cambios.",
+      "unresolved_uncertainty": "Todavía no sabemos si el freno está en el mensaje, el canal o la ausencia total de demanda inicial.",
+      "new_verifiable_signal": "Comparar la reacción real de dos mensajes comerciales distintos y registrar consultas cualificadas por cada uno.",
+      "prior_evidence_gap": "La semana pasada hubo una oferta definida, pero faltó cualquier dato de respuesta del mercado."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Crear dos mensajes comerciales distinguibles para la oferta de reparaciones urgentes",
+        "objective": "Preparar una prueba comercial comparable",
+        "reason": "La decisión crítica requiere saber si cambia la respuesta según el enfoque del mensaje.",
+        "success_metric": "Dos mensajes listos y diferenciados por ángulo, promesa y llamado a la acción.",
+        "expected_result": "Obtener un activo comercial que permita comparar reacción real.",
+        "execution_mode": "ai_assisted",
+        "action_type": "commercial_messages",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_messages_comparison",
+          "title": "Comparación de mensajes comerciales",
+          "description": "Registrar los dos mensajes y la reacción observada en la prueba inicial.",
+          "fields": [
+            {
+              "id": "message_a",
+              "label": "Mensaje A",
+              "description": "Texto completo del primer mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje A",
+              "max_length": 800
+            },
+            {
+              "id": "message_b",
+              "label": "Mensaje B",
+              "description": "Texto completo del segundo mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje B",
+              "max_length": 800
+            },
+            {
+              "id": "where_used",
+              "label": "Dónde se publicó o probó cada mensaje",
+              "description": "Canal o lugar exacto usado para cada mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe el canal de prueba",
+              "max_length": 400
+            },
+            {
+              "id": "best_response",
+              "label": "Respuesta que generó más interés",
+              "description": "Qué mensaje produjo más consultas, dudas o contactos.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "message_a",
+                  "label": "Mensaje A"
+                },
+                {
+                  "value": "message_b",
+                  "label": "Mensaje B"
+                },
+                {
+                  "value": "tie",
+                  "label": "Empate"
+                },
+                {
+                  "value": "none",
+                  "label": "Ninguno"
+                }
+              ]
+            },
+            {
+              "id": "observed_reactions",
+              "label": "Reacciones observadas",
+              "description": "Resumen breve de consultas, dudas o silencios por mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe las reacciones observadas",
+              "max_length": 1000
+            },
+            {
+              "id": "best_reason",
+              "label": "Por qué respondió mejor",
+              "description": "Hipótesis concreta sobre el motivo de la mejor reacción.",
+              "required": false,
+              "type": "textarea",
+              "placeholder": "Explica el motivo probable",
+              "max_length": 600
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe decidir el ángulo comercial porque afecta directamente la validación de demanda.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "status": "pending"
+        }
+      },
+      {
+        "sequence": 2,
+        "action": "Registrar todas las respuestas y clasificarlas por nivel de interés",
+        "objective": "Convertir la prueba en aprendizaje utilizable",
+        "reason": "El cuello de botella es la falta de evidencia; sin clasificación no se puede decidir el siguiente movimiento.",
+        "success_metric": "Registro completo de respuestas con tipo de interés y siguiente paso.",
+        "expected_result": "Saber si hubo consultas cualificadas o solo curiosidad superficial.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "response_log",
+          "title": "Registro de respuestas comerciales",
+          "description": "Capturar cada respuesta relevante y su nivel de interés.",
+          "fields": [
+            {
+              "id": "responses",
+              "label": "Respuestas registradas",
+              "description": "Lista de respuestas relevantes observadas.",
+              "required": true,
+              "type": "repeatable_group",
+              "min_items": 1,
+              "max_items": 10,
+              "fields": [
+                {
+                  "id": "response_type",
+                  "label": "Tipo de respuesta",
+                  "description": "Clase de reacción observada.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "qualified_question",
+                      "label": "Pregunta cualificada"
+                    },
+                    {
+                      "value": "price_request",
+                      "label": "Pide precio"
+                    },
+                    {
+                      "value": "general_interest",
+                      "label": "Interés general"
+                    },
+                    {
+                      "value": "no_response",
+                      "label": "Sin respuesta"
+                    },
+                    {
+                      "value": "other",
+                      "label": "Otro"
+                    }
+                  ]
+                },
+                {
+                  "id": "customer_context",
+                  "label": "Contexto del cliente",
+                  "description": "Qué dijo o mostró el posible cliente.",
+                  "required": true,
+                  "type": "textarea",
+                  "placeholder": "Describe el contexto",
+                  "max_length": 500
+                },
+                {
+                  "id": "next_step",
+                  "label": "Siguiente paso",
+                  "description": "Qué acción sigue para esa respuesta.",
+                  "required": true,
+                  "type": "textarea",
+                  "placeholder": "Describe el siguiente paso",
+                  "max_length": 300
+                }
+              ]
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario necesita ver directamente las señales de mercado para decidir si sigue o cambia de canal.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Decidir si la próxima iteración comercial debe seguir con el mismo ángulo o cambiar de canal",
+        "objective": "Evitar repetir pruebas sin aprendizaje",
+        "reason": "La hipótesis ya fue profundizada una vez; si la señal sigue débil, hace falta una decisión estratégica sobre canal o mensaje.",
+        "success_metric": "Decisión escrita basada en la reacción observada.",
+        "expected_result": "Reducir incertidumbre sobre el siguiente experimento comercial.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_decision_review",
+          "title": "Revisión de decisión comercial",
+          "description": "Registrar la decisión tomada tras observar la prueba.",
+          "fields": [
+            {
+              "id": "decision_taken",
+              "label": "Decisión tomada",
+              "description": "Seguir, ajustar o cambiar el enfoque.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "continue",
+                  "label": "Continuar mismo ángulo"
+                },
+                {
+                  "value": "adjust",
+                  "label": "Ajustar mensaje"
+                },
+                {
+                  "value": "change_channel",
+                  "label": "Cambiar canal"
+                },
+                {
+                  "value": "pause",
+                  "label": "Pausar prueba"
+                }
+              ]
+            },
+            {
+              "id": "main_reason",
+              "label": "Razón principal",
+              "description": "Por qué se tomó esa decisión.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Explica la razón",
+              "max_length": 500
+            },
+            {
+              "id": "evidence_used",
+              "label": "Evidencia usada",
+              "description": "Qué respuestas o señales sostuvieron la decisión.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe la evidencia",
+              "max_length": 700
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "La decisión depende del criterio del propietario y de lo que observe en la respuesta real del mercado.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 1
+  },
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 1,
+    "seconds": 23.358,
+    "attempts": [
+      {
+        "seconds": 23.341,
+        "promptChars": 12684,
+        "inputTokens": 7437,
+        "outputTokens": 2990
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Debemos probar ya la oferta enfocada en un canal accesible y medir consultas reales, o seguir reformulando la oferta sin mercado?",
+      "recommended_direction": "Probar la oferta de reparaciones urgentes con mensajes comerciales concretos usando un canal disponible y registrar respuestas reales.",
+      "rationale": "Ya existe una oferta base; repetir definición sin prueba no reduce la incertidumbre. Para un negocio de servicios urgentes, la evidencia importante es si el mercado responde a un mensaje claro.",
+      "expected_outcome": "Primeras consultas o, si no llegan, una señal útil para ajustar oferta o canal.",
+      "target_metric": "Consultas cualificadas"
+    },
+    "diagnosis": {
+      "summary": "La empresa no tiene todavía una señal validada de demanda; por eso el cuello de botella no es la ejecución del servicio sino conseguir primeros contactos cualificados.",
+      "affected_area": "demand",
+      "why_it_matters": "Sin consultas reales no hay forma de convertir el servicio en ingresos repetibles ni de aprender qué mensaje comercial funciona."
+    },
+    "hours": {
+      "available_hours": 25,
+      "allocated_hours": 5,
+      "reserved_hours": 20,
+      "rationale": "Solo se asigna tiempo a la prueba crítica y al registro; el resto queda disponible para operación y urgencias del servicio."
+    },
+    "continuity": {
+      "mode": "continuation",
+      "justification": "La semana anterior dejó la hipótesis inconclusa; no hay evidencia suficiente para cambiar de dirección, pero sí para pasar de definición a prueba real.",
+      "unresolved_uncertainty": "Sigue sin saberse qué canal y qué mensaje convierten mejor.",
+      "new_verifiable_signal": "Número y calidad de respuestas a los mensajes enviados.",
+      "prior_evidence_gap": "La semana pasada solo se definió la oferta; faltó exposición al mercado y registro de respuestas."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Redactar tres mensajes comerciales distintos basados en la oferta de reparaciones urgentes",
+        "objective": "Generar piezas listas para probar interés real",
+        "reason": "La decisión crítica exige un mensaje que permita medir respuesta, no seguir afinando la oferta en abstracto.",
+        "success_metric": "Tres mensajes completos y distinguibles listos para usar",
+        "expected_result": "Tener un material comercial que pueda revelar qué ángulo atrae más consultas",
+        "execution_mode": "ai_assisted",
+        "action_type": "commercial_messages",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_messages",
+          "title": "Registro de prueba de mensajes",
+          "description": "Captura qué mensaje se usó y qué reacción generó.",
+          "fields": [
+            {
+              "id": "message_variant",
+              "label": "Mensaje usado",
+              "description": "Identificador o resumen breve de la variante probada.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Variante A / B / C",
+              "max_length": 120
+            },
+            {
+              "id": "channel_used",
+              "label": "Canal usado",
+              "description": "Canal donde se publicó o envió el mensaje.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "whatsapp",
+                  "label": "WhatsApp"
+                },
+                {
+                  "value": "internet",
+                  "label": "Internet"
+                },
+                {
+                  "value": "other",
+                  "label": "Otro"
+                }
+              ]
+            },
+            {
+              "id": "responses_count",
+              "label": "Respuestas obtenidas",
+              "description": "Cantidad de respuestas recibidas a este mensaje.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 999
+            },
+            {
+              "id": "response_quality",
+              "label": "Calidad de la respuesta",
+              "description": "Tipo dominante de respuesta observada.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "no_response",
+                  "label": "Sin respuesta"
+                },
+                {
+                  "value": "curiosity",
+                  "label": "Curiosidad"
+                },
+                {
+                  "value": "interest",
+                  "label": "Interés"
+                },
+                {
+                  "value": "urgent_request",
+                  "label": "Solicitud urgente"
+                },
+                {
+                  "value": "price_objection",
+                  "label": "Objeción de precio"
+                }
+              ]
+            },
+            {
+              "id": "notable_question",
+              "label": "Pregunta o duda repetida",
+              "description": "La duda más repetida o relevante observada.",
+              "required": false,
+              "type": "textarea",
+              "placeholder": "Ej.: cuánto cuesta, cuánto tardan, qué incluye",
+              "max_length": 300
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_messages",
+          "intent": "build",
+          "requires": [
+            "value_proposition"
+          ],
+          "completed_prerequisite_id": "00000000-0000-4000-8000-000000000001",
+          "progression": "continuation",
+          "prior_action_id": "00000000-0000-4000-8000-000000000002",
+          "justification": "Se continúa desde la oferta ya definida para convertirla en mensajes probables de respuesta.",
+          "prior_barrier": "resolved",
+          "new_evidence_id": null,
+          "period_week": 2,
+          "deliverable": "commercial_messages"
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe decidir el tono, la promesa y la urgencia porque eso afecta directamente la conversión.",
+        "estimated_hours": 1.5,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "status": "pending"
+        }
+      },
+      {
+        "sequence": 2,
+        "action": "Publicar o enviar los mensajes en el canal accesible disponible y registrar cada reacción",
+        "objective": "Obtener señal de mercado",
+        "reason": "La empresa necesita consultas reales para saber si la oferta funciona y no puede seguir decidiendo sin evidencia.",
+        "success_metric": "Registro de respuestas y clasificación de cada reacción observada",
+        "expected_result": "Saber si existe interés, duda de precio o ausencia total de demanda",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "market_response_log",
+          "title": "Registro de respuestas comerciales",
+          "description": "Captura respuestas observadas por cada contacto o publicación.",
+          "fields": [
+            {
+              "id": "contact_channel",
+              "label": "Canal",
+              "description": "Canal por el que llegó la reacción.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "whatsapp",
+                  "label": "WhatsApp"
+                },
+                {
+                  "value": "internet",
+                  "label": "Internet"
+                },
+                {
+                  "value": "other",
+                  "label": "Otro"
+                }
+              ]
+            },
+            {
+              "id": "responses_observed",
+              "label": "Respuestas observadas",
+              "description": "Cantidad de respuestas recibidas en este ciclo.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 999
+            },
+            {
+              "id": "main_observation",
+              "label": "Observación principal",
+              "description": "Qué pasó con más frecuencia.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Sin respuesta / pidieron precio / pidieron visita / etc.",
+              "max_length": 500
+            },
+            {
+              "id": "lead_type",
+              "label": "Tipo de interés",
+              "description": "Clasificación del tipo de interés detectado.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "none",
+                  "label": "Ninguno"
+                },
+                {
+                  "value": "curiosity",
+                  "label": "Curiosidad"
+                },
+                {
+                  "value": "qualified_interest",
+                  "label": "Interés cualificado"
+                },
+                {
+                  "value": "urgent_need",
+                  "label": "Necesidad urgente"
+                }
+              ]
+            },
+            {
+              "id": "next_action_needed",
+              "label": "Siguiente paso",
+              "description": "Qué haría falta hacer con estos contactos o con el mensaje.",
+              "required": false,
+              "type": "textarea",
+              "placeholder": "Ej.: aclarar precio, responder más rápido, cambiar canal",
+              "max_length": 300
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_outreach",
+          "intent": "discover",
+          "requires": [
+            "whatsapp",
+            "existing_contacts"
+          ],
+          "completed_prerequisite_id": null,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "La evidencia faltante es la reacción del mercado; sin ella no se puede decidir si la oferta está lista.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 2,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe supervisar qué se envía y a quién para aprender de la respuesta del mercado.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "unknown",
+          "reason": "Confirma la disponibilidad de los recursos antes de ejecutar."
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Revisar los resultados y decidir si el cuello de botella es el mensaje, el canal o la propuesta",
+        "objective": "Convertir respuestas en una decisión comercial",
+        "reason": "La semana debe cerrar con aprendizaje accionable para no repetir pruebas sin dirección.",
+        "success_metric": "Una decisión explícita basada en las respuestas obtenidas",
+        "expected_result": "Saber si se escala la misma oferta, se cambia el canal o se ajusta el mensaje",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "decision_review",
+          "title": "Revisión de aprendizaje comercial",
+          "description": "Resume la lectura del experimento y la decisión tomada.",
+          "fields": [
+            {
+              "id": "what_worked",
+              "label": "Qué funcionó",
+              "description": "Qué elemento generó mejor respuesta.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Mensaje, canal, urgencia, precio, etc.",
+              "max_length": 400
+            },
+            {
+              "id": "what_didnt_work",
+              "label": "Qué no funcionó",
+              "description": "Qué elemento no generó respuesta o generó fricción.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Canal, promesa, tono, precio, etc.",
+              "max_length": 400
+            },
+            {
+              "id": "decision_taken",
+              "label": "Decisión tomada",
+              "description": "Qué se hará a partir de esta evidencia.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "repeat",
+                  "label": "Repetir"
+                },
+                {
+                  "value": "adjust_message",
+                  "label": "Ajustar mensaje"
+                },
+                {
+                  "value": "change_channel",
+                  "label": "Cambiar canal"
+                },
+                {
+                  "value": "change_offer",
+                  "label": "Cambiar oferta"
+                }
+              ]
+            },
+            {
+              "id": "confidence_level",
+              "label": "Nivel de confianza",
+              "description": "Qué tan segura quedó la decisión después de la prueba.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "low",
+                  "label": "Baja"
+                },
+                {
+                  "value": "medium",
+                  "label": "Media"
+                },
+                {
+                  "value": "high",
+                  "label": "Alta"
+                }
+              ]
+            },
+            {
+              "id": "evidence_note",
+              "label": "Nota de evidencia",
+              "description": "La señal concreta que sustentó la decisión.",
+              "required": false,
+              "type": "textarea",
+              "placeholder": "Ej.: 3 respuestas y 1 solicitud de cotización",
+              "max_length": 300
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "other",
+          "intent": "validate",
+          "requires": [],
+          "completed_prerequisite_id": null,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "Cierra el ciclo de aprendizaje y evita repetir la prueba sin interpretar resultados.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 2,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "La interpretación final requiere criterio del propietario sobre su capacidad operativa y comercial.",
+        "estimated_hours": 1.5,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 0
+  },
+  {
+    "case": "mantenimiento",
+    "version": "baseline",
+    "sample": 2,
+    "seconds": 19.873,
+    "attempts": [
+      {
+        "seconds": 19.869,
+        "promptChars": 10441,
+        "inputTokens": 6714,
+        "outputTokens": 2760
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Debemos mantener la oferta de reparaciones urgentes y cambiar el foco a probar mensajes y canal comercial en lugar de volver a redefinir el servicio?",
+      "recommended_direction": "Mantener la oferta actual y validar dos mensajes comerciales distinguibles para medir qué enfoque genera consultas cualificadas.",
+      "rationale": "La oferta ya fue definida y el cuello de botella visible está en demanda, no en capacidad técnica. Repetir la definición de oferta aportaría poco; lo que falta es evidencia de mercado sobre mensaje y canal.",
+      "expected_outcome": "Obtener señales comparables sobre qué mensaje atrae consultas y empezar a identificar si existe tracción comercial real.",
+      "target_metric": "Consultas cualificadas"
+    },
+    "diagnosis": {
+      "summary": "La oferta ya está definida, pero todavía no existe señal de tracción comercial. El cuello de botella es convertir esa oferta en consultas cualificadas.",
+      "affected_area": "demand",
+      "why_it_matters": "Sin consultas no hay aprendizaje comercial ni flujo de trabajo; el negocio no puede validar adquisición ni escalar a clientes fijos."
+    },
+    "hours": {
+      "available_hours": 25,
+      "allocated_hours": 6,
+      "reserved_hours": 19,
+      "rationale": "Solo se asigna tiempo a las acciones que generan aprendizaje comercial inmediato; el resto queda reservado para operación y trabajo comercial reactivo."
+    },
+    "continuity": {
+      "mode": "deepening",
+      "justification": "La hipótesis anterior sobre enfocar la oferta fue validada en dirección, pero no en resultado; ahora toca profundizar con prueba de mensaje y canal, no repetir la misma definición de oferta.",
+      "unresolved_uncertainty": "Sigue sin saberse qué mensaje o canal genera consultas reales.",
+      "new_verifiable_signal": "Registrar respuestas reales a dos mensajes comerciales distintos y su calidad de interés.",
+      "prior_evidence_gap": "La semana anterior no hubo resultados empresariales y faltó evidencia de mercado."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Crear dos mensajes comerciales distintos para publicar o probar",
+        "objective": "Obtener dos versiones comparables de la oferta enfocada para testear respuesta del mercado.",
+        "reason": "La semana pasada se validó la dirección de la oferta, pero no hubo resultados; ahora el cuello de botella es el mensaje comercial.",
+        "success_metric": "Dos mensajes listos y suficientemente distintos para comparar respuesta.",
+        "expected_result": "Dos alternativas concretas para medir interés real en consultas cualificadas.",
+        "execution_mode": "ai_assisted",
+        "action_type": "commercial_messages",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_messages_test",
+          "title": "Comparación de mensajes comerciales",
+          "description": "Registrar las dos versiones creadas y la evidencia inicial de cuál genera más interés.",
+          "fields": [
+            {
+              "id": "message_1",
+              "label": "Mensaje 1",
+              "description": "Texto completo del primer mensaje comercial.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje 1",
+              "max_length": 800
+            },
+            {
+              "id": "message_2",
+              "label": "Mensaje 2",
+              "description": "Texto completo del segundo mensaje comercial.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje 2",
+              "max_length": 800
+            },
+            {
+              "id": "target_customer",
+              "label": "Cliente objetivo",
+              "description": "Tipo de cliente al que apunta cada mensaje.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Hogares con urgencia o mantenimiento pendiente",
+              "max_length": 120
+            },
+            {
+              "id": "expected_problem",
+              "label": "Problema prometido",
+              "description": "Qué problema concreto resuelve el mensaje.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Reparación urgente / mantenimiento pendiente",
+              "max_length": 160
+            },
+            {
+              "id": "distinctive_angle",
+              "label": "Ángulo diferencial",
+              "description": "Qué cambia entre ambos mensajes.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Rapidez, claridad, confianza, urgencia u otro",
+              "max_length": 160
+            },
+            {
+              "id": "completion_rule",
+              "label": "Señal de comparación",
+              "description": "Qué evidencia inicial permitirá comparar ambos mensajes.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe la señal observada",
+              "max_length": 500
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario necesita decidir el enfoque comercial y asegurar que el mensaje refleje la oferta real del negocio.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "status": "pending"
+        }
+      },
+      {
+        "sequence": 2,
+        "action": "Publicar o probar los dos mensajes en el canal disponible y registrar la respuesta inicial",
+        "objective": "Generar primeras señales de mercado sobre la oferta enfocada.",
+        "reason": "La decisión crítica depende de ver si el mensaje produce consultas cualificadas; sin exposición no hay aprendizaje.",
+        "success_metric": "Respuestas iniciales registradas para ambos mensajes, incluyendo interés, dudas o rechazo.",
+        "expected_result": "Evidencia comparativa sobre qué mensaje provoca más consultas o mejores conversaciones.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_response_log",
+          "title": "Registro de respuestas comerciales",
+          "description": "Registrar la evidencia de respuesta obtenida por cada mensaje probado.",
+          "fields": [
+            {
+              "id": "channel_used",
+              "label": "Canal usado",
+              "description": "Dónde se probó cada mensaje.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Internet, publicación, chat, etc.",
+              "max_length": 120
+            },
+            {
+              "id": "messages_tested",
+              "label": "Mensajes probados",
+              "description": "Nombre o referencia de los dos mensajes.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Mensaje A y mensaje B",
+              "max_length": 160
+            },
+            {
+              "id": "responses_observed",
+              "label": "Respuestas observadas",
+              "description": "Resumen breve de las respuestas recibidas.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Interés, dudas, rechazo, silencio",
+              "max_length": 1200
+            },
+            {
+              "id": "qualified_inquiries_count",
+              "label": "Consultas cualificadas observadas",
+              "description": "Número de consultas que parecen realmente relevantes.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 999
+            },
+            {
+              "id": "best_performing_message",
+              "label": "Mensaje con mejor respuesta",
+              "description": "Cuál de los dos mensajes mostró mejor señal.",
+              "required": false,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "message_1",
+                  "label": "Mensaje 1"
+                },
+                {
+                  "value": "message_2",
+                  "label": "Mensaje 2"
+                },
+                {
+                  "value": "no_difference",
+                  "label": "Sin diferencia clara"
+                }
+              ]
+            },
+            {
+              "id": "key_objection",
+              "label": "Objeción principal",
+              "description": "Principal duda, fricción o motivo de rechazo.",
+              "required": false,
+              "type": "text",
+              "placeholder": "Precio, confianza, urgencia, canal, otro",
+              "max_length": 200
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe supervisar la publicación y la lectura de respuestas porque eso afecta la cotización y el criterio comercial.",
+        "estimated_hours": 3,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Clasificar las respuestas y extraer el patrón comercial más útil",
+        "objective": "Convertir la evidencia en una decisión sobre qué mensaje y enfoque repetir.",
+        "reason": "La prioridad no es acumular actividad sino aprender qué señal comercial merece repetirse o ajustarse.",
+        "success_metric": "Un resumen con patrón observado, mensaje ganador o ausencia de señal clara.",
+        "expected_result": "Decisión informada sobre el siguiente paso comercial y reducción de incertidumbre.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "response_analysis",
+          "title": "Análisis de respuestas",
+          "description": "Registrar el patrón detectado tras revisar las respuestas obtenidas.",
+          "fields": [
+            {
+              "id": "observed_pattern",
+              "label": "Patrón observado",
+              "description": "Qué patrón se repite en las respuestas.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Ejemplo: más interés por urgencias que por mantenimiento",
+              "max_length": 800
+            },
+            {
+              "id": "winning_message",
+              "label": "Mensaje más fuerte",
+              "description": "Cuál mensaje funcionó mejor, si aplica.",
+              "required": false,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "message_1",
+                  "label": "Mensaje 1"
+                },
+                {
+                  "value": "message_2",
+                  "label": "Mensaje 2"
+                },
+                {
+                  "value": "no_clear_winner",
+                  "label": "No hubo ganador claro"
+                }
+              ]
+            },
+            {
+              "id": "evidence_strength",
+              "label": "Fuerza de la evidencia",
+              "description": "Qué tan sólida fue la señal para decidir.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "weak",
+                  "label": "Débil"
+                },
+                {
+                  "value": "moderate",
+                  "label": "Moderada"
+                },
+                {
+                  "value": "strong",
+                  "label": "Fuerte"
+                }
+              ]
+            },
+            {
+              "id": "next_adjustment",
+              "label": "Siguiente ajuste",
+              "description": "Qué cambio se propone para la próxima iteración.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Ajustar canal, titular, oferta o seguimiento",
+              "max_length": 200
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe interpretar la demanda porque esa lectura condiciona la cotización y el siguiente experimento.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 1
+  },
+  {
+    "case": "mantenimiento",
+    "version": "baseline",
+    "sample": 3,
+    "seconds": 18.629,
+    "attempts": [
+      {
+        "seconds": 18.618,
+        "promptChars": 10441,
+        "inputTokens": 6714,
+        "outputTokens": 2687
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Debemos usar la próxima semana para probar una oferta comercial enfocada en reparaciones urgentes y medir consultas reales, en lugar de seguir refinando el servicio internamente?",
+      "recommended_direction": "Lanzar una prueba comercial mínima con mensajes enfocados a urgencias del hogar y registrar respuestas reales.",
+      "rationale": "La oferta ya fue definida y la hipótesis fue validada; lo que falta es evidencia de demanda. La decisión correcta ahora es aprender del mercado con la menor inversión de tiempo posible.",
+      "expected_outcome": "Obtener primeras consultas cualificadas o, si no ocurren, aprender que hace falta ajustar canal o mensaje.",
+      "target_metric": "consultas cualificadas"
+    },
+    "diagnosis": {
+      "summary": "La hipótesis de oferta enfocada fue validada a nivel de decisión, pero sigue sin existir evidencia de adquisición; el cuello de botella es obtener consultas cualificadas con una propuesta clara y medible.",
+      "affected_area": "demand",
+      "why_it_matters": "Sin consultas reales no se puede convertir la oferta en clientes ni aprender qué mensaje o canal genera demanda."
+    },
+    "hours": {
+      "available_hours": 25,
+      "allocated_hours": 5,
+      "reserved_hours": 20,
+      "rationale": "Solo se asignan horas al trabajo que cambia la decisión comercial. El resto debe quedar disponible para atender trabajos si aparecen consultas o para ajustes rápidos tras la prueba."
+    },
+    "continuity": {
+      "mode": "deepening",
+      "justification": "La semana anterior confirmó la dirección de enfocar la oferta; ahora profundizamos esa hipótesis llevándola al mercado para obtener evidencia real.",
+      "unresolved_uncertainty": "Todavía no sabemos si el mercado responde mejor a este mensaje ni qué canal produce consultas.",
+      "new_verifiable_signal": "Respuestas reales de potenciales clientes ante el mensaje enfocado.",
+      "prior_evidence_gap": "Faltaba evidencia de mercado; la semana anterior solo validó la definición interna de la oferta."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Crear dos mensajes comerciales distinguibles para probar la oferta de reparaciones urgentes",
+        "objective": "Generar una prueba comercial útil para captar consultas",
+        "reason": "La decisión crítica ya no es definir la oferta sino aprender qué mensaje activa demanda real.",
+        "success_metric": "Dos mensajes listos y claramente distintos, cada uno con una promesa y un ángulo comercial identificables.",
+        "expected_result": "Tener dos variantes para observar cuál despierta más interés o genera mejores consultas.",
+        "execution_mode": "ai_assisted",
+        "action_type": "commercial_messages",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "commercial_messages_test",
+          "title": "Registro de prueba de mensajes comerciales",
+          "description": "Captura la evidencia necesaria para comparar dos mensajes y aprender cuál genera mejores consultas.",
+          "fields": [
+            {
+              "id": "message_a_title",
+              "label": "Título del mensaje A",
+              "description": "Nombre corto del primer ángulo comercial.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Ej. reparación urgente en 24h",
+              "max_length": 80
+            },
+            {
+              "id": "message_b_title",
+              "label": "Título del mensaje B",
+              "description": "Nombre corto del segundo ángulo comercial.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Ej. visita rápida y diagnóstico inicial",
+              "max_length": 80
+            },
+            {
+              "id": "message_a_diff",
+              "label": "Diferencia clave del mensaje A",
+              "description": "Qué promete o enfatiza que lo hace distinto.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe el ángulo",
+              "max_length": 400
+            },
+            {
+              "id": "message_b_diff",
+              "label": "Diferencia clave del mensaje B",
+              "description": "Qué promete o enfatiza que lo hace distinto.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe el ángulo",
+              "max_length": 400
+            },
+            {
+              "id": "chosen_audience",
+              "label": "Tipo de cliente al que apunta",
+              "description": "Perfil doméstico al que se dirigirá la prueba.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "urgent_repair",
+                  "label": "Reparación urgente"
+                },
+                {
+                  "value": "pending_maintenance",
+                  "label": "Mantenimiento pendiente"
+                },
+                {
+                  "value": "price_sensitive",
+                  "label": "Muy sensible al precio"
+                },
+                {
+                  "value": "other",
+                  "label": "Otro"
+                }
+              ]
+            },
+            {
+              "id": "success_criterion",
+              "label": "Criterio para elegir un mensaje",
+              "description": "Qué señal práctica hará que una variante se considere mejor.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Ej. más consultas cualificadas o mejor calidad de respuesta",
+              "max_length": 300
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe decidir el enfoque comercial y validar si el mensaje representa bien la oferta.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "status": "pending"
+        }
+      },
+      {
+        "sequence": 2,
+        "action": "Publicar o enviar la prueba comercial y registrar las respuestas iniciales",
+        "objective": "Obtener evidencia de mercado sobre interés real",
+        "reason": "La demanda sigue sin comprobarse y esta es la variable que bloquea el crecimiento.",
+        "success_metric": "Registro de respuestas reales recibidas con su tipo y nivel de interés.",
+        "expected_result": "Saber si la oferta enfocada produce consultas cualificadas o si el canal/mensaje necesita ajuste.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "response_log",
+          "title": "Registro de respuestas comerciales",
+          "description": "Recoge la evidencia mínima de las respuestas obtenidas a la prueba comercial.",
+          "fields": [
+            {
+              "id": "responses_count",
+              "label": "Número de respuestas recibidas",
+              "description": "Cuántas personas respondieron a la prueba.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 9999
+            },
+            {
+              "id": "qualified_responses_count",
+              "label": "Número de respuestas cualificadas",
+              "description": "Cuántas respuestas mostraron una necesidad real de reparación o mantenimiento.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 9999
+            },
+            {
+              "id": "response_types",
+              "label": "Tipos de respuesta observados",
+              "description": "Clasifica las respuestas principales observadas.",
+              "required": true,
+              "type": "multi_select",
+              "min_items": 1,
+              "max_items": 4,
+              "options": [
+                {
+                  "value": "price_question",
+                  "label": "Pregunta por precio"
+                },
+                {
+                  "value": "urgent_need",
+                  "label": "Necesidad urgente"
+                },
+                {
+                  "value": "schedule_request",
+                  "label": "Pide agenda o visita"
+                },
+                {
+                  "value": "not_interested",
+                  "label": "Sin interés"
+                },
+                {
+                  "value": "unclear",
+                  "label": "No quedó claro"
+                }
+              ]
+            },
+            {
+              "id": "first_objection",
+              "label": "Primera objeción o duda común",
+              "description": "La duda más repetida o el freno principal observado.",
+              "required": false,
+              "type": "textarea",
+              "placeholder": "Describe la objeción principal",
+              "max_length": 300
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe revisar la reacción del mercado y decidir si el contacto es realmente útil.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Decidir el siguiente ajuste según las respuestas observadas",
+        "objective": "Convertir la prueba en aprendizaje accionable",
+        "reason": "La semana debe cerrar con una decisión, no solo con actividad.",
+        "success_metric": "Una conclusión explícita sobre si mantener, ajustar o cambiar el mensaje/canal.",
+        "expected_result": "Reducir incertidumbre sobre la siguiente apuesta comercial.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "decision_review",
+          "title": "Conclusión de la prueba comercial",
+          "description": "Estructura la decisión tomada a partir de las respuestas reales.",
+          "fields": [
+            {
+              "id": "market_signal",
+              "label": "Señal principal observada",
+              "description": "Qué patrón apareció en las respuestas.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Ej. más interés por urgencias que por mantenimiento",
+              "max_length": 400
+            },
+            {
+              "id": "decision_taken",
+              "label": "Decisión tomada",
+              "description": "Qué se hará a partir de esta evidencia.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "keep_test",
+                  "label": "Mantener la prueba actual"
+                },
+                {
+                  "value": "adjust_message",
+                  "label": "Ajustar el mensaje"
+                },
+                {
+                  "value": "adjust_channel",
+                  "label": "Cambiar el canal"
+                },
+                {
+                  "value": "change_offer",
+                  "label": "Cambiar la oferta"
+                }
+              ]
+            },
+            {
+              "id": "reason_for_decision",
+              "label": "Razón de la decisión",
+              "description": "Por qué esa decisión es la mejor según la señal observada.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Explica el aprendizaje",
+              "max_length": 500
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El propietario debe tomar la decisión final porque afecta cotización, enfoque comercial y coordinación del equipo.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 1
+  },
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 2,
+    "seconds": 39.77,
+    "attempts": [
+      {
+        "seconds": 19.656,
+        "promptChars": 12684,
+        "inputTokens": 7437,
+        "outputTokens": 2902
+      },
+      {
+        "seconds": 20.103,
+        "promptChars": 13724,
+        "inputTokens": 7656,
+        "outputTokens": 3259
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "El especialista prepara materiales. El dueño ejecuta el contacto o verifica el resultado.",
+      "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado.",
+      "El trabajo ya existe. Reutilízalo en una acción de intención distinta o justifica su revisión con evidencia específica.",
+      "Una acción manual no invoca un especialista."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "baseline",
+    "sample": 1,
+    "seconds": 34.709,
+    "attempts": [
+      {
+        "seconds": 17.264,
+        "promptChars": 7281,
+        "inputTokens": 6009,
+        "outputTokens": 2557
+      },
+      {
+        "seconds": 17.425,
+        "promptChars": 8369,
+        "inputTokens": 6243,
+        "outputTokens": 2401
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "El plan puede contener como máximo una acción asistida por IA"
+    ]
+  },
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 3,
+    "seconds": 38.363,
+    "attempts": [
+      {
+        "seconds": 20.202,
+        "promptChars": 12684,
+        "inputTokens": 7437,
+        "outputTokens": 2981
+      },
+      {
+        "seconds": 18.149,
+        "promptChars": 13858,
+        "inputTokens": 7688,
+        "outputTokens": 2727
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado.",
+      "El especialista prepara materiales. El dueño ejecuta el contacto o verifica el resultado.",
+      "La progresión debe partir de un trabajo completado.",
+      "La progresión debe partir de un trabajo completado."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "baseline",
+    "sample": 2,
+    "seconds": 33.532,
+    "attempts": [
+      {
+        "seconds": 16.532,
+        "promptChars": 7281,
+        "inputTokens": 6009,
+        "outputTokens": 2432
+      },
+      {
+        "seconds": 16.996,
+        "promptChars": 8369,
+        "inputTokens": 6243,
+        "outputTokens": 2468
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "El plan puede contener como máximo una acción asistida por IA"
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 1,
+    "seconds": 35.265,
+    "attempts": [
+      {
+        "seconds": 17.408,
+        "promptChars": 9776,
+        "inputTokens": 6846,
+        "outputTokens": 2618
+      },
+      {
+        "seconds": 17.851,
+        "promptChars": 10977,
+        "inputTokens": 7099,
+        "outputTokens": 2759
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Hace falta una propuesta de valor disponible para esta acción. Propón una alternativa viable o el prerrequisito como acción independiente."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 2,
+    "seconds": 34.483,
+    "attempts": [
+      {
+        "seconds": 17.569,
+        "promptChars": 9776,
+        "inputTokens": 6846,
+        "outputTokens": 2667
+      },
+      {
+        "seconds": 16.907,
+        "promptChars": 10977,
+        "inputTokens": 7099,
+        "outputTokens": 2617
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Una acción manual no invoca un especialista."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "baseline",
+    "sample": 3,
+    "seconds": 35.036,
+    "attempts": [
+      {
+        "seconds": 17.117,
+        "promptChars": 7281,
+        "inputTokens": 6009,
+        "outputTokens": 2258
+      },
+      {
+        "seconds": 17.914,
+        "promptChars": 8280,
+        "inputTokens": 6223,
+        "outputTokens": 2689
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "El plan puede contener como máximo una acción asistida por IA"
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 3,
+    "seconds": 36.194,
+    "attempts": [
+      {
+        "seconds": 16.343,
+        "promptChars": 9776,
+        "inputTokens": 6846,
+        "outputTokens": 2586
+      },
+      {
+        "seconds": 19.845,
+        "promptChars": 10771,
+        "inputTokens": 7058,
+        "outputTokens": 2910
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Una acción manual no invoca un especialista."
+    ]
+  }
+]

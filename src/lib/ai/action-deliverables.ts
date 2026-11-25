@@ -21,11 +21,13 @@ export const CommercialMessageSchema = z.object({
   message: commercialMessageText,
 });
 
-export const CommercialMessagesSchema = z.object({
+const CommercialMessagesBaseSchema = z.object({
   deliverable_type: z.literal("commercial_messages"),
-  messages: z.array(CommercialMessageSchema).length(3),
+  messages: z.array(CommercialMessageSchema),
   explanation: z.string().trim().min(1),
-}).superRefine((deliverable, context) => {
+});
+
+function validateMessageFactors(deliverable: z.infer<typeof CommercialMessagesBaseSchema>, context: z.RefinementCtx) {
   const factors = deliverable.messages.map((message) =>
     message.changing_factor
       .trim()
@@ -41,7 +43,15 @@ export const CommercialMessagesSchema = z.object({
       path: ["messages"],
     });
   }
-});
+}
+
+export const CommercialMessagesSchema = CommercialMessagesBaseSchema.extend({
+  messages: z.array(CommercialMessageSchema).length(3),
+}).superRefine(validateMessageFactors);
+
+export const CommercialMessageBatchSchema = CommercialMessagesBaseSchema.extend({
+  messages: z.array(CommercialMessageSchema).min(2).max(3),
+}).superRefine(validateMessageFactors);
 
 export type CommercialMessages = z.infer<
   typeof CommercialMessagesSchema
@@ -173,7 +183,7 @@ export function parseActionDeliverable(
   if (actionType === "commercial_messages") {
     return z.union([
       CommercialOffersSchema,
-      CommercialMessagesSchema,
+      CommercialMessageBatchSchema,
     ]).safeParse(content);
   }
 

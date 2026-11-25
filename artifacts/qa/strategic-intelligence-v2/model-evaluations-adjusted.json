@@ -1,0 +1,896 @@
+[
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 2,
+    "seconds": 36.535,
+    "attempts": [
+      {
+        "seconds": 17.772,
+        "promptChars": 13075,
+        "inputTokens": 7536,
+        "outputTokens": 2707
+      },
+      {
+        "seconds": 18.741,
+        "promptChars": 14160,
+        "inputTokens": 7763,
+        "outputTokens": 2886
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado.",
+      "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado."
+    ]
+  },
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 1,
+    "seconds": 36.797,
+    "attempts": [
+      {
+        "seconds": 18.524,
+        "promptChars": 13075,
+        "inputTokens": 7536,
+        "outputTokens": 2932
+      },
+      {
+        "seconds": 18.26,
+        "promptChars": 14131,
+        "inputTokens": 7759,
+        "outputTokens": 2898
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Para continuar un pendiente, enlaza el registro e indica el motivo conocido o que aún no se ha informado.",
+      "La progresión debe partir de un trabajo completado."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 1,
+    "seconds": 18.325,
+    "attempts": [
+      {
+        "seconds": 18.32,
+        "promptChars": 10167,
+        "inputTokens": 6945,
+        "outputTokens": 2906
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Debemos concentrar la semana en activar una lista corta de contactos locales por WhatsApp para medir respuesta real antes de abrir nuevos canales?",
+      "recommended_direction": "Sí: priorizar un contacto local y medible por WhatsApp con enfoque geográfico estricto.",
+      "rationale": "Es la forma más barata y rápida de validar demanda en la zona sin requerir redes sociales ni traslados innecesarios.",
+      "expected_outcome": "Obtener señales reales de interés, respuestas y posibles reservas dentro de los barrios objetivo.",
+      "target_metric": "Respuestas y consultas calificadas desde contactos locales"
+    },
+    "diagnosis": {
+      "summary": "La prioridad es activar demanda local por canales de bajo costo y alta cercanía para validar qué mensaje y qué contactos convierten mejor dentro de la zona objetivo.",
+      "affected_area": "demand",
+      "why_it_matters": "Si no entra demanda en el radio correcto, el negocio pierde tiempo en traslados y no construye una operación rentable y repetible."
+    },
+    "hours": {
+      "available_hours": 4,
+      "allocated_hours": 4,
+      "reserved_hours": 0,
+      "rationale": "Con solo 4 horas, conviene usar casi todo en una prueba comercial simple y dejar margen mínimo para seguimiento y registro."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Preparar un mensaje breve de WhatsApp con foco en los dos barrios, el tipo de limpieza y una llamada a responder si tienen sofá o colchón para limpiar.",
+        "objective": "Crear una pieza comercial clara para activar demanda local.",
+        "reason": "La decisión crítica requiere un mensaje que permita probar interés sin dispersar traslados ni abrir canales nuevos.",
+        "success_metric": "Un mensaje listo para enviar con cobertura geográfica y oferta claramente expresadas.",
+        "expected_result": "Tener un texto usable para medir respuesta real en la semana.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "message_validation",
+          "title": "Validación del mensaje local",
+          "description": "Registrar qué versión del mensaje se definió y qué señales se esperan observar.",
+          "fields": [
+            {
+              "id": "message_text",
+              "label": "Texto final del mensaje",
+              "description": "Copiar el mensaje exacto que se enviará.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el texto final",
+              "max_length": 600
+            },
+            {
+              "id": "zone_focus",
+              "label": "Zona objetivo",
+              "description": "Qué barrios o zonas menciona el mensaje.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Barrio A y Barrio B",
+              "max_length": 120
+            },
+            {
+              "id": "expected_response_type",
+              "label": "Respuesta esperada",
+              "description": "Qué tipo de respuesta indicaría interés real.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "whatsapp_reply",
+                  "label": "Respuesta por WhatsApp"
+                },
+                {
+                  "value": "quote_request",
+                  "label": "Piden cotización"
+                },
+                {
+                  "value": "booking_request",
+                  "label": "Piden agendar"
+                },
+                {
+                  "value": "referral",
+                  "label": "Piden referir a otra persona"
+                }
+              ]
+            },
+            {
+              "id": "completion_rule",
+              "label": "Regla de cierre",
+              "description": "Qué evidencia concreta hará útil este mensaje.",
+              "required": true,
+              "type": "text",
+              "placeholder": "Mensaje final listo y validado internamente",
+              "max_length": 200
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_messages",
+          "intent": "validate",
+          "requires": [
+            "existing_contacts",
+            "whatsapp"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": null,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "Necesitamos un entregable comercial claro para probar demanda local con el canal disponible.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El dueño debe decidir el tono local y la promesa comercial; es una tarea de alto aprendizaje directo.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 2,
+        "action": "Enviar el mensaje a una lista corta de contactos conocidos que vivan o trabajen en los dos barrios y registrar respuesta, interés y si piden cotización.",
+        "objective": "Medir demanda local real con el canal disponible.",
+        "reason": "La demanda es el cuello de botella y WhatsApp es el canal confirmado; esta acción produce evidencia directa sobre interés y zona.",
+        "success_metric": "Mensajes enviados y respuestas clasificadas por tipo de interés.",
+        "expected_result": "Saber si hay señales suficientes para seguir priorizando este canal o ajustar el mensaje/segmento.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "whatsapp_outreach_review",
+          "title": "Registro de respuestas de WhatsApp",
+          "description": "Capturar evidencia de interés real y patrón de respuesta.",
+          "fields": [
+            {
+              "id": "contacts_planned",
+              "label": "Contactos planificados",
+              "description": "Cantidad de contactos que se pensaba escribir.",
+              "required": true,
+              "type": "number",
+              "min": 1,
+              "max": 1000
+            },
+            {
+              "id": "contacts_messaged",
+              "label": "Contactos contactados",
+              "description": "Cantidad realmente contactada.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 1000
+            },
+            {
+              "id": "responses",
+              "label": "Respuestas recibidas",
+              "description": "Registrar las respuestas más relevantes.",
+              "required": true,
+              "type": "repeatable_group",
+              "min_items": 1,
+              "max_items": 10,
+              "fields": [
+                {
+                  "id": "contact_type",
+                  "label": "Tipo de contacto",
+                  "description": "Relación con el contacto.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "existing_contact",
+                      "label": "Contacto existente"
+                    },
+                    {
+                      "value": "referral",
+                      "label": "Referencia"
+                    },
+                    {
+                      "value": "neighbor",
+                      "label": "Vecino"
+                    },
+                    {
+                      "value": "other",
+                      "label": "Otro"
+                    }
+                  ]
+                },
+                {
+                  "id": "response_type",
+                  "label": "Tipo de respuesta",
+                  "description": "Qué respondió.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "interested",
+                      "label": "Interesado"
+                    },
+                    {
+                      "value": "asked_quote",
+                      "label": "Pidió cotización"
+                    },
+                    {
+                      "value": "asked_schedule",
+                      "label": "Pidió agenda"
+                    },
+                    {
+                      "value": "not_interested",
+                      "label": "No interesado"
+                    },
+                    {
+                      "value": "no_reply",
+                      "label": "Sin respuesta"
+                    }
+                  ]
+                },
+                {
+                  "id": "zone_match",
+                  "label": "Coincide con zona objetivo",
+                  "description": "Si vive o está dentro de los barrios objetivo.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "yes",
+                      "label": "Sí"
+                    },
+                    {
+                      "value": "no",
+                      "label": "No"
+                    },
+                    {
+                      "value": "unknown",
+                      "label": "Desconocido"
+                    }
+                  ]
+                },
+                {
+                  "id": "next_step",
+                  "label": "Siguiente paso",
+                  "description": "Qué se hará con ese contacto.",
+                  "required": true,
+                  "type": "text",
+                  "placeholder": "Cotizar, agendar o descartar",
+                  "max_length": 200
+                }
+              ]
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_outreach",
+          "intent": "discover",
+          "requires": [
+            "whatsapp",
+            "existing_contacts"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": 1,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "Es la prueba directa de demanda local; sin esta evidencia no hay forma de saber si el canal funciona.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El contacto y la interpretación de respuestas requieren criterio del dueño; no conviene delegarlo sin un equipo definido.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Revisar las respuestas recibidas y decidir si el foco sigue en WhatsApp/contactos o si el mensaje y la segmentación necesitan ajuste.",
+        "objective": "Transformar la evidencia de la semana en una decisión comercial siguiente.",
+        "reason": "La decisión crítica no es solo contactar, sino aprender qué produce respuesta real y qué no.",
+        "success_metric": "Una conclusión operativa basada en la calidad de las respuestas y una dirección clara para la semana siguiente.",
+        "expected_result": "Reducir incertidumbre y evitar repetir contactos o mensajes que no generan consultas útiles.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "decision_review",
+          "title": "Revisión de aprendizaje comercial",
+          "description": "Registrar qué se observó y qué decisión se tomará.",
+          "fields": [
+            {
+              "id": "observed_pattern",
+              "label": "Patrón observado",
+              "description": "Resumen de cómo respondieron los contactos.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Ej.: respondieron más los vecinos del barrio X",
+              "max_length": 500
+            },
+            {
+              "id": "best_response_source",
+              "label": "Fuente con mejor respuesta",
+              "description": "Qué tipo de contacto respondió mejor.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "existing_contact",
+                  "label": "Contacto existente"
+                },
+                {
+                  "value": "referral",
+                  "label": "Referencia"
+                },
+                {
+                  "value": "neighbor",
+                  "label": "Vecino"
+                },
+                {
+                  "value": "none_clear",
+                  "label": "No hubo patrón claro"
+                }
+              ]
+            },
+            {
+              "id": "decision_for_next_week",
+              "label": "Decisión siguiente",
+              "description": "Qué se hará la próxima semana.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "repeat_whatsapp",
+                  "label": "Repetir WhatsApp"
+                },
+                {
+                  "value": "adjust_message",
+                  "label": "Ajustar mensaje"
+                },
+                {
+                  "value": "narrow_zone",
+                  "label": "Reducir zona"
+                },
+                {
+                  "value": "pause_channel",
+                  "label": "Pausar canal"
+                }
+              ]
+            },
+            {
+              "id": "confidence_level",
+              "label": "Confianza en la lectura",
+              "description": "Qué tan confiable es esta conclusión.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "low",
+                  "label": "Baja"
+                },
+                {
+                  "value": "medium",
+                  "label": "Media"
+                },
+                {
+                  "value": "high",
+                  "label": "Alta"
+                }
+              ]
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "other",
+          "intent": "optimize",
+          "requires": [
+            "existing_contacts",
+            "whatsapp"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": 2,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "Cierra el ciclo de aprendizaje y evita tomar decisiones sin interpretar la evidencia.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "La interpretación de señales de mercado y la decisión de siguiente paso debe quedar en manos del dueño.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 0
+  },
+  {
+    "case": "mantenimiento",
+    "version": "v2",
+    "sample": 3,
+    "seconds": 34.601,
+    "attempts": [
+      {
+        "seconds": 16.46,
+        "promptChars": 13075,
+        "inputTokens": 7536,
+        "outputTokens": 2629
+      },
+      {
+        "seconds": 18.137,
+        "promptChars": 14282,
+        "inputTokens": 7792,
+        "outputTokens": 2935
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "La progresión debe partir de un trabajo completado.",
+      "La progresión debe partir de un trabajo completado."
+    ]
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 2,
+    "seconds": 16.58,
+    "attempts": [
+      {
+        "seconds": 16.574,
+        "promptChars": 10167,
+        "inputTokens": 6945,
+        "outputTokens": 2712
+      }
+    ],
+    "status": "PASS",
+    "decision": {
+      "question": "¿Debemos centrar la primera semana en validar un mensaje de oferta local por WhatsApp a contactos cercanos, en lugar de ampliar canales o zonas?",
+      "recommended_direction": "Sí: concentrar la semana en activar demanda local por WhatsApp con un mensaje simple y medible para los dos barrios.",
+      "rationale": "Es la decisión de mayor impacto por hora: usa recursos disponibles, protege el margen geográfico y crea evidencia rápida sobre qué propuesta atrae clientes cercanos.",
+      "expected_outcome": "Obtener señales reales sobre qué tipo de mensaje y a qué tipo de contacto responde mejor el mercado local.",
+      "target_metric": "Respuesta y reserva de clientes dentro de las zonas objetivo."
+    },
+    "diagnosis": {
+      "summary": "La prioridad estratégica es concentrar la captación en zonas cercanas usando WhatsApp y contactos existentes para convertir demanda local en trabajos rentables, evitando traslados improductivos.",
+      "affected_area": "demand",
+      "why_it_matters": "Si la captación no se concentra por zona, el negocio puede vender pero perder margen y tiempo en traslados, frenando el crecimiento real."
+    },
+    "hours": {
+      "available_hours": 4,
+      "allocated_hours": 4,
+      "reserved_hours": 0,
+      "rationale": "Con solo 4 horas del dueño, conviene una prueba comercial corta y concentrada, no tareas extensas ni expansión de canales."
+    },
+    "actions": [
+      {
+        "sequence": 1,
+        "action": "Redactar una oferta breve de WhatsApp para vecinos de los dos barrios, enfocada en problema, zona y rapidez de atención.",
+        "objective": "Construir un mensaje comercial claro para probar demanda local.",
+        "reason": "La decisión crítica necesita un mensaje simple para aprender rápido qué activa interés en la zona objetivo.",
+        "success_metric": "Una oferta escrita y lista para enviar con dos variantes de enfoque.",
+        "expected_result": "Tener una propuesta concreta para iniciar conversaciones y comparar qué ángulo genera más respuestas.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "offer_draft",
+          "title": "Oferta breve de WhatsApp",
+          "description": "Registrar la propuesta comercial creada y qué enfoque se eligió.",
+          "fields": [
+            {
+              "id": "offer_version_a",
+              "label": "Versión A",
+              "description": "Texto exacto de la primera versión del mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje completo de la versión A",
+              "max_length": 500
+            },
+            {
+              "id": "offer_version_b",
+              "label": "Versión B",
+              "description": "Texto exacto de la segunda versión del mensaje.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Escribe el mensaje completo de la versión B",
+              "max_length": 500
+            },
+            {
+              "id": "chosen_angle",
+              "label": "Ángulo elegido",
+              "description": "Qué promesa o enfoque se priorizó.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "rapidez",
+                  "label": "Rapidez"
+                },
+                {
+                  "value": "cercania",
+                  "label": "Cercanía geográfica"
+                },
+                {
+                  "value": "confianza",
+                  "label": "Confianza/recomendación"
+                },
+                {
+                  "value": "precio",
+                  "label": "Precio"
+                },
+                {
+                  "value": "otro",
+                  "label": "Otro"
+                }
+              ]
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_messages",
+          "intent": "build",
+          "requires": [
+            "whatsapp",
+            "existing_contacts"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": null,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "Necesita un mensaje comercial para activar el canal disponible y aprender del mercado local.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "Requiere criterio del dueño para elegir el tono y la promesa que mejor representa el servicio y la zona.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 2,
+        "action": "Enviar el mensaje a contactos cercanos y registrar respuestas y objeciones.",
+        "objective": "Medir interés real en la zona objetivo.",
+        "reason": "La mejor validación de la hipótesis es observar respuesta real, no suposiciones internas.",
+        "success_metric": "Registro de al menos 1 a 5 respuestas relevantes con tipo de contacto y reacción.",
+        "expected_result": "Saber si el problema está en el canal, el mensaje o la confianza del cliente.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "whatsapp_outreach_results",
+          "title": "Resultados de contacto por WhatsApp",
+          "description": "Registrar señales reales obtenidas al contactar vecinos o conocidos.",
+          "fields": [
+            {
+              "id": "planned_contacts",
+              "label": "Contactos planificados",
+              "description": "Cantidad prevista de contactos a escribir.",
+              "required": true,
+              "type": "number",
+              "min": 1,
+              "max": 50
+            },
+            {
+              "id": "contacts_reached",
+              "label": "Contactos alcanzados",
+              "description": "Cantidad realmente contactada.",
+              "required": true,
+              "type": "number",
+              "min": 0,
+              "max": 50
+            },
+            {
+              "id": "responses",
+              "label": "Respuestas relevantes",
+              "description": "Resumen de respuestas con tipo de contacto, reacción y objeción o interés.",
+              "required": true,
+              "type": "repeatable_group",
+              "min_items": 1,
+              "max_items": 5,
+              "fields": [
+                {
+                  "id": "contact_type",
+                  "label": "Tipo de contacto",
+                  "description": "Vecino, referido, conocido o cliente previo.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "vecino",
+                      "label": "Vecino"
+                    },
+                    {
+                      "value": "referido",
+                      "label": "Referido"
+                    },
+                    {
+                      "value": "conocido",
+                      "label": "Conocido"
+                    },
+                    {
+                      "value": "cliente_previo",
+                      "label": "Cliente previo"
+                    }
+                  ]
+                },
+                {
+                  "id": "reaction",
+                  "label": "Reacción",
+                  "description": "Respuesta principal recibida.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "interes",
+                      "label": "Interés"
+                    },
+                    {
+                      "value": "precio",
+                      "label": "Pregunta por precio"
+                    },
+                    {
+                      "value": "confianza",
+                      "label": "Pregunta por confianza"
+                    },
+                    {
+                      "value": "sin_respuesta",
+                      "label": "Sin respuesta"
+                    },
+                    {
+                      "value": "rechazo",
+                      "label": "Rechazo"
+                    }
+                  ]
+                },
+                {
+                  "id": "next_step",
+                  "label": "Siguiente paso",
+                  "description": "Qué se hará con ese contacto.",
+                  "required": true,
+                  "type": "single_select",
+                  "options": [
+                    {
+                      "value": "cotizar",
+                      "label": "Cotizar"
+                    },
+                    {
+                      "value": "seguir_conversacion",
+                      "label": "Seguir conversación"
+                    },
+                    {
+                      "value": "agendar",
+                      "label": "Agendar"
+                    },
+                    {
+                      "value": "descartar",
+                      "label": "Descartar"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "commercial_messages",
+          "intent": "validate",
+          "requires": [
+            "whatsapp",
+            "existing_contacts"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": 1,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "La conversación es la validación inmediata de si el mensaje y la zona generan demanda.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "La conversación directa y el seguimiento corto requieren criterio humano y conocimiento del contexto local.",
+        "estimated_hours": 2,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      },
+      {
+        "sequence": 3,
+        "action": "Clasificar qué patrón de respuesta indica mejor oportunidad por zona y ajustar la próxima oferta.",
+        "objective": "Convertir la evidencia en una decisión comercial concreta.",
+        "reason": "Sin síntesis, la semana produciría contactos pero no aprendizaje estratégico.",
+        "success_metric": "Una conclusión escrita sobre qué zona, ángulo o tipo de contacto mostró mejor señal.",
+        "expected_result": "Definir el siguiente ajuste comercial con menos dispersión.",
+        "execution_mode": "manual",
+        "action_type": "generic",
+        "capture_schema": {
+          "version": 1,
+          "capture_type": "response_pattern_review",
+          "title": "Patrón de respuesta y ajuste",
+          "description": "Registrar el patrón observado y el cambio recomendado.",
+          "fields": [
+            {
+              "id": "best_reaction_pattern",
+              "label": "Mejor patrón observado",
+              "description": "Qué respuesta o tipo de contacto mostró mayor señal.",
+              "required": true,
+              "type": "single_select",
+              "options": [
+                {
+                  "value": "interes",
+                  "label": "Interés"
+                },
+                {
+                  "value": "precio",
+                  "label": "Pregunta por precio"
+                },
+                {
+                  "value": "confianza",
+                  "label": "Pregunta por confianza"
+                },
+                {
+                  "value": "referido",
+                  "label": "Referido"
+                },
+                {
+                  "value": "ninguno",
+                  "label": "Ninguno claro"
+                }
+              ]
+            },
+            {
+              "id": "zone_signal",
+              "label": "Señal por zona",
+              "description": "Cómo se comportó la demanda en cada barrio.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe diferencias entre zonas",
+              "max_length": 400
+            },
+            {
+              "id": "next_adjustment",
+              "label": "Ajuste siguiente",
+              "description": "Qué cambiará en el siguiente contacto o oferta.",
+              "required": true,
+              "type": "textarea",
+              "placeholder": "Describe el ajuste concreto",
+              "max_length": 400
+            }
+          ],
+          "completion_rule": {
+            "type": "all_required_fields_valid"
+          }
+        },
+        "strategy": {
+          "work_key": "customer_research",
+          "intent": "validate",
+          "requires": [
+            "whatsapp",
+            "existing_contacts"
+          ],
+          "completed_prerequisite_id": null,
+          "depends_on_sequence": 2,
+          "progression": "new",
+          "prior_action_id": null,
+          "justification": "La evidencia de respuesta debe convertirse en aprendizaje accionable para el siguiente ciclo.",
+          "prior_barrier": "unreported",
+          "new_evidence_id": null,
+          "period_week": 1,
+          "deliverable": null
+        },
+        "role_recommendation": "execute",
+        "role_reason": "El dueño debe decidir con base en señales reales; esta síntesis no conviene delegarla en una etapa inicial.",
+        "estimated_hours": 1,
+        "feasibility": {
+          "status": "feasible"
+        },
+        "matchingPrior": null
+      }
+    ],
+    "blocked": 0,
+    "undocumentedOverlap": 0
+  },
+  {
+    "case": "limpieza",
+    "version": "v2",
+    "sample": 3,
+    "seconds": 34.981,
+    "attempts": [
+      {
+        "seconds": 15.997,
+        "promptChars": 10167,
+        "inputTokens": 6945,
+        "outputTokens": 2627
+      },
+      {
+        "seconds": 18.979,
+        "promptChars": 11166,
+        "inputTokens": 7159,
+        "outputTokens": 3084
+      }
+    ],
+    "status": "FAIL",
+    "code": "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+    "messages": [
+      "Hace falta una propuesta de valor disponible para esta acción. Propón una alternativa viable o el prerrequisito como acción independiente."
+    ]
+  }
+]

@@ -1,0 +1,551 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T01:50:44.708Z",
+  "scenarios": {
+    "mantenimiento": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Crear una propuesta comercial breve para un servicio prioritario y dos variantes de mensaje para usar en contacto directo.",
+              "reason": "La demanda inicial depende de que el cliente entienda rápido qué problema resuelve el negocio.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "build",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": "commercial_messages",
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Hace falta una propuesta comercial concreta antes de evaluar reacción del mercado. No depende de redes sociales y puede probarse con contactos directos o WhatsApp si está disponible.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener un texto claro y diferenciable para probar qué engancha más.",
+              "action_type": "commercial_messages",
+              "role_reason": "El dueño debe decidir el enfoque comercial porque conoce el servicio, la urgencia real y el margen de cada trabajo.",
+              "capture_schema": {
+                "title": "Prueba de mensaje comercial",
+                "fields": [
+                  {
+                    "id": "offer_name",
+                    "type": "text",
+                    "label": "Nombre de la oferta",
+                    "required": true,
+                    "max_length": 80,
+                    "description": "Nombre corto de la propuesta mostrada.",
+                    "placeholder": "Ej: Reparación urgente en 24h"
+                  },
+                  {
+                    "id": "channel_used",
+                    "type": "single_select",
+                    "label": "Canal usado",
+                    "options": [
+                      {
+                        "label": "WhatsApp",
+                        "value": "whatsapp"
+                      },
+                      {
+                        "label": "Contactos existentes",
+                        "value": "existing_contacts"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Canal por el que se presentó la oferta."
+                  },
+                  {
+                    "id": "response_summary",
+                    "type": "textarea",
+                    "label": "Respuesta observada",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué dijo o hizo el cliente ante el mensaje.",
+                    "placeholder": "Interesado, pidió precio, no respondió, etc."
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar qué oferta se mostró y cómo reaccionó el mercado.",
+                "capture_type": "commercial_messages_test",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "ai_assisted",
+              "success_metric": "Dos ofertas claramente distintas y listas para usar, con mensaje base y beneficio principal definidos.",
+              "estimated_hours": 2,
+              "expected_result": "Una hipótesis comercial usable para probar respuesta del mercado.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Contactar a una pequeña muestra de personas o contactos cercanos para ofrecer el servicio y registrar respuesta.",
+              "reason": "La restricción principal es la falta de contactos; esta acción prueba si existe interés real en el servicio.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_outreach",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "Tras definir el mensaje, hay que ponerlo frente a personas reales para validar si genera interés.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Obtener primeras señales reales de demanda sin depender de redes sociales.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe liderar los primeros contactos para aprender objeciones y ajustar el mensaje.",
+              "capture_schema": {
+                "title": "Registro de contactos iniciales",
+                "fields": [
+                  {
+                    "id": "contact_count",
+                    "max": 20,
+                    "min": 5,
+                    "type": "number",
+                    "label": "Cantidad de contactos hechos",
+                    "required": true,
+                    "description": "Número total de contactos realizados."
+                  },
+                  {
+                    "id": "responses",
+                    "type": "repeatable_group",
+                    "label": "Respuestas observadas",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "single_select",
+                        "label": "Tipo de contacto",
+                        "options": [
+                          {
+                            "label": "Contacto existente",
+                            "value": "existing_contact"
+                          },
+                          {
+                            "label": "Vecino",
+                            "value": "neighbor"
+                          },
+                          {
+                            "label": "Referido",
+                            "value": "referral"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Tipo de persona o contacto."
+                      },
+                      {
+                        "id": "response",
+                        "type": "single_select",
+                        "label": "Respuesta",
+                        "options": [
+                          {
+                            "label": "Interesado",
+                            "value": "interested"
+                          },
+                          {
+                            "label": "Pidió precio",
+                            "value": "asked_price"
+                          },
+                          {
+                            "label": "Sin respuesta",
+                            "value": "no_response"
+                          },
+                          {
+                            "label": "No ahora",
+                            "value": "not_now"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Qué respondió la persona."
+                      },
+                      {
+                        "id": "next_step",
+                        "type": "text",
+                        "label": "Siguiente paso",
+                        "required": true,
+                        "max_length": 120,
+                        "description": "Qué ocurrió después de la respuesta.",
+                        "placeholder": "Ej: enviar foto, agendar visita, seguir en contacto"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 5,
+                    "min_items": 3,
+                    "description": "Resumen breve de las respuestas obtenidas."
+                  }
+                ],
+                "version": 1,
+                "description": "Capturar evidencia de contactos y reacción observada.",
+                "capture_type": "lead_contact_test",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Al menos 5 contactos realizados y respuesta registrada para cada uno.",
+              "estimated_hours": 3,
+              "expected_result": "Señales concretas sobre qué tipo de cliente responde y qué objeción aparece primero.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Registrar qué canal y qué tipo de servicio generan más interés en las primeras respuestas.",
+              "reason": "El negocio necesita saber si el problema está en el canal, en el mensaje o en la oferta.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "existing_contacts"
+                ],
+                "work_key": "customer_research",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La decisión crítica se valida mejor observando patrones iniciales de respuesta, no solo contando tareas hechas.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Convertir los contactos en aprendizaje comercial útil para decidir el siguiente paso.",
+              "action_type": "generic",
+              "role_reason": "El propietario debe revisar las respuestas porque son señales tempranas del mercado y afectan el siguiente mensaje.",
+              "capture_schema": {
+                "title": "Patrón inicial de respuesta",
+                "fields": [
+                  {
+                    "id": "observed_pattern",
+                    "type": "textarea",
+                    "label": "Patrón observado",
+                    "required": true,
+                    "max_length": 250,
+                    "description": "Qué patrón se repite en las respuestas.",
+                    "placeholder": "Ej: responden más cuando se habla de urgencias que de mantenimiento"
+                  },
+                  {
+                    "id": "top_channel",
+                    "type": "single_select",
+                    "label": "Canal más prometedor",
+                    "options": [
+                      {
+                        "label": "WhatsApp",
+                        "value": "whatsapp"
+                      },
+                      {
+                        "label": "Contactos existentes",
+                        "value": "existing_contacts"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      },
+                      {
+                        "label": "Aún no claro",
+                        "value": "unknown"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Canal que mostró mejor respuesta."
+                  },
+                  {
+                    "id": "adjustment_reason",
+                    "type": "textarea",
+                    "label": "Razón del ajuste",
+                    "required": true,
+                    "max_length": 250,
+                    "description": "Qué conviene cambiar o mantener según la respuesta observada.",
+                    "placeholder": "Ej: reforzar urgencia, simplificar precio, cambiar ejemplo"
+                  }
+                ],
+                "version": 1,
+                "description": "Registrar el patrón observado en las primeras respuestas.",
+                "capture_type": "pattern_review",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Un resumen de patrón inicial con al menos 3 observaciones comparables.",
+              "estimated_hours": 1,
+              "expected_result": "Una decisión mejor informada sobre qué canal repetir y qué mensaje ajustar.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debe el negocio enfocarse esta semana en validar un canal simple de captación y el mensaje comercial antes de intentar escalar presencia o servicios?",
+            "rationale": "Este negocio vive de trabajos por encargo; primero necesita comprobar que un canal sencillo produce contactos reales. Si no hay entrada, no hay cartera que construir.",
+            "target_metric": "Primeros contactos o solicitudes de cotización registradas",
+            "expected_outcome": "Obtener evidencia de qué mensaje y qué canal generan primeras consultas de hogares.",
+            "recommended_direction": "Sí: validar demanda con un canal directo y una propuesta clara, sin depender de redes sociales."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "ai_assisted",
+              "completionData": {
+                "offer_name": "QA: Visita de diagnóstico para una reparación urgente en el hogar.",
+                "channel_used": "whatsapp",
+                "response_summary": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "responses": [
+                  {
+                    "response": "interested",
+                    "next_step": "QA · Contacto de la zona habitual",
+                    "customer_type": "existing_contact"
+                  }
+                ],
+                "contact_count": 5
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "top_channel": "whatsapp",
+                "observed_pattern": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización.",
+                "adjustment_reason": "QA sintético: revisamos dos solicitudes de reparación. Una persona preguntó por disponibilidad y tarifa de diagnóstico. Aún falta confirmar que acepte una cotización."
+              }
+            }
+          ],
+          "review": {
+            "id": "20eef22a-0d5a-4912-9f36-7549394e7293",
+            "outcome_status": "no_change",
+            "decision_learning": {
+              "evidence": [
+                "No disponemos de evidencia de mercado."
+              ],
+              "learning": "QA: aclarar el problema urgente y el canal autorizado antes de ampliar el alcance.",
+              "hypothesis": "Si se valida un canal simple con un mensaje claro, deberían aparecer primeras consultas suficientes para aprender qué tipo de hogar responde mejor.",
+              "target_metric": "Primeros contactos o solicitudes de cotización registradas",
+              "observed_result": "No se obtuvieron resultados empresariales.",
+              "expected_outcome": "Obtener evidencia de qué mensaje y qué canal generan primeras consultas de hogares.",
+              "decision_question": "¿Debe el negocio enfocarse esta semana en validar un canal simple de captación y el mensaje comercial antes de intentar escalar presencia o servicios?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Sí: validar demanda con un canal directo y una propuesta clara, sin depender de redes sociales.",
+              "evidence_assessment_note": "La revisión indica que aún faltan resultados o evidencia para validar la hipótesis.",
+              "reported_hypothesis_status": "validated"
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-2-generation",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 721,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 345,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 355,
+              "bottom": 711,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 652,
+              "bottom": 696,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 388,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 400,
+              "bottom": 786,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 721,
+              "bottom": 765,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "El plan de semana 2 quedó en estado failed."
+    },
+    "limpieza": {
+      "status": "FAIL",
+      "cycles": [],
+      "stage": "week-1",
+      "error": "El plan de semana 1 quedó en estado failed."
+    }
+  },
+  "finishedAt": "2026-11-25T01:52:24.188Z"
+}

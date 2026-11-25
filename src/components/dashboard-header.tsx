@@ -1,5 +1,6 @@
 import { logout } from "@/actions/auth";
 import { CommandCenterIcon } from "@/components/command-center-icon";
+import Link from "next/link";
 
 type DashboardHeaderProps = {
   businessName: string;
@@ -26,6 +27,7 @@ export function DashboardHeader({ businessName, weekNumber, email }: DashboardHe
           </summary>
           <div className="command-card absolute right-0 top-[calc(100%+0.4rem)] w-60 p-3">
             {email && <p className="text-sm text-slate-700">{email}</p>}
+            <Link href="/business-context" className="command-link w-full">Canales y recursos</Link>
             <form action={logout}>
               <button type="submit" className="command-link w-full">Cerrar sesión</button>
             </form>

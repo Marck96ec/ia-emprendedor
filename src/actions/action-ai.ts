@@ -10,12 +10,14 @@ import { generateValueProposition } from "@/lib/ai/generate-value-proposition";
 import {
   AIActionDefinitionSchema,
   CommercialOffersSchema,
-  CommercialMessagesSchema,
   getAIAssistedActionCapability,
   parseActionDeliverable,
   validateActionResultForApproval,
 } from "@/lib/ai/action-deliverables";
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
+import { normalizeWorkText } from "@/lib/business-memory";
+import { commercialDeliverableFor, describeResourceCheck, strategyForSequence } from "@/lib/strategic-action";
+import { isActionDependencyCompleted, loadOperationalAvailability } from "@/lib/strategic-context-server";
 import {
   ValuePropositionSchema,
 } from "@/lib/ai/value-proposition-agent";
@@ -85,7 +87,7 @@ export async function workOnActionWithAI(formData: FormData) {
   const { supabase, userId } = await getAuthenticatedUser();
   const { data: action, error: actionErrorResult } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type, role_recommendation")
     .eq("id", parsed.data.action_id)
     .maybeSingle();
 
@@ -95,7 +97,7 @@ export async function workOnActionWithAI(formData: FormData) {
 
   const { data: plan, error: planError } = await supabase
     .from("ceo_plans")
-    .select("id, business_id, status, executive_summary, diagnosis, priorities")
+    .select("id, business_id, status, executive_summary, diagnosis, priorities, weekly_plan")
     .eq("id", action.ceo_plan_id)
     .maybeSingle();
   const { data: business, error: businessError } = await supabase
@@ -159,17 +161,23 @@ export async function workOnActionWithAI(formData: FormData) {
     ? parseActionDeliverable(actionType, existingResult.draft_content)
     : null;
   const currentDraft = draft?.success ? draft.data : null;
+  const strategy = strategyForSequence(plan.weekly_plan, action.sequence);
+  const [resources, dependencyCompleted] = await Promise.all([
+    loadOperationalAvailability(supabase, business.id, business.description),
+    isActionDependencyCompleted(supabase, plan.id, strategy),
+  ]);
+  const resourceCheck = describeResourceCheck({ ...action, strategy }, resources, dependencyCompleted);
+  if (resourceCheck?.blocked) redirect(actionError(action.id, resourceCheck.detail, parsed.data.return_to));
+  const commercialDeliverable = commercialDeliverableFor(action.action, strategy,
+    Boolean(currentDraft && "messages" in currentDraft));
   const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   try {
     const content = actionType === "commercial_messages"
       ? await (async () => {
-          const legacyDraft = currentDraft && "messages" in currentDraft
-            ? CommercialMessagesSchema.parse(currentDraft)
-            : null;
-          return legacyDraft
-            ? CommercialMessagesSchema.parse(
-                await generateCommercialMessages({
+          const legacyDraft = currentDraft && "messages" in currentDraft ? currentDraft : null;
+          return commercialDeliverable === "commercial_messages"
+            ? await generateCommercialMessages({
                   business: {
                     name: business.name,
                     revenue_model: business.revenue_model,
@@ -191,8 +199,8 @@ export async function workOnActionWithAI(formData: FormData) {
                   currentDraft: legacyDraft,
                   currentKnowledge: businessKnowledge.valueProposition,
                   feedback: parsed.data.feedback ?? null,
-                }),
-              )
+                  messageCount: /\b(?:dos|2) (?:variantes de )?mensajes?\b/.test(normalizeWorkText(action.action)) ? 2 : 3,
+                })
             : CommercialOffersSchema.parse(
                 await generateCommercialOffers({
                   business: {
@@ -251,8 +259,8 @@ export async function workOnActionWithAI(formData: FormData) {
           }),
         );
     const promptVersion = actionType === "commercial_messages"
-      ? currentDraft && "messages" in currentDraft
-        ? "commercial-messages-v1"
+      ? commercialDeliverable === "commercial_messages"
+        ? "commercial-messages-v2"
         : "commercial-offers-v1"
       : PROMPT_VERSION;
     const { data: savedResult, error: saveError } = existingResult
@@ -321,17 +329,28 @@ export async function approveActionResult(formData: FormData) {
   if (result.status === "draft") {
     const { data: action, error: actionErrorResult } = await supabase
       .from("weekly_actions")
-      .select("action, objective, success_metric, execution_mode, action_type")
+      .select("action, objective, success_metric, execution_mode, action_type, ceo_plan_id, sequence")
       .eq("id", result.weekly_action_id)
       .maybeSingle();
 
     const approvalValidation = action
       ? validateActionResultForApproval(action, result)
       : null;
+    let compatible = true;
+    if (action?.action_type === "commercial_messages" && approvalValidation?.success) {
+      const { data: plan, error: planError } = await supabase.from("ceo_plans")
+        .select("weekly_plan").eq("id", action.ceo_plan_id).maybeSingle();
+      const draft = parseActionDeliverable(action.action_type, result.draft_content);
+      const content = draft.success && "deliverable_type" in draft.data ? draft.data : null;
+      compatible = !planError && Boolean(plan && content
+        && content.deliverable_type === commercialDeliverableFor(action.action,
+          strategyForSequence(plan.weekly_plan, action.sequence), "messages" in content));
+    }
 
     if (
       actionErrorResult ||
-      !approvalValidation?.success
+      !approvalValidation?.success ||
+      !compatible
     ) {
       console.error("ACTION_RESULT_INVALID_BEFORE_APPROVAL", {
         actionErrorResult,

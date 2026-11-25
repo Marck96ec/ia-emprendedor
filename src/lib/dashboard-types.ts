@@ -6,6 +6,7 @@ import type {
 import type { ActionCapture } from "@/lib/action-capture";
 import type { ActionDeliverable } from "@/lib/ai/action-deliverables";
 import type { StrategicContinuity } from "@/lib/strategic-continuity";
+import type { ActionStrategy } from "@/lib/strategic-action";
 
 export type DashboardActionResult = {
   id: string;
@@ -32,6 +33,8 @@ export type DashboardAction = {
   execution_mode: ActionExecutionMode;
   action_type: ActionType;
   action_results: DashboardActionResult[];
+  strategy?: ActionStrategy;
+  resourceCheck?: { blocked: boolean; detail: string };
 };
 
 export type DashboardTimeAllocation = {

@@ -203,6 +203,14 @@ export function ActionDetailPanel({
   const status = getStatus(action);
   const result = action.action_results?.[0] ?? null;
   const captureSchema = getActionCaptureSchema(action.capture_schema);
+  const blocked = action.resourceCheck?.blocked;
+  const progressionLabel = action.strategy ? {
+    new: null,
+    advance: "Avance respecto al plan anterior",
+    continuation: "Continuación de una acción pendiente",
+    recurrence: "Actualización periódica",
+    rework: "Revisión de trabajo previo",
+  }[action.strategy.progression] : null;
 
   return (
     <section className="flex w-full flex-col rounded-2xl bg-white/90 shadow-sm sm:border sm:border-slate-200" aria-labelledby="action-detail-title">
@@ -237,6 +245,18 @@ export function ActionDetailPanel({
         <h2 id="action-detail-title" className="text-xl font-semibold leading-6 tracking-tight text-slate-950">
           {action.action}
         </h2>
+        {action.resourceCheck && (
+          <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
+            <p>{action.resourceCheck.detail}</p>
+            <Link className="command-link" href="/business-context">Revisar canales y recursos</Link>
+          </div>
+        )}
+        {progressionLabel && (
+          <div className="mt-3 text-sm leading-5 text-slate-700">
+            <p className="font-semibold">{progressionLabel}</p>
+            <p>{action.strategy?.justification}</p>
+          </div>
+        )}
 
         <div className="mt-4 space-y-3">
           <div>
@@ -273,11 +293,11 @@ export function ActionDetailPanel({
           </div>
         )}
 
-        {action.execution_mode === "ai_assisted" && (
+        {action.execution_mode === "ai_assisted" && !blocked && (
           <AIActionWorkspace action={action} result={result} reviewed={reviewed} />
         )}
 
-        {action.execution_mode === "ai_assisted" && result?.status === "approved" && action.status === "pending" && !reviewed && (
+        {action.execution_mode === "ai_assisted" && result?.status === "approved" && action.status === "pending" && !reviewed && !blocked && (
           <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5" aria-labelledby="ai-action-evidence-title">
             <p className="eyebrow">Evidencia de utilización real</p>
             <h3 id="ai-action-evidence-title" className="mt-1 text-lg font-semibold text-slate-950">¿Qué ocurrió al probarlo?</h3>
@@ -292,13 +312,13 @@ export function ActionDetailPanel({
       </div>
 
       <div className="sticky bottom-0 shrink-0 space-y-2 rounded-b-2xl border-t border-slate-200 bg-white px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        {action.execution_mode === "ai_assisted" && (
+        {action.execution_mode === "ai_assisted" && !blocked && (
           <button type="button" className="accent-button min-h-11 w-full px-4 py-2.5 text-sm" onClick={() => document.getElementById("ai-action-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
             {result ? "Revisar entregable" : "Crear con ayuda de IA"}
           </button>
         )}
 
-        {action.execution_mode === "manual" && !reviewed && action.status === "pending" && (
+        {action.execution_mode === "manual" && !reviewed && action.status === "pending" && !blocked && (
           <button type="button" className="accent-button min-h-11 w-full px-4 py-2.5 text-sm" onClick={() => setCompletionMode("capture")}>
             Registrar resultado
           </button>

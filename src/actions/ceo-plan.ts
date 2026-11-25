@@ -10,8 +10,8 @@ import {
   generateExternalEvidence,
 } from "@/lib/ai/generate-external-evidence";
 import type { CEOPlan } from "@/lib/ai/ceo-agent";
-import { DecisionLearningSchema } from "@/lib/decision-learning";
-import { loadBusinessKnowledge } from "@/lib/business-knowledge";
+import { DecisionLearningSchema, hypothesisForPlanning } from "@/lib/decision-learning";
+import { loadStrategicContext } from "@/lib/strategic-context-server";
 import { buildBusinessAssessment } from "@/lib/business-assessment-adapter";
 import {
   CEOPlanError,
@@ -22,7 +22,7 @@ import { createClient } from "@/lib/supabase/server";
 const MODEL =
   process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
-const PROMPT_VERSION = "v5-strategic-learning";
+const PROMPT_VERSION = "v6-strategic-intelligence";
 
 const EVIDENCE_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4-mini";
 
@@ -152,8 +152,6 @@ export async function generateCEOPlanAction() {
       ),
     );
   }
-
-  const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   /*
    * 3. Obtener el plan más reciente.
@@ -652,7 +650,7 @@ if (latestPlan?.status === "generating") {
           weekNumber: plan.week_number,
           outcomeStatus: review?.outcome_status ?? "no_change",
           learning: learning?.learning ?? null,
-          hypothesisStatus: learning?.hypothesis_status ?? null,
+          hypothesisStatus: learning ? hypothesisForPlanning(learning) : null,
           decisionQuestion: learning?.decision_question ?? null,
           targetMetric: learning?.target_metric ?? null,
           actions: (olderActions ?? [])
@@ -754,7 +752,7 @@ if (latestPlan?.status === "generating") {
                 learning:
                   previousDecisionLearning.data.learning,
                 hypothesisStatus:
-                  previousDecisionLearning.data.hypothesis_status,
+                  hypothesisForPlanning(previousDecisionLearning.data),
               }
             : null,
       },
@@ -778,6 +776,11 @@ if (latestPlan?.status === "generating") {
         : null,
       reviewedWeeks: previousWeek ? 1 : 0,
     });
+
+    const { knowledge: businessKnowledge, context: strategicContext } = await loadStrategicContext(
+      supabase, business.id, weekNumber, businessEvidence ?? [],
+      [business.description, diagnostic.main_challenge, diagnostic.sales_process].filter(Boolean).join(". "),
+    );
 
     const output = await generateCEOPlan({
       business: {
@@ -814,7 +817,7 @@ if (latestPlan?.status === "generating") {
           diagnostic.owner_responsibilities,
 
         monthlyRevenue:
-          Number(diagnostic.monthly_revenue),
+          diagnostic.monthly_revenue === null ? null : Number(diagnostic.monthly_revenue),
 
         currencyCode:
           diagnostic.currency_code,
@@ -823,6 +826,7 @@ if (latestPlan?.status === "generating") {
       assessment,
       previousWeek,
       businessKnowledge,
+      strategicContext,
     });
 
     generatedPlanOutput = output;

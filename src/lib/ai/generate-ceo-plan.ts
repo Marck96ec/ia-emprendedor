@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import {
   ceoAgent,
   CEOPlanModelSchema,
+  StrategicCEOPlanModelSchema,
   CEOPlanSchema,
   type StrategicDiagnosis,
   validateCEOPlanBusinessRules,
@@ -19,6 +20,8 @@ import {
 import { parseActionCaptureModel } from "../action-capture";
 import type { StrategicContinuity } from "../strategic-continuity";
 import type { BusinessAssessment } from "../business-assessment";
+import type { StrategicContext } from "../strategic-context";
+import { assessFeasibility, inferredIntent, inferWorkKey, normalizeActionStrategy, validateActionDeliverable, validateProgression } from "../strategic-action";
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -52,11 +55,12 @@ export type GenerateCEOPlanInput = {
     customersDescription: string;
     salesProcess: string;
     ownerResponsibilities: string;
-    monthlyRevenue: number;
+    monthlyRevenue: number | null;
     currencyCode: string;
   };
 
   assessment?: BusinessAssessment;
+  strategicContext?: StrategicContext;
 
   previousWeek: {
     weekNumber: number;
@@ -156,6 +160,29 @@ ${
     : ""
 }`;
 
+      const context = input.strategicContext;
+      const previousWeek = input.previousWeek;
+      const promptInput = context ? {
+        ...input,
+        businessKnowledge: undefined,
+        previousWeek: previousWeek ? {
+          ...previousWeek, weeklyPlan: undefined,
+          actions: previousWeek.actions.map((action) => ({
+            ...action, completionData: action.completionData
+              ? JSON.stringify(action.completionData).slice(0, 700) : null,
+          })),
+        } : null,
+        strategicContext: {
+          ...context,
+          history: context.history.map((action, index) => ({
+            id: action.id, week: action.week, status: action.status,
+            action: action.action.slice(0, 200), objective: index < 10 ? action.objective.slice(0, 160) : undefined,
+            result: index < 10 ? action.result : null,
+            work_key: action.strategy?.work_key ?? inferWorkKey(action.action),
+            intent: action.strategy?.intent ?? inferredIntent(action.action),
+          })),
+        },
+      } : input;
       const result = await runner(
         ceoAgent,
         `
@@ -163,7 +190,42 @@ Analiza el siguiente negocio y prepara su próximo plan semanal.
 
 DATOS DISPONIBLES:
 
-${JSON.stringify(input, null, 2)}
+${JSON.stringify(promptInput)}
+
+${context ? `CONTRATO DE CONTEXTO Y FACTIBILIDAD:
+- Explica por qué la decisión sirve a este negocio según su modelo de ingresos,
+  adquisición, retención, recursos, capacidad y objetivo. Trata lo desconocido
+  como una hipótesis. Publicidad en internet no implica cuentas en redes.
+- strategicContext.resources conserva la disponibilidad confirmada o declarada.
+  Si un canal está unavailable, no programes utilizarlo. Reutiliza WhatsApp
+  o contactos disponibles cuando sea apropiado. Si hay incertidumbre decisiva,
+  elige discover o resolve_blocker con una pregunta breve, o una alternativa.
+- Cada strategy declara work_key, intent, requires y su relación con el historial.
+  requires contiene recursos necesarios para ejecutar. Usa depends_on_sequence
+  cuando una acción anterior en este mismo plan deba completarse primero.
+  Si esa acción construye explícitamente una propuesta, puede habilitar una
+  validación posterior. Usa completed_prerequisite_id solo para acciones
+  históricas identificadas y completadas. Nunca depende de una acción posterior.
+  Usa requires=value_proposition solo si la acción necesita una propuesta
+  diferenciada previamente definida. Una prueba del servicio descrito,
+  una consulta o el registro del canal de entrada pueden ser independientes.
+- Si existe reusableOffer, intégrala en la prueba o ejecución. Para rework exige
+  un new_evidence_id de recentEvidence y explica qué evidencia cambia la oferta.
+- Continuación de un pendiente requiere progression=continuation, prior_action_id
+  del mismo trabajo e intención, y prior_barrier=unreported o resolved.
+  Si un bloqueo sigue activo, resuélvelo. Un advance necesita una acción
+  completada. Para un trabajo independiente usa progression=new y
+  prior_action_id=null, aun cuando la decisión se apoye en un aprendizaje.
+  Una recurrencia de flujo de caja enlaza el registro anterior y declara
+  period_week igual a targetWeek. La etiqueta deepening no justifica repetir.
+- Para ai_assisted declara el entregable real. commercial_offers genera dos ofertas.
+  commercial_messages prepara textos completos, normalmente tres variantes.
+  Los mensajes de cobro no son fichas de ofertas. El especialista no realiza
+  contactos, cobros ni publicaciones. Una promesa de pago no es efectivo recibido.
+- Usa cero o una acción asistida por plan. En semanas con poca disponibilidad
+  prioriza una o dos acciones realistas. Si la estructura fue rechazada, puedes
+  simplificar el plan a una acción independiente factible y fundamentada.
+` : ""}
 
 Si assessment está disponible, es una evaluación determinística versionada del
 negocio. Utilízala como contexto para priorizar y explicar la decisión, pero no
@@ -206,9 +268,8 @@ repetir mecánicamente el plan. Un resultado positive con pocas
 acciones exige identificar qué produjo el impacto. Si hubo negative,
 adapta las prioridades sin dramatizar.
 
-businessKnowledge contiene únicamente conocimiento canónico aprobado
-por el usuario. Reutilízalo cuando siga siendo válido y considera
-revisarlo solo si el contexto actual indica que quedó obsoleto.
+El conocimiento aprobado del negocio sigue siendo reutilizable. Distingue un
+activo aprobado de un resultado declarado por el usuario.
 
 Genera:
 
@@ -292,7 +353,7 @@ ${retryInstructions}
       if (appOutput.success) {
         normalizedOutput = appOutput.data;
       } else {
-        const modelOutput = normalizeCEOPlanModelOutput(result.finalOutput);
+        const modelOutput = normalizeCEOPlanModelOutput(result.finalOutput, Boolean(context));
         if (!modelOutput.success) {
           const validationError = appOutput.success
             ? modelOutput.error
@@ -322,10 +383,14 @@ ${retryInstructions}
         );
       }
 
+      const draftPlan = context ? {
+        ...structuralOutput.data,
+        weekly_plan: structuralOutput.data.weekly_plan.map((action) => normalizeActionStrategy(action, context.history)),
+      } : structuralOutput.data;
       const businessRules = validateCEOPlanBusinessRules(
-        structuralOutput.data,
+        draftPlan,
         input.diagnostic.ownerHoursPerWeek,
-        input.previousWeek?.actions.map((action) => ({
+        context ? undefined : input.previousWeek?.actions.map((action) => ({
           action: action.action,
           objective: action.objective,
           successMetric: action.successMetric,
@@ -340,6 +405,15 @@ ${retryInstructions}
           getIssuePaths(businessRules.error),
           getIssueMessages(businessRules.error),
         );
+      }
+
+      if (context) {
+        const issues = validateStrategicPlan(businessRules.data, context, Boolean(previousWeek));
+        if (issues.length) {
+          throw new CEOPlanError("semantic", "CEO_PLAN_SEMANTIC_OUTPUT_INVALID",
+            "El plan necesita corregir factibilidad o progresión.",
+            issues.map((issue) => issue.path), issues.map((issue) => issue.message));
+        }
       }
 
       const allocatedHours = businessRules.data.weekly_plan.reduce(
@@ -425,8 +499,38 @@ function getIssueMessages(error: ZodError): string[] {
   return error.issues.map((issue) => issue.message);
 }
 
-function normalizeCEOPlanModelOutput(value: unknown) {
-  const modelOutput = CEOPlanModelSchema.safeParse(value);
+export function validateStrategicPlan(plan: CEOPlan, context: StrategicContext, hasPreviousWeek: boolean) {
+  const issues: Array<{ path: string; message: string }> = [];
+  if (hasPreviousWeek && !plan.strategic_continuity) {
+    issues.push({ path: "strategic_continuity", message: "Explica la continuidad con la semana anterior." });
+  }
+  const evidenceIds = context.recentEvidence.filter((row) => row.certainty !== "unknown").map((row) => row.id);
+  for (const [index, item] of plan.weekly_plan.entries()) {
+    const dependencySequence = item.strategy?.depends_on_sequence;
+    const dependency = dependencySequence ? plan.weekly_plan.find((row) => row.sequence === dependencySequence) : undefined;
+    if (dependencySequence && (!dependency || dependency.sequence >= item.sequence || dependency.role_recommendation === "defer")) {
+      issues.push({ path: `weekly_plan.${index}.strategy.depends_on_sequence`,
+        message: "La dependencia debe apuntar a una acción ejecutable anterior de la misma semana." });
+    }
+    const buildsOffer = dependency && dependency.sequence < item.sequence
+      && dependency.strategy?.intent === "build"
+      && (dependency.strategy.work_key === "offer_definition" || inferWorkKey(dependency.action) === "offer_definition");
+    const resources = buildsOffer ? { ...context.resources, value_proposition: "available" as const } : context.resources;
+    const feasibility = assessFeasibility(item, resources, context.history);
+    if (feasibility.status === "blocked" || feasibility.status === "requires_prerequisite") {
+      issues.push({ path: `weekly_plan.${index}.strategy.requires`,
+        message: `${feasibility.reason} Propón una alternativa viable o el prerrequisito como acción independiente.` });
+    }
+    const progression = validateProgression(item, context.history, evidenceIds, context.targetWeek, Boolean(context.reusableOffer));
+    if (progression) issues.push({ path: `weekly_plan.${index}.strategy.progression`, message: progression });
+    const deliverable = validateActionDeliverable(item);
+    if (deliverable) issues.push({ path: `weekly_plan.${index}.strategy.deliverable`, message: deliverable });
+  }
+  return issues;
+}
+
+function normalizeCEOPlanModelOutput(value: unknown, strategic: boolean) {
+  const modelOutput = (strategic ? StrategicCEOPlanModelSchema : CEOPlanModelSchema).safeParse(value);
   if (!modelOutput.success) {
     return modelOutput;
   }

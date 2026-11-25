@@ -18,6 +18,8 @@ import {
 import { loadBusinessKnowledge } from "@/lib/business-knowledge";
 import { createClient } from "@/lib/supabase/server";
 import { getActionCaptureSchema } from "@/lib/action-capture";
+import { isActionDependencyCompleted, loadOperationalAvailability } from "@/lib/strategic-context-server";
+import { describeResourceCheck, strategyForSequence } from "@/lib/strategic-action";
 import {
   getActionDeliverableExplanation,
   getActionDeliverableTitle,
@@ -45,7 +47,7 @@ export default async function ActionWorkspacePage({
 
   const { data: action, error: actionError } = await supabase
     .from("weekly_actions")
-    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type, capture_schema")
+    .select("id, ceo_plan_id, sequence, action, objective, reason, success_metric, expected_result, status, execution_mode, action_type, capture_schema, role_recommendation")
     .eq("id", actionId)
     .maybeSingle();
 
@@ -55,7 +57,7 @@ export default async function ActionWorkspacePage({
 
   const { data: plan } = await supabase
     .from("ceo_plans")
-    .select("id, business_id, status, executive_summary, diagnosis, priorities")
+    .select("id, business_id, status, executive_summary, diagnosis, priorities, weekly_plan")
     .eq("id", action.ceo_plan_id)
     .maybeSingle();
   const { data: business } = await supabase
@@ -96,6 +98,12 @@ export default async function ActionWorkspacePage({
 
   const result = resultResponse.data;
   const review = reviewResponse.data;
+  const strategy = strategyForSequence(plan.weekly_plan, action.sequence);
+  const [resources, dependencyCompleted] = await Promise.all([
+    loadOperationalAvailability(supabase, business.id, business.description),
+    isActionDependencyCompleted(supabase, plan.id, strategy),
+  ]);
+  const resourceCheck = action.status === "pending" ? describeResourceCheck({ ...action, strategy }, resources, dependencyCompleted) : undefined;
   const businessKnowledge = await loadBusinessKnowledge(business.id);
 
   const isClosed = Boolean(review);
@@ -107,7 +115,7 @@ export default async function ActionWorkspacePage({
           : result.draft_content,
       )
     : null;
-  const canWork = !isClosed && plan.status === "ready" && action.status === "pending" && result?.status !== "approved";
+  const canWork = !isClosed && plan.status === "ready" && action.status === "pending" && result?.status !== "approved" && !resourceCheck?.blocked;
 
   return (
     <main className="ambient-shell min-h-screen px-4 py-8 sm:px-6 lg:px-8">
@@ -124,6 +132,7 @@ export default async function ActionWorkspacePage({
         {pageError && <div className="alert-box mt-6" role="alert">{pageError}</div>}
 
         {isClosed && <div className="soft-status mt-6">Esta semana está cerrada. Este resultado es solo de lectura.</div>}
+        {resourceCheck && <p className="soft-status mt-6">{resourceCheck.detail} <Link className="command-link" href="/business-context">Revisar recursos</Link></p>}
         {result?.status === "approved" && <div className="success-box mt-6">Resultado aprobado</div>}
 
         {!content?.success && canWork && (
@@ -198,7 +207,7 @@ export default async function ActionWorkspacePage({
                 </form>
               </div>
             )}
-            {action.status === "pending" && !isClosed && result?.status === "approved" && (
+            {action.status === "pending" && !isClosed && result?.status === "approved" && !resourceCheck?.blocked && (
               <section className="surface-card mt-6 rounded-[2rem] p-4 sm:p-8">
                 <ActionCompletionForm
                   actionId={action.id}

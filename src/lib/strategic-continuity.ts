@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sameWork } from "./strategic-action";
 
 export const StrategicContinuityModeSchema = z.enum([
   "continuation",
@@ -38,7 +39,10 @@ export function findRepeatedActions(
   );
 
   return nextActions.filter((item) =>
-    previous.has([item.action, item.objective].map(fingerprint).join("|")),
+    previous.has([item.action, item.objective].map(fingerprint).join("|"))
+    || previousActions.some((before) => sameWork(
+      { action: before.action, strategy: null }, { action: item.action, strategy: undefined },
+    )),
   );
 }
 

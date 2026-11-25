@@ -23,6 +23,9 @@ import { BusinessEvolutionCard } from "@/components/business-evolution-card";
 import { BusinessResultsCard } from "@/components/business-results-card";
 import { ExecutionOverview } from "@/components/execution-overview";
 import { buildBusinessAssessment } from "@/lib/business-assessment-adapter";
+import { loadBusinessMemory } from "@/lib/strategic-context-server";
+import { operationalAvailability } from "@/lib/business-memory";
+import { describeResourceCheck, strategyForSequence } from "@/lib/strategic-action";
 import { CommandCenterNavigation } from "@/components/command-center-navigation";
 
 type DashboardPageProps = {
@@ -99,6 +102,7 @@ export default async function DashboardPage({
         team_size,
         owner_hours_per_week,
         owner_responsibilities,
+        main_challenge,
         customers_description,
         sales_process,
         monthly_revenue
@@ -296,8 +300,20 @@ export default async function DashboardPage({
       );
     }
 
-    weeklyActions = (actions ?? []).map((action) => ({
+    const memory = await loadBusinessMemory(supabase, business.id);
+    const resources = operationalAvailability(memory, [
+      business.description, diagnostic.main_challenge, diagnostic.sales_process,
+    ].filter(Boolean).join(". "));
+    weeklyActions = (actions ?? []).map((action) => {
+      const strategy = strategyForSequence(ceoPlan.weekly_plan, action.sequence);
+      return {
       ...action,
+      strategy,
+      resourceCheck: action.status === "pending"
+        ? describeResourceCheck({ action: action.action, role_recommendation: action.role_recommendation, strategy }, resources,
+          !strategy?.depends_on_sequence || (actions ?? []).some((prior) =>
+            prior.sequence === strategy.depends_on_sequence && prior.status === "completed"))
+        : undefined,
       action_results: (Array.isArray(action.action_results)
         ? action.action_results
         : action.action_results
@@ -318,7 +334,8 @@ export default async function DashboardPage({
               content: parsedResult.success ? parsedResult.data : null,
             };
           }),
-    })) as DashboardAction[];
+      };
+    }) as DashboardAction[];
   }
 
   /*

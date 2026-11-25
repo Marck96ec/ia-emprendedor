@@ -1,0 +1,574 @@
+{
+  "application": "http://localhost:3000",
+  "startedAt": "2026-11-25T01:47:21.509Z",
+  "scenarios": {
+    "mantenimiento": {
+      "status": "FAIL",
+      "cycles": [],
+      "stage": "week-1",
+      "error": "El plan de semana 1 quedó en estado failed."
+    },
+    "limpieza": {
+      "status": "FAIL",
+      "cycles": [
+        {
+          "week": 1,
+          "plan": [
+            {
+              "action": "Diseñar un mensaje breve de WhatsApp para ofrecer limpieza a vecinos de los dos barrios.",
+              "reason": "La captación depende de un primer contacto simple y localizado; esto habilita la prueba central de demanda.",
+              "sequence": 1,
+              "strategy": {
+                "intent": "build",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_messages",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "El negocio necesita un texto comercial claro para probar demanda local por WhatsApp.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": null,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Tener un texto claro para iniciar conversaciones locales sin dispersión.",
+              "action_type": "generic",
+              "role_reason": "El dueño debe validar el ángulo comercial porque afecta conversión y aprendizaje directo.",
+              "capture_schema": {
+                "title": "Mensaje local de WhatsApp",
+                "fields": [
+                  {
+                    "id": "target_area",
+                    "type": "text",
+                    "label": "Zona objetivo",
+                    "required": true,
+                    "max_length": 80,
+                    "description": "Barrio o zona específica a la que se dirige el mensaje",
+                    "placeholder": "Barrio A / Barrio B"
+                  },
+                  {
+                    "id": "message_text",
+                    "type": "textarea",
+                    "label": "Texto del mensaje",
+                    "required": true,
+                    "max_length": 800,
+                    "description": "Mensaje final enviado o listo para enviar",
+                    "placeholder": "Escribe el texto completo"
+                  },
+                  {
+                    "id": "main_offer_angle",
+                    "type": "single_select",
+                    "label": "Ángulo principal",
+                    "options": [
+                      {
+                        "label": "Precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "Comodidad a domicilio",
+                        "value": "convenience"
+                      },
+                      {
+                        "label": "Confianza y cuidado",
+                        "value": "trust"
+                      },
+                      {
+                        "label": "Rapidez",
+                        "value": "speed"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué promete o resalta el mensaje"
+                  },
+                  {
+                    "id": "success_criterion",
+                    "type": "textarea",
+                    "label": "Criterio de éxito observado",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué señal mostrará que el mensaje fue claro",
+                    "placeholder": "Ej: respuestas, preguntas, solicitudes de visita"
+                  }
+                ],
+                "version": 1,
+                "description": "Registro del mensaje final usado para contactar vecinos.",
+                "capture_type": "whatsapp_offer_message",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Un mensaje listo con propuesta, zona objetivo y llamada a responder.",
+              "estimated_hours": 1,
+              "expected_result": "Un guion reutilizable que permita abrir conversaciones sin improvisación.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Contactar a una muestra pequeña de vecinos o conocidos de los dos barrios y registrar respuestas.",
+              "reason": "La decisión crítica requiere evidencia real de demanda, no suposiciones.",
+              "sequence": 2,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "commercial_outreach",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La conversación directa es necesaria para validar si la demanda local existe y qué frena el cierre.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 1,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Medir si el mercado local responde al mensaje y qué fricciones aparecen.",
+              "action_type": "generic",
+              "role_reason": "El propietario debe conducir el contacto inicial porque el aprendizaje depende de la conversación directa.",
+              "capture_schema": {
+                "title": "Respuestas del contacto local",
+                "fields": [
+                  {
+                    "id": "contacts_reached",
+                    "max": 50,
+                    "min": 1,
+                    "type": "number",
+                    "label": "Contactos alcanzados",
+                    "required": true,
+                    "description": "Cantidad de personas contactadas"
+                  },
+                  {
+                    "id": "responses",
+                    "type": "repeatable_group",
+                    "label": "Respuestas registradas",
+                    "fields": [
+                      {
+                        "id": "customer_type",
+                        "type": "single_select",
+                        "label": "Tipo de contacto",
+                        "options": [
+                          {
+                            "label": "Vecino",
+                            "value": "neighbor"
+                          },
+                          {
+                            "label": "Conocido",
+                            "value": "acquaintance"
+                          },
+                          {
+                            "label": "Referencia",
+                            "value": "referral"
+                          },
+                          {
+                            "label": "Otro",
+                            "value": "other"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Vecino, conocido u otro"
+                      },
+                      {
+                        "id": "response_type",
+                        "type": "single_select",
+                        "label": "Tipo de respuesta",
+                        "options": [
+                          {
+                            "label": "Interesado",
+                            "value": "interested"
+                          },
+                          {
+                            "label": "Pidió precio",
+                            "value": "asked_price"
+                          },
+                          {
+                            "label": "Pidió detalles",
+                            "value": "asked_details"
+                          },
+                          {
+                            "label": "Sin respuesta",
+                            "value": "no_reply"
+                          },
+                          {
+                            "label": "Rechazó",
+                            "value": "rejected"
+                          }
+                        ],
+                        "required": true,
+                        "description": "Qué pasó con ese contacto"
+                      },
+                      {
+                        "id": "main_objection",
+                        "type": "textarea",
+                        "label": "Objeción principal",
+                        "required": false,
+                        "max_length": 200,
+                        "description": "Si hubo fricción, cuál fue",
+                        "placeholder": "Precio, confianza, tiempo, zona"
+                      }
+                    ],
+                    "required": true,
+                    "max_items": 10,
+                    "min_items": 1,
+                    "description": "Muestra de respuestas relevantes observadas"
+                  }
+                ],
+                "version": 1,
+                "description": "Registro de respuestas obtenidas por WhatsApp o contacto directo.",
+                "capture_type": "local_contact_responses",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Al menos algunas respuestas registradas con tipo de interés o objeción.",
+              "estimated_hours": 2,
+              "expected_result": "Identificar si hay consultas reales y qué obstáculo domina.",
+              "role_recommendation": "execute"
+            },
+            {
+              "action": "Resumir qué tipo de respuesta dominó y decidir si conviene repetir el mismo mensaje o cambiar el ángulo.",
+              "reason": "Sin síntesis, la prueba no se convierte en aprendizaje accionable.",
+              "sequence": 3,
+              "strategy": {
+                "intent": "validate",
+                "requires": [
+                  "whatsapp",
+                  "existing_contacts"
+                ],
+                "work_key": "other",
+                "deliverable": null,
+                "period_week": 1,
+                "progression": "new",
+                "justification": "La síntesis transforma la evidencia en decisión y reduce incertidumbre para la siguiente semana.",
+                "prior_barrier": "unreported",
+                "new_evidence_id": null,
+                "prior_action_id": null,
+                "depends_on_sequence": 2,
+                "completed_prerequisite_id": null
+              },
+              "objective": "Convertir las respuestas en una decisión comercial concreta para la semana siguiente.",
+              "action_type": "generic",
+              "role_reason": "Solo el dueño puede interpretar la señal y decidir el siguiente movimiento comercial.",
+              "capture_schema": {
+                "title": "Síntesis de aprendizaje",
+                "fields": [
+                  {
+                    "id": "dominant_pattern",
+                    "type": "textarea",
+                    "label": "Patrón dominante",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué tipo de respuesta se repitió más",
+                    "placeholder": "Ej: pidieron precio, hubo poco interés, preguntaron por disponibilidad"
+                  },
+                  {
+                    "id": "main_blocker",
+                    "type": "single_select",
+                    "label": "Bloqueo principal",
+                    "options": [
+                      {
+                        "label": "Precio",
+                        "value": "price"
+                      },
+                      {
+                        "label": "Confianza",
+                        "value": "trust"
+                      },
+                      {
+                        "label": "Zona/traslado",
+                        "value": "zone"
+                      },
+                      {
+                        "label": "Claridad de la oferta",
+                        "value": "offer_clarity"
+                      },
+                      {
+                        "label": "Momento o agenda",
+                        "value": "timing"
+                      },
+                      {
+                        "label": "Otro",
+                        "value": "other"
+                      }
+                    ],
+                    "required": true,
+                    "description": "Qué impidió avanzar más"
+                  },
+                  {
+                    "id": "next_decision",
+                    "type": "textarea",
+                    "label": "Siguiente decisión",
+                    "required": true,
+                    "max_length": 300,
+                    "description": "Qué harás la próxima semana según lo aprendido",
+                    "placeholder": "Repetir, cambiar o ampliar el ángulo"
+                  }
+                ],
+                "version": 1,
+                "description": "Resumen de lo observado en los contactos locales.",
+                "capture_type": "response_pattern_summary",
+                "completion_rule": {
+                  "type": "all_required_fields_valid"
+                }
+              },
+              "execution_mode": "manual",
+              "success_metric": "Un resumen con patrón principal, fricción dominante y siguiente decisión.",
+              "estimated_hours": 1,
+              "expected_result": "Claridad sobre si el problema es demanda, oferta o confianza.",
+              "role_recommendation": "execute"
+            }
+          ],
+          "decision": {
+            "question": "¿Debemos priorizar una prueba de captación local por WhatsApp con contactos de los dos barrios, o cambiar primero la oferta para mejorar conversión antes de buscar más contactos?",
+            "rationale": "En este momento el mayor riesgo es seguir sin señal de mercado. Una prueba pequeña y local da evidencia rápida sobre demanda real sin exigir más capacidad de la disponible.",
+            "target_metric": "consultas locales registradas",
+            "expected_outcome": "Obtener consultas reales y distinguir si el límite está en la llegada de clientes o en la claridad de la oferta.",
+            "recommended_direction": "Priorizar una prueba simple de captación local por WhatsApp usando contactos existentes, con mensaje breve y foco geográfico."
+          },
+          "continuity": null,
+          "executions": [
+            {
+              "sequence": 1,
+              "mode": "manual",
+              "completionData": {
+                "target_area": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horar",
+                "message_text": "QA sintético: Hola. ¿Te interesa confirmar el servicio en tu zona y conversar sobre horarios?",
+                "main_offer_angle": "price",
+                "success_criterion": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            },
+            {
+              "sequence": 2,
+              "mode": "manual",
+              "completionData": {
+                "responses": [
+                  {
+                    "customer_type": "neighbor",
+                    "response_type": "interested",
+                    "main_objection": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+                  }
+                ],
+                "contacts_reached": 1
+              }
+            },
+            {
+              "sequence": 3,
+              "mode": "manual",
+              "completionData": {
+                "main_blocker": "price",
+                "next_decision": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+                "dominant_pattern": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              }
+            }
+          ],
+          "review": {
+            "id": "362725cb-0d8d-4242-9dfa-fa6bc3c39446",
+            "outcome_status": "mixed",
+            "decision_learning": {
+              "evidence": [
+                "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada."
+              ],
+              "learning": "QA: separar por barrio y tamaño del mueble para conservar tiempos de traslado.",
+              "hypothesis": "Si enviamos una propuesta local clara a contactos de los dos barrios por WhatsApp, deberían aparecer consultas útiles o al menos señales concretas de interés que aclaren la demanda.",
+              "target_metric": "consultas locales registradas",
+              "observed_result": "QA sintético: dos contactos consultaron por limpieza de sofá. Uno pidió un horario para el sábado en la zona elegida. Todavía no hubo reserva pagada.",
+              "expected_outcome": "Obtener consultas reales y distinguir si el límite está en la llegada de clientes o en la claridad de la oferta.",
+              "decision_question": "¿Debemos priorizar una prueba de captación local por WhatsApp con contactos de los dos barrios, o cambiar primero la oferta para mejorar conversión antes de buscar más contactos?",
+              "hypothesis_status": "inconclusive",
+              "recommended_direction": "Priorizar una prueba simple de captación local por WhatsApp usando contactos existentes, con mensaje breve y foco geográfico."
+            },
+            "completed_actions": 3,
+            "total_actions": 3
+          },
+          "learningMemory": true
+        }
+      ],
+      "stage": "week-2-generation",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720,
+          "usable": 720,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 325,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 335,
+              "bottom": 691,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 632,
+              "bottom": 676,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 720,
+          "scrollWidth": 1280,
+          "clientWidth": 1280
+        },
+        {
+          "width": 1366,
+          "height": 768,
+          "usable": 768,
+          "blocks": {
+            "decision": {
+              "top": 133,
+              "bottom": 325,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 335,
+              "bottom": 691,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 133,
+              "bottom": 351,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 361,
+              "bottom": 603,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 632,
+              "bottom": 676,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 768,
+          "scrollWidth": 1366,
+          "clientWidth": 1366
+        },
+        {
+          "width": 1440,
+          "height": 900,
+          "usable": 900,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 368,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 380,
+              "bottom": 766,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 701,
+              "bottom": 745,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 900,
+          "scrollWidth": 1440,
+          "clientWidth": 1440
+        },
+        {
+          "width": 1920,
+          "height": 1080,
+          "usable": 1080,
+          "blocks": {
+            "decision": {
+              "top": 154,
+              "bottom": 368,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 380,
+              "bottom": 739,
+              "fullyVisible": true
+            },
+            "evolution": {
+              "top": 154,
+              "bottom": 372,
+              "fullyVisible": true
+            },
+            "dna": {
+              "top": 384,
+              "bottom": 626,
+              "fullyVisible": true
+            },
+            "cta": {
+              "top": 674,
+              "bottom": 718,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1080,
+          "scrollWidth": 1920,
+          "clientWidth": 1920
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "usable": 787,
+          "blocks": {
+            "decision": {
+              "top": 163,
+              "bottom": 369,
+              "fullyVisible": true
+            },
+            "execution": {
+              "top": 381,
+              "bottom": 846,
+              "fullyVisible": false
+            },
+            "evolution": {
+              "top": 858,
+              "bottom": 1072,
+              "fullyVisible": false
+            },
+            "dna": {
+              "top": 1084,
+              "bottom": 1326,
+              "fullyVisible": false
+            },
+            "cta": {
+              "top": 737,
+              "bottom": 781,
+              "fullyVisible": true
+            }
+          },
+          "scrollHeight": 1402,
+          "scrollWidth": 390,
+          "clientWidth": 390
+        }
+      ],
+      "error": "El plan de semana 2 quedó en estado failed."
+    }
+  },
+  "finishedAt": "2026-11-25T01:48:36.348Z"
+}

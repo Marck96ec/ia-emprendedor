@@ -21,7 +21,7 @@ export function WeeklyActionBoard({
   review,
   nextWeekNumber,
 }: WeeklyActionBoardProps) {
-  const firstPendingAction = actions.find((action) => action.status === "pending");
+  const firstPendingAction = actions.find((action) => action.status === "pending" && !action.resourceCheck?.blocked);
   const [mobileView, setMobileView] = useState<"actions" | "detail">(initialActionId ? "detail" : "actions");
   const [selectedActionId, setSelectedActionId] = useState(initialActionId);
   const [trackedPendingId, setTrackedPendingId] = useState(firstPendingAction?.id ?? null);

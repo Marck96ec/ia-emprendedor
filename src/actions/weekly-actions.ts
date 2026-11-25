@@ -34,6 +34,8 @@ const COMPLETION_ERROR_MESSAGES: Record<string, string> = {
     "Esta acción tiene un esquema de resultado inválido.",
   ACTION_NOT_FOUND:
     "No encontramos esa acción.",
+  ACTION_DEPENDENCY_PENDING:
+    "Completa primero la acción previa del plan semanal.",
 };
 
 function errorState(message: string, issues?: CompletionIssue[]): ActionCompletionFormState {

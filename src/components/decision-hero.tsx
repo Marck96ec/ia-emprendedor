@@ -46,7 +46,7 @@ export function DecisionHero({
 
   return (
     <section
-      className="rounded-2xl bg-[var(--executive-blue)] p-4 text-white sm:p-5"
+      className="command-decision rounded-2xl bg-[var(--executive-blue)] p-4 text-white sm:p-5"
       aria-labelledby="decision-hero-title"
     >
       <div className="flex items-center justify-between gap-2">

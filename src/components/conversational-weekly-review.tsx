@@ -23,6 +23,7 @@ import {
   OUTCOME_STATUS_LABELS,
   type WeeklyReviewDraft,
 } from "@/lib/weekly-review-types";
+import { assessHypothesis } from "@/lib/decision-learning";
 
 type Choice = {
   value: string;
@@ -336,6 +337,11 @@ export function ConversationalWeeklyReview({
   const isSubmitting =
     submissionState === "saving" ||
     submissionState === "preparing";
+  const evidenceAssessment = answers.hypothesis_status && answers.evidence && answers.observed_result
+    ? assessHypothesis({
+        reported: answers.hypothesis_status, evidence: answers.evidence, observedResult: answers.observed_result,
+      })
+    : null;
 
   async function startPreparation() {
     setSubmissionState("preparing");
@@ -540,6 +546,11 @@ export function ConversationalWeeklyReview({
                     </div>
                   ))}
                 </div>
+                {evidenceAssessment?.reason && (
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950" role="status">
+                    {evidenceAssessment.reason} Puedes editar la evidencia o guardar tu percepción. El siguiente plan tratará la hipótesis como inconclusa.
+                  </p>
+                )}
                 {submissionState === "preparing" ? (
                   <PlanGenerationExperience
                     businessName={businessName}

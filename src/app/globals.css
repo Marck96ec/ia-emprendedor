@@ -291,6 +291,57 @@ body:has(.command-shell)::before {
   }
 }
 
+@media (min-width: 1100px) and (max-height: 820px) {
+  .command-shell {
+    padding-block: 0.625rem;
+  }
+
+  .command-shell > main > header {
+    min-height: 3.25rem;
+  }
+
+  .command-shell > main > .success-box {
+    padding-block: 0.5rem;
+  }
+
+  .command-grid,
+  .command-stack {
+    gap: 0.625rem;
+  }
+
+  .command-decision,
+  .command-execution {
+    padding: 0.875rem;
+  }
+
+  .command-decision h2 {
+    font-size: 1.5rem;
+  }
+
+  .command-execution > header {
+    padding-bottom: 0.5rem;
+  }
+
+  .command-execution > header h2 {
+    font-size: 1.25rem;
+  }
+
+  .command-execution > div {
+    padding-top: 0.5rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .command-execution-cta {
+    row-gap: 0.25rem;
+    padding-top: 0.5rem;
+  }
+
+  .command-execution > header {
+    padding-bottom: 0.5rem;
+  }
+}
+
 .form-field {
   width: 100%;
   min-height: 48px;
