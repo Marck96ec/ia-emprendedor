@@ -42,7 +42,7 @@ test("una observación cualitativa concreta puede sostener una hipótesis", () =
 import { buildStrategicContext } from "../src/lib/strategic-context";
 import type { MemoryRecord } from "../src/lib/business-memory";
 import {
-  assessFeasibility, commercialDeliverableFor, normalizeActionStrategy, validateActionDeliverable, validateProgression,
+  assessFeasibility, commercialDeliverableFor, normalizeActionStrategy, sameWork, validateActionDeliverable, validateProgression,
   type ActionStrategy, type HistoricalAction,
 } from "../src/lib/strategic-action";
 
@@ -349,5 +349,71 @@ test("el seguimiento de cobros enruta textos de cobro y nunca fichas de oferta",
   assert.equal(commercialDeliverableFor(title, scripted.strategy), "commercial_messages");
   assert.match(validateActionDeliverable(scripted) ?? "", /cobros/);
   assert.equal(validateActionDeliverable({ ...scripted, strategy: { ...scripted.strategy, deliverable: "commercial_messages" } }), null);
+});
+
+// --- Recurrencia semántica: sameWork y validateProgression ---
+
+test("sameWork detecta equivalencia semántica por superposición alta de palabras objetivo", () => {
+  const histAction = {
+    action: "Contactar propietarios de talleres mecánicos para presentar el servicio de inventario",
+    strategy: strategy({ work_key: "commercial_outreach", intent: "execute" }),
+  };
+  // Mismo grupo objetivo, distinto orden y palabras auxiliares → superposición 6/6 palabras clave
+  const equiv = {
+    action: "Presentar el servicio de inventario a propietarios de talleres mecánicos del norte",
+    strategy: strategy({ work_key: "commercial_outreach", intent: "execute" }),
+  };
+  assert.equal(sameWork(histAction, equiv), true);
+});
+
+test("sameWork permite scope genuinamente nuevo cuando el grupo objetivo no comparte palabras", () => {
+  const histAction = {
+    action: "Contactar propietarios de talleres mecánicos para presentar el servicio de inventario",
+    strategy: strategy({ work_key: "commercial_outreach", intent: "execute" }),
+  };
+  // Segmento diferente (restaurantes ≠ talleres) → superposición 3/6 < 0.67 umbral
+  const newScope = {
+    action: "Presentar el servicio de inventario a dueños de restaurantes del sector gastronómico",
+    strategy: strategy({ work_key: "commercial_outreach", intent: "execute" }),
+  };
+  assert.equal(sameWork(histAction, newScope), false);
+});
+
+test("sameWork bloquea cashflow_update independientemente del título por regla especial", () => {
+  const hist = {
+    action: "Actualizar flujo de caja con movimientos de esta semana",
+    strategy: strategy({ work_key: "cashflow_update", intent: "maintain" }),
+  };
+  const differentWording = {
+    action: "Registrar ingresos y egresos del mes para actualizar proyección de caja",
+    strategy: strategy({ work_key: "cashflow_update", intent: "maintain" }),
+  };
+  assert.equal(sameWork(hist, differentWording), true);
+});
+
+test("validateProgression bloquea acción semánticamente equivalente declarada como nueva y permite scope diferente", () => {
+  const completed: HistoricalAction = {
+    id: uuid(70), week: 1, status: "completed",
+    result: "Contacto realizado con 5 propietarios",
+    action: "Contactar propietarios de talleres mecánicos para presentar el servicio de inventario",
+    objective: "Conseguir primera cita",
+    strategy: strategy({ work_key: "commercial_outreach", intent: "execute", period_week: 1 }),
+  };
+  // Acción semánticamente equivalente declarada como nueva → bloqueada
+  assert.match(
+    validateProgression(candidate(
+      "Presentar el servicio de inventario a propietarios de talleres mecánicos del norte",
+      { work_key: "commercial_outreach", intent: "execute", progression: "new", prior_action_id: null },
+    ), [completed], [], 2, false) ?? "",
+    /trabajo ya existe/,
+  );
+  // Scope genuinamente nuevo (segmento diferente) → pasa
+  assert.equal(
+    validateProgression(candidate(
+      "Presentar el servicio de inventario a dueños de restaurantes del sector gastronómico",
+      { work_key: "commercial_outreach", intent: "execute", progression: "new", prior_action_id: null },
+    ), [completed], [], 2, false),
+    null,
+  );
 });
 

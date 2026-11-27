@@ -421,7 +421,11 @@ async function scenarioRun(browser, scenario) {
   } finally {
     save();
     if (context) await context.close();
-    await testHelpers.deleteTestUser(admin, user);
+    if (process.env.QA_PRESERVE_CHECKPOINT) {
+      console.log(scenario.key, "QA_PRESERVE_CHECKPOINT: datos del usuario conservados para diagnóstico. Ejecutar limpieza manual con QA_CLEANUP_USER=" + user.id + " cuando ya no sea necesario.");
+    } else {
+      await testHelpers.deleteTestUser(admin, user);
+    }
   }
 }
 

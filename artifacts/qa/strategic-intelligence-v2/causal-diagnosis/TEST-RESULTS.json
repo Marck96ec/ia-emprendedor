@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-25",
+  "phase": "v2.6 causal diagnosis",
+  "command": "npm test",
+  "results": {
+    "total": 196,
+    "pass": 192,
+    "fail": 0,
+    "skip": 4,
+    "todo": 0
+  },
+  "supabase_integration_tests": {
+    "enabled": false,
+    "note": "SUPABASE_LOCAL_TESTS=1 enables 4 Supabase integration tests that are skipped by default"
+  },
+  "new_tests_added_v2_6": [
+    {
+      "name": "sameWork detecta equivalencia semántica por superposición alta de palabras objetivo",
+      "category": "semantic-recurrence",
+      "covers": "commercial_outreach same segment, different wording → sameWork returns true"
+    },
+    {
+      "name": "sameWork permite scope genuinamente nuevo cuando el grupo objetivo no comparte palabras",
+      "category": "semantic-recurrence",
+      "covers": "commercial_outreach different segment → sameWork returns false"
+    },
+    {
+      "name": "sameWork bloquea cashflow_update independientemente del título por regla especial",
+      "category": "semantic-recurrence",
+      "covers": "cashflow_update unconditional block by special rule at strategic-action.ts:115"
+    },
+    {
+      "name": "validateProgression bloquea acción semánticamente equivalente declarada como nueva y permite scope diferente",
+      "category": "semantic-recurrence",
+      "covers": "end-to-end: semantic equivalent blocked with 'trabajo ya existe'; genuine new scope returns null"
+    }
+  ],
+  "code_changes_v2_6": [
+    {
+      "file": "artifacts/qa/strategic-intelligence-v2/reliability/e2e-local.mjs",
+      "change": "Added QA_PRESERVE_CHECKPOINT env var support — skips deleteTestUser and logs user ID for manual cleanup"
+    },
+    {
+      "file": "tests/strategic-intelligence.test.ts",
+      "change": "Added sameWork to imports; added 4 semantic recurrence tests"
+    }
+  ],
+  "typecheck": "not run in this phase (no src/ changes)",
+  "lint": "not run in this phase (no src/ changes)"
+}
