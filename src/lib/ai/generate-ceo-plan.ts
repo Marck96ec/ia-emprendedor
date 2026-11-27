@@ -1,4 +1,3 @@
-import { readFileSync, writeFileSync } from "node:fs";
 import { run } from "@openai/agents";
 import { ZodError } from "zod";
 
@@ -23,6 +22,7 @@ import type { StrategicContinuity } from "../strategic-continuity";
 import type { BusinessAssessment } from "../business-assessment";
 import type { StrategicContext } from "../strategic-context";
 import { assessFeasibility, inferredIntent, inferWorkKey, normalizeActionStrategy, validateActionDeliverable, validateProgression } from "../strategic-action";
+import { consumeBudget } from "./provider-budget";
 
 const MAX_GENERATION_ATTEMPTS = 2;
 
@@ -66,21 +66,6 @@ const defaultCEOPlanRunner: CEOPlanRunner = async (
   agent,
   prompt,
 ) => {
-  const budgetFile = process.env.CEO_PLAN_API_BUDGET_FILE;
-  if (budgetFile) {
-    let budget: { limit: number; used: number };
-    try {
-      budget = JSON.parse(readFileSync(budgetFile, "utf8"));
-    } catch {
-      budget = { limit: 0, used: 0 };
-    }
-    if (budget.used >= budget.limit) {
-      throw new Error(
-        `CEO_PLAN_API_BUDGET_EXHAUSTED: Presupuesto de ${budget.limit} llamadas agotado (${budget.used} usadas). No se realizará la solicitud.`,
-      );
-    }
-    writeFileSync(budgetFile, JSON.stringify({ ...budget, used: budget.used + 1 }));
-  }
   let rejected: CEOPlanRunResult | undefined;
   try {
     return await run(agent, prompt, {
@@ -231,6 +216,7 @@ export async function generateCEOPlan(
       inputTokens: usage?.reduce((total, response) => total + (response.usage?.inputTokens ?? 0), 0) ?? null,
       outputTokens: usage?.reduce((total, response) => total + (response.usage?.outputTokens ?? 0), 0) ?? null,
     });
+    consumeBudget("ceo-plan");
     try {
       const retryInstructions =
         attempt === 1 || input.strategicContext

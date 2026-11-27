@@ -417,3 +417,158 @@ test("validateProgression bloquea acción semánticamente equivalente declarada 
   );
 });
 
+// --- Presupuesto de proveedor compartido ---
+
+import { writeFileSync, readFileSync as readFS } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { consumeBudget } from "../src/lib/ai/provider-budget";
+import { generateCEOPlan, type GenerateCEOPlanInput, type CEOPlanRunner } from "../src/lib/ai/generate-ceo-plan";
+import { CEOPlanError } from "../src/lib/ai/ceo-plan-errors";
+
+function tempBudgetPath(name: string): string {
+  return join(tmpdir(), `qa-budget-${name}-${Date.now()}.json`);
+}
+
+test("consumeBudget bloquea cuando el presupuesto está agotado", () => {
+  const p = tempBudgetPath("exhausted");
+  writeFileSync(p, JSON.stringify({ limit: 2, used: 2 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  try {
+    assert.throws(() => consumeBudget("test"), /PROVIDER_API_BUDGET_EXHAUSTED/);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("consumeBudget permite cuando hay capacidad restante y actualiza el contador", () => {
+  const p = tempBudgetPath("capacity");
+  writeFileSync(p, JSON.stringify({ limit: 5, used: 3 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  try {
+    assert.doesNotThrow(() => consumeBudget("test"));
+    const updated = JSON.parse(readFS(p, "utf8"));
+    assert.equal(updated.used, 4);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("consumeBudget con archivo inexistente bloquea como fallback seguro", () => {
+  process.env.PROVIDER_API_BUDGET_FILE = join(tmpdir(), "nonexistent-budget-file-qa.json");
+  try {
+    assert.throws(() => consumeBudget("test"), /PROVIDER_API_BUDGET_EXHAUSTED/);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("consumeBudget sin configuración permite llamadas en modo producción", () => {
+  const prev = { a: process.env.PROVIDER_API_BUDGET_FILE, b: process.env.CEO_PLAN_API_BUDGET_FILE, c: process.env.QA_MODE };
+  delete process.env.PROVIDER_API_BUDGET_FILE;
+  delete process.env.CEO_PLAN_API_BUDGET_FILE;
+  delete process.env.QA_MODE;
+  try {
+    assert.doesNotThrow(() => consumeBudget("test"));
+  } finally {
+    if (prev.a !== undefined) process.env.PROVIDER_API_BUDGET_FILE = prev.a;
+    if (prev.b !== undefined) process.env.CEO_PLAN_API_BUDGET_FILE = prev.b;
+    if (prev.c !== undefined) process.env.QA_MODE = prev.c;
+  }
+});
+
+test("consumeBudget con QA_MODE y sin archivo de configuración falla de forma segura", () => {
+  const prev = { a: process.env.PROVIDER_API_BUDGET_FILE, b: process.env.CEO_PLAN_API_BUDGET_FILE };
+  delete process.env.PROVIDER_API_BUDGET_FILE;
+  delete process.env.CEO_PLAN_API_BUDGET_FILE;
+  process.env.QA_MODE = "1";
+  try {
+    assert.throws(() => consumeBudget("test"), /PROVIDER_API_BUDGET_MISSING/);
+  } finally {
+    delete process.env.QA_MODE;
+    if (prev.a !== undefined) process.env.PROVIDER_API_BUDGET_FILE = prev.a;
+    if (prev.b !== undefined) process.env.CEO_PLAN_API_BUDGET_FILE = prev.b;
+  }
+});
+
+test("generateCEOPlan respeta el presupuesto y no llama al runner cuando está agotado", async () => {
+  const p = tempBudgetPath("ceo-block");
+  writeFileSync(p, JSON.stringify({ limit: 0, used: 0 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  process.env.OPENAI_API_KEY = "sk-test-budget";
+  let runnerCalls = 0;
+  const mockRunner: CEOPlanRunner = async () => {
+    runnerCalls += 1;
+    return { finalOutput: null, rawResponses: [] };
+  };
+  const minimalInput: GenerateCEOPlanInput = {
+    business: { name: "Test", revenueModel: "Test", description: null },
+    diagnostic: { businessStage: "starting", teamSize: 1, ownerHoursPerWeek: 10, mainChallenge: "Test", primaryGoal: "Test", customersDescription: "Test", salesProcess: "Test", ownerResponsibilities: "Test", monthlyRevenue: null, currencyCode: "USD" },
+    previousWeek: null,
+    businessKnowledge: { valueProposition: null },
+  };
+  try {
+    await assert.rejects(generateCEOPlan(minimalInput, mockRunner), /PROVIDER_API_BUDGET_EXHAUSTED/);
+    assert.equal(runnerCalls, 0);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+// --- Pipeline con fixtures sintéticos ---
+
+test("pipeline agota reintentos tras dos rechazos semánticos", async () => {
+  const p = tempBudgetPath("pipeline-semantic");
+  writeFileSync(p, JSON.stringify({ limit: 10, used: 0 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  process.env.OPENAI_API_KEY = "sk-test-fixture";
+  let runnerCalls = 0;
+  const mockRunner: CEOPlanRunner = async () => {
+    runnerCalls += 1;
+    return {
+      rawResponses: [],
+      outputError: {
+        error: new CEOPlanError("semantic", "CEO_PLAN_SEMANTIC_OUTPUT_INVALID", "El plan excede la capacidad semanal."),
+        candidate: null,
+      },
+    };
+  };
+  const input: GenerateCEOPlanInput = {
+    business: { name: "Test", revenueModel: "Test", description: null },
+    diagnostic: { businessStage: "starting", teamSize: 1, ownerHoursPerWeek: 4, mainChallenge: "Test", primaryGoal: "Test", customersDescription: "Test", salesProcess: "Test", ownerResponsibilities: "Test", monthlyRevenue: null, currencyCode: "USD" },
+    previousWeek: null,
+    businessKnowledge: { valueProposition: null },
+  };
+  try {
+    await assert.rejects(generateCEOPlan(input, mockRunner));
+    assert.equal(runnerCalls, 2);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("pipeline con proveedor que falla lanza error recuperable", async () => {
+  const p = tempBudgetPath("pipeline-provider-fail");
+  writeFileSync(p, JSON.stringify({ limit: 10, used: 0 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  process.env.OPENAI_API_KEY = "sk-test-fixture";
+  const mockRunner: CEOPlanRunner = async () => {
+    throw new Error("Network error: timeout");
+  };
+  const input: GenerateCEOPlanInput = {
+    business: { name: "Test", revenueModel: "Test", description: null },
+    diagnostic: { businessStage: "starting", teamSize: 1, ownerHoursPerWeek: 10, mainChallenge: "Test", primaryGoal: "Test", customersDescription: "Test", salesProcess: "Test", ownerResponsibilities: "Test", monthlyRevenue: null, currencyCode: "USD" },
+    previousWeek: null,
+    businessKnowledge: { valueProposition: null },
+  };
+  try {
+    await assert.rejects(generateCEOPlan(input, mockRunner), (err: unknown) => {
+      assert.ok(err instanceof CEOPlanError);
+      assert.equal(err.kind, "transient");
+      return true;
+    });
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+

@@ -6,6 +6,7 @@ import {
 } from "./action-deliverables";
 import type { ValueProposition } from "./value-proposition-agent";
 import { commercialMessagesAgent } from "./commercial-messages-agent";
+import { consumeBudget } from "./provider-budget";
 
 export type CommercialMessagesContext = {
   business: {
@@ -78,6 +79,7 @@ export async function generateCommercialMessages(
     throw new Error("OPENAI_API_KEY no está configurada");
   }
 
+  consumeBudget("commercial-messages");
   const result = await run(
     commercialMessagesAgent,
     buildCommercialMessagesPrompt(context),

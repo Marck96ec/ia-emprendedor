@@ -4,6 +4,7 @@ import {
   valuePropositionAgent,
   type ValueProposition,
 } from "@/lib/ai/value-proposition-agent";
+import { consumeBudget } from "./provider-budget";
 
 export type ValuePropositionContext = {
   business: {
@@ -47,6 +48,7 @@ export async function generateValueProposition(
     throw new Error("OPENAI_API_KEY no está configurada");
   }
 
+  consumeBudget("value-proposition");
   const result = await run(
     valuePropositionAgent,
     `

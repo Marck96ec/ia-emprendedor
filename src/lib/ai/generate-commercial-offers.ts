@@ -6,6 +6,7 @@ import {
 } from "./action-deliverables";
 import type { ValueProposition } from "./value-proposition-agent";
 import { commercialOffersAgent } from "./commercial-offers-agent";
+import { consumeBudget } from "./provider-budget";
 
 export type CommercialOffersContext = {
   business: {
@@ -79,6 +80,7 @@ export async function generateCommercialOffers(
     throw new Error("OPENAI_API_KEY no está configurada");
   }
 
+  consumeBudget("commercial-offers");
   const result = await run(
     commercialOffersAgent,
     buildCommercialOffersPrompt(context),

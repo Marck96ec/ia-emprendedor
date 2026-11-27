@@ -350,7 +350,10 @@ async function responsive(page, scenario, log) {
 }
 
 async function scenarioRun(browser, scenario) {
-  const result = { status: "RUNNING", cycles: [], stage: "setup" };
+  const startWeek = process.env.QA_START_WEEK ? parseInt(process.env.QA_START_WEEK, 10) : 1;
+  const result = { status: "RUNNING", cycles: [], stage: "setup",
+    checkpoint: { scenarioKey: scenario.key, startWeek, resumedFrom: startWeek > 1 ? startWeek : null,
+      traceRef: "CEO_PLAN_TRACE correlationId available in server stderr" } };
   evidence.scenarios[scenario.key] = result;
   const user = await testHelpers.createTestUser(admin, config, "reliability-" + scenario.key);
   let context;
@@ -385,6 +388,18 @@ async function scenarioRun(browser, scenario) {
     await page.getByRole("link", { name: "Volver al centro de dirección" }).click();
     for (let week = 1; week <= 4; week++) {
       result.stage = "week-" + week;
+      if (week < startWeek) {
+        const existing = await data(user.client.from("ceo_plans")
+          .select("id,week_number,status,weekly_plan,strategic_diagnosis,strategic_continuity,prompt_version")
+          .eq("business_id", q.business).eq("week_number", week).eq("status", "ready").maybeSingle());
+        if (existing) {
+          plan = existing;
+          result.cycles.push({ week, skipped: true, plan: existing.weekly_plan });
+          result.stage = "week-" + (week + 1) + "-generation";
+          console.log(scenario.key, "QA_START_WEEK: semana " + week + " ya existe, saltando.");
+          continue;
+        }
+      }
       const log = { week, plan: plan.weekly_plan, decision: plan.strategic_diagnosis.critical_decision,
         continuity: plan.strategic_continuity, executions: [] };
       result.cycles.push(log);

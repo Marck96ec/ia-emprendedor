@@ -1,5 +1,6 @@
 import { run } from "@openai/agents";
 import type { HostedToolCallItem } from "@openai/agents";
+import { consumeBudget } from "./provider-budget";
 
 import type { DecisionHypothesis } from "../decision-learning";
 import type { StrategicDiagnosis } from "./ceo-agent";
@@ -43,8 +44,10 @@ export type EvidenceAgentRunner = (
   prompt: string,
 ) => Promise<EvidenceRunResult>;
 
-const defaultEvidenceAgentRunner: EvidenceAgentRunner = (prompt) =>
-  run(evidenceAgent, prompt) as Promise<EvidenceRunResult>;
+const defaultEvidenceAgentRunner: EvidenceAgentRunner = (prompt) => {
+  consumeBudget("external-evidence");
+  return run(evidenceAgent, prompt) as Promise<EvidenceRunResult>;
+};
 
 export async function generateExternalEvidence(
   input: GenerateExternalEvidenceInput,
