@@ -781,11 +781,22 @@ function normalizeCEOPlanModelOutput(value: unknown, strategic: boolean) {
 
   const {
     strategic_continuity: strategicContinuity,
-    ...planWithoutContinuity
+    time_allocation: timeAllocationModel,
+    ...planWithoutAllocation
   } = modelOutput.data;
 
+  // Hour fields are compiled by TypeScript; inject placeholder values so CEOPlanSchema
+  // validation passes. The actual values are overwritten in generateCEOPlan before return.
+  const time_allocation = {
+    available_hours: timeAllocationModel.available_hours ?? 0,
+    allocated_hours: timeAllocationModel.allocated_hours ?? 0,
+    reserved_hours: timeAllocationModel.reserved_hours ?? 0,
+    rationale: timeAllocationModel.rationale,
+  };
+
   return CEOPlanSchema.safeParse({
-    ...planWithoutContinuity,
+    ...planWithoutAllocation,
+    time_allocation,
     ...(strategicContinuity === null
       ? {}
       : { strategic_continuity: strategicContinuity }),

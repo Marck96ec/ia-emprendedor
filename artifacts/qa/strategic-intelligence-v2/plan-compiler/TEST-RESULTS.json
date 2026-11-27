@@ -1,0 +1,85 @@
+{
+  "phase": "plan-compiler-v2.7",
+  "date": "2026-11-26",
+  "branch": "feature/strategic-intelligence-v2",
+  "runner": "node --test",
+  "command": "npm test",
+  "summary": {
+    "total": 207,
+    "passed": 203,
+    "failed": 0,
+    "skipped": 4,
+    "skippedReason": "Supabase integration tests require SUPABASE_LOCAL_TESTS=1",
+    "durationMs": 24888
+  },
+  "newTests": [
+    {
+      "name": "consumeBudget bloquea cuando el presupuesto está agotado",
+      "result": "pass",
+      "durationMs": 4.2
+    },
+    {
+      "name": "consumeBudget permite cuando hay capacidad restante y actualiza el contador",
+      "result": "pass",
+      "durationMs": 5.3
+    },
+    {
+      "name": "consumeBudget con archivo inexistente bloquea como fallback seguro",
+      "result": "pass",
+      "durationMs": 1.4
+    },
+    {
+      "name": "consumeBudget sin configuración permite llamadas en modo producción",
+      "result": "pass",
+      "durationMs": 0.4
+    },
+    {
+      "name": "consumeBudget con QA_MODE y sin archivo de configuración falla de forma segura",
+      "result": "pass",
+      "durationMs": 0.4
+    },
+    {
+      "name": "generateCEOPlan respeta el presupuesto y no llama al runner cuando está agotado",
+      "result": "pass",
+      "durationMs": 10.3
+    },
+    {
+      "name": "pipeline agota reintentos tras dos rechazos semánticos",
+      "result": "pass",
+      "durationMs": 6.5
+    },
+    {
+      "name": "pipeline con proveedor que falla lanza error recuperable",
+      "result": "pass",
+      "durationMs": 3.6
+    },
+    {
+      "name": "generateCEOPlan sobreescribe time_allocation con valores calculados por TypeScript",
+      "result": "pass",
+      "durationMs": 34.6
+    },
+    {
+      "name": "consumeBudget rechaza valores no numéricos o negativos en el archivo de presupuesto",
+      "result": "pass",
+      "durationMs": 1.2
+    },
+    {
+      "name": "consumeBudget falla cuando no puede adquirir el bloqueo (lock ya existe)",
+      "result": "pass",
+      "durationMs": 110.0
+    }
+  ],
+  "supabaseIntegration": {
+    "status": "skipped",
+    "tests": [
+      "La evidencia de acciones se valida en Supabase y la tabla no admite escrituras directas",
+      "El validador de PostgreSQL coincide con el de TypeScript en los fixtures compartidos",
+      "Supabase local conserva memoria antigua, registra cambios y aísla a dos propietarios",
+      "CEO plan RPC en Supabase local protege propietarios, estados y atomicidad"
+    ]
+  },
+  "providerCalls": 0,
+  "typecheckResult": "clean",
+  "previousTotal": 196,
+  "delta": 11
+}

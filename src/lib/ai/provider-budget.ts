@@ -4,6 +4,10 @@ function getBudgetFile(): string | null {
   return process.env.PROVIDER_API_BUDGET_FILE ?? process.env.CEO_PLAN_API_BUDGET_FILE ?? null;
 }
 
+function sleepSync(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 function tryAcquireLock(lockPath: string): boolean {
   try {
     const fd = openSync(lockPath, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL);
@@ -26,11 +30,17 @@ function withBudgetLock(budgetFile: string, fn: () => void): void {
       acquired = true;
       break;
     }
+    sleepSync(20);
+  }
+  if (!acquired) {
+    throw new Error(
+      "PROVIDER_API_BUDGET_LOCK_FAILED: No se pudo adquirir el bloqueo del presupuesto tras 5 intentos. Intento concurrente detectado. No se realizará la solicitud.",
+    );
   }
   try {
     fn();
   } finally {
-    if (acquired) releaseLock(lockPath);
+    releaseLock(lockPath);
   }
 }
 
@@ -49,7 +59,13 @@ export function consumeBudget(caller: string): void {
   withBudgetLock(budgetFile, () => {
     let budget: { limit: number; used: number };
     try {
-      budget = JSON.parse(readFileSync(budgetFile, "utf8"));
+      const raw = readFileSync(budgetFile, "utf8");
+      budget = JSON.parse(raw);
+      if (typeof budget.limit !== "number" || typeof budget.used !== "number"
+        || !Number.isFinite(budget.limit) || !Number.isFinite(budget.used)
+        || budget.limit < 0 || budget.used < 0) {
+        budget = { limit: 0, used: 0 };
+      }
     } catch {
       budget = { limit: 0, used: 0 };
     }
@@ -60,10 +76,14 @@ export function consumeBudget(caller: string): void {
       );
     }
 
-    const updated = { ...budget, used: budget.used + 1 };
+    const updated = { limit: budget.limit, used: budget.used + 1 };
     try {
       writeFileSync(budgetFile, JSON.stringify(updated));
-    } catch {}
+    } catch (writeError) {
+      throw new Error(
+        `PROVIDER_API_BUDGET_WRITE_FAILED: No se pudo persistir el consumo del presupuesto [${caller}]: ${String(writeError)}`,
+      );
+    }
 
     console.error("PROVIDER_BUDGET_LOG", JSON.stringify({
       caller,

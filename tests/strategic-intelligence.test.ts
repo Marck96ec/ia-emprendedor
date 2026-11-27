@@ -419,7 +419,7 @@ test("validateProgression bloquea acción semánticamente equivalente declarada 
 
 // --- Presupuesto de proveedor compartido ---
 
-import { writeFileSync, readFileSync as readFS } from "node:fs";
+import { writeFileSync, readFileSync as readFS, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { consumeBudget } from "../src/lib/ai/provider-budget";
@@ -569,6 +569,106 @@ test("pipeline con proveedor que falla lanza error recuperable", async () => {
     });
   } finally {
     delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+// --- Plan Compiler: time_allocation derivada por TypeScript ---
+
+
+
+test("generateCEOPlan sobreescribe time_allocation con valores calculados por TypeScript", async () => {
+  const p = tempBudgetPath("plan-compiler-hours");
+  writeFileSync(p, JSON.stringify({ limit: 10, used: 0 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  process.env.OPENAI_API_KEY = "sk-test-fixture";
+  // Build a full valid model output with WRONG hour values to verify TypeScript overwrites them.
+  const capture_schema = {
+    version: 1 as const, capture_type: "generic_capture",
+    title: "Resultado de la acción", description: null,
+    fields: [{ id: "resultado", label: "Resultado observado", type: "text" as const, required: true, placeholder: null, max_length: null, description: null }],
+    completion_rule: { type: "all_required_fields_valid" as const },
+  };
+  const strategic_diagnosis = {
+    business_understanding: { business_model: "Servicios", revenue_engine: "Recomendaciones", primary_customer: "Hogares", current_goal: "Primeros ingresos", owner_involvement: "Todo", current_context: "Inicio" },
+    diagnosis: { summary: "Problema de adquisición", affected_area: "demand" as const, why_it_matters: "Sin clientes no hay ingresos" },
+    bottleneck: { area: "Adquisición", description: "Sin clientes", affected_metric: "Número de clientes" },
+    evidence: [{ fact: "Sin clientes registrados", source_field: "diagnostic.mainChallenge" as const, interpretation: "El desafío principal lo confirma" }],
+    confidence: "medium" as const, unknowns: ["Interés real del mercado"],
+    alternative_hypothesis: { hypothesis: "El problema es de precio", what_would_confirm_it: "Que descuentos generen conversión" },
+    critical_decision: { question: "¿Cómo conseguir el primer cliente?", recommended_direction: "Contacto directo", rationale: "Es el canal más directo", expected_outcome: "1 primer cliente", target_metric: "Número de clientes" },
+  };
+  const mockRunner: CEOPlanRunner = async () => ({
+    rawResponses: [],
+    finalOutput: {
+      executive_summary: "Resumen ejecutivo de prueba", diagnosis: "Sin clientes disponibles todavía",
+      strategic_diagnosis,
+      decision_hypothesis: { statement: "Si contactamos directamente conseguiremos el primer cliente", validation_signal: "1 cita concretada" },
+      strategic_continuity: null,
+      priorities: [
+        { rank: 1, title: "Conseguir primer cliente", reason: "Sin cliente no hay negocio", expected_impact: "Validar modelo" },
+        { rank: 2, title: "Definir oferta clara", reason: "Para poder comunicar", expected_impact: "Facilitar la venta" },
+        { rank: 3, title: "Registrar aprendizaje", reason: "Para iterar", expected_impact: "Mejora continua" },
+      ],
+      time_allocation: {
+        available_hours: 999,  // WRONG value — TypeScript must overwrite with ownerHoursPerWeek=10
+        allocated_hours: 999,  // WRONG value — TypeScript must overwrite with sum of estimated_hours=3
+        reserved_hours: 999,   // WRONG value — TypeScript must overwrite with 10-3=7
+        rationale: "Razonamiento del AI sobre la distribución de tiempo.",
+      },
+      weekly_plan: [
+        {
+          sequence: 1, action: "Contactar clientes potenciales", objective: "Conseguir primera señal de interés",
+          reason: "Es la acción más directa para el diagnóstico de adquisición", success_metric: "1 respuesta recibida",
+          expected_result: "Aprendizaje sobre interés real del mercado", role_recommendation: "execute" as const,
+          role_reason: "Requiere criterio estratégico del propietario", estimated_hours: 3,
+          execution_mode: "manual" as const, action_type: "generic" as const,
+          capture_schema,
+          strategy: { work_key: "commercial_outreach" as const, intent: "execute" as const, requires: [], completed_prerequisite_id: null, progression: "new" as const, prior_action_id: null, justification: "Primer contacto", prior_barrier: null, new_evidence_id: null, period_week: null, deliverable: null },
+        },
+      ],
+    },
+  });
+  const input: GenerateCEOPlanInput = {
+    business: { name: "Test Business", revenueModel: "Servicios a hogares", description: null },
+    diagnostic: { businessStage: "starting", teamSize: 1, ownerHoursPerWeek: 10, mainChallenge: "Conseguir clientes", primaryGoal: "Primeros ingresos", customersDescription: "Hogares", salesProcess: "Recomendaciones", ownerResponsibilities: "Todo", monthlyRevenue: null, currencyCode: "USD" },
+    previousWeek: null,
+    businessKnowledge: { valueProposition: null },
+  };
+  try {
+    const plan = await generateCEOPlan(input, mockRunner);
+    assert.equal(plan.time_allocation.available_hours, 10, "available_hours debe ser ownerHoursPerWeek=10, no 999");
+    assert.equal(plan.time_allocation.allocated_hours, 3, "allocated_hours debe ser suma de estimated_hours=3, no 999");
+    assert.equal(plan.time_allocation.reserved_hours, 7, "reserved_hours debe ser 10-3=7, no 999");
+    assert.equal(plan.time_allocation.rationale, "Razonamiento del AI sobre la distribución de tiempo.", "rationale del AI se conserva");
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("consumeBudget rechaza valores no numéricos o negativos en el archivo de presupuesto", () => {
+  const p = tempBudgetPath("invalid-budget");
+  // Invalid: limit is a string
+  writeFileSync(p, JSON.stringify({ limit: "ten", used: 0 }));
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  try {
+    // Invalid config → safe default {limit:0,used:0} → exhausted
+    assert.throws(() => consumeBudget("test"), /PROVIDER_API_BUDGET_EXHAUSTED/);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+  }
+});
+
+test("consumeBudget falla cuando no puede adquirir el bloqueo (lock ya existe)", () => {
+  const p = tempBudgetPath("lock-fail");
+  writeFileSync(p, JSON.stringify({ limit: 10, used: 0 }));
+  const lockPath = p + ".lock";
+  writeFileSync(lockPath, ""); // pre-create lock file to simulate a concurrent process
+  process.env.PROVIDER_API_BUDGET_FILE = p;
+  try {
+    assert.throws(() => consumeBudget("test"), /PROVIDER_API_BUDGET_LOCK_FAILED/);
+  } finally {
+    delete process.env.PROVIDER_API_BUDGET_FILE;
+    try { unlinkSync(lockPath); } catch {}
   }
 });
 

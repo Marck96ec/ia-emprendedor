@@ -187,6 +187,15 @@ const TimeAllocationSchema = z.object({
 
 export type TimeAllocation = z.infer<typeof TimeAllocationSchema>;
 
+// Model schema: hour fields are computed by TypeScript; AI only provides rationale.
+// OpenAI Structured Outputs requires all fields present, so hours are nullable here.
+const TimeAllocationModelSchema = z.object({
+  available_hours: z.number().min(0).nullable(),
+  allocated_hours: z.number().min(0).nullable(),
+  reserved_hours: z.number().min(0).nullable(),
+  rationale: z.string().trim().min(1),
+});
+
 const WeeklyPlanItemWithRoleSchema = WeeklyPlanItemSchema.extend({
   role_recommendation: z.enum([
     "execute",
@@ -269,6 +278,8 @@ export const CEOPlanModelSchema = CEOPlanSchema.extend({
   // OpenAI Structured Outputs requires every property to be present. The SDK
   // represents the domain-level optional value as a required nullable field.
   strategic_continuity: StrategicContinuitySchema.nullable(),
+  // Hour fields are derived by TypeScript; AI only needs to supply rationale.
+  time_allocation: TimeAllocationModelSchema,
   weekly_plan: z.array(WeeklyPlanItemModelSchema).min(1).max(5),
 });
 
@@ -673,8 +684,9 @@ diagnostic.ownerHoursPerWeek. No llenes la capacidad restante con trabajo artifi
 maximiza impacto por hora. role_recommendation responde quién asume la responsabilidad;
 execution_mode solo responde si CEO IA puede producir un entregable.
 
-Incluye time_allocation con rationale sobre la distribución. La aplicación
-recalculará available_hours, allocated_hours y reserved_hours con datos del diagnóstico.
+Incluye time_allocation con rationale sobre la distribución del tiempo semanal.
+Los campos available_hours, allocated_hours y reserved_hours son calculados por
+TypeScript y deben enviarse como null; solo rationale es obligatorio.
 
 Reglas obligatorias para esos campos:
 
